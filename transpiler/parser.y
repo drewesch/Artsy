@@ -6,9 +6,8 @@
 
 #include "symbolTable.h"
 #include "AST.h"
-#include "ircode.h"
 #include "semantic.h"
-#include "codegen.h"
+#include "javascriptgen.h"
 
 extern int yylex();
 extern int yyparse();
