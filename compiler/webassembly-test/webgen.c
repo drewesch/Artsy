@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "codegen.h"
+#include "webgen.h"
 
 // Initialize WATcode file, IRcode file, and other required variables
 FILE * WATcode;
