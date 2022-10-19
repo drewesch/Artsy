@@ -14,17 +14,6 @@ char* CheckPrimaryType(char*variableName, char*currentScope){
     if (strcmp(variableName, "int")==0){
         return "int";
     }
-    if (strcmp(variableName, "string")==0){
-        return "string";
-    }
-
-    if (strcmp(variableName, "float")==0){
-        return "float";
-    }
-    if (strcmp(variableName, "function")==0){
-        return "function";
-    }
-    
 
     // If this item is not in the symbol table, return a semantic error. Else, return the primary type
     char*inscope = getItemType(variableName, currentScope);
@@ -40,20 +29,11 @@ char* CheckPrimaryType(char*variableName, char*currentScope){
 // Checks the assignment type for a given item by checking its type
 // Returns the actual type
 char* CheckAssignmentType(char*identifier, char* exp, char* currentScope){
-    //printf("GetItemType\n");
+    printf("GetItemType\n");
     char* inscope = getItemType(identifier, currentScope);
     return inscope; 
 }
 
-/*
-int checkDivisionError(int * num1, int * num2) {
-    if (num1 == 0 && num1 == num2) {
-        printf("Division Error: Cannot divide 0 by 0.");
-        return 1;
-    }
-    return 0;
-}
-*/
 
 
 

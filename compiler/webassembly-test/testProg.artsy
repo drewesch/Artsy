@@ -1,0 +1,14 @@
+int x;
+int y;
+int z;
+int k;
+
+x = 4;
+y = 5;
+k = 1;
+z = x + y + 1 + 4;
+x = z + y;
+
+write x;
+write z;
+write k;
