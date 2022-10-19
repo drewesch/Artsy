@@ -9,7 +9,7 @@
   (memory $0 1)
 
   ;; Store the Hello World (null terminated) string at byte offset 0 
-  (data (i32.const 0) "Hello World!\00")
+  (data (i32.const 0) "new update\00")
 
   ;; Export the memory so it can be access in the host environment.
   (export "pagememory" (memory $0))

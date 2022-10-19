@@ -78,7 +78,7 @@
 #include "AST.h"
 #include "ircode.h"
 #include "semantic.h"
-#include "codegen.h"
+#include "webgen.h"
 
 extern int yylex();
 extern int yyparse();

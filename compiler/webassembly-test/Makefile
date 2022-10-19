@@ -11,6 +11,9 @@ wasm: lex.yy.c parser.tab.c parser.tab.h symbolTable.h symbolTable.c AST.c AST.h
 	./driver testProg.artsy
 	wat2wasm WATcode.wat -o WASMcode.wasm
 
+w: 
+	wat2wasm helloworld.wat -o helloworld.wasm
+
 clean:
 	rm -f parser lexer parser.tab.c lex.yy.c parser.tab.h parser.output
 	rm -f parser lexer parser.gv parser.html parser.ps parser.xml lexer_standalone
