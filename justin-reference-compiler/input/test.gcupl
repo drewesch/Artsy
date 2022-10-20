@@ -1,0 +1,15 @@
+int hello;
+bool main() {
+    int g = 3;
+    hello = 3 + 2 * 5 - 1;
+    if (hello >= 3) {
+        return true;
+    } else {
+        return false;
+    }
+    while(true){}
+}
+
+void test(int a, int b) {
+    return false;
+}

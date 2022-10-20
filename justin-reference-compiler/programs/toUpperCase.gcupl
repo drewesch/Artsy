@@ -1,0 +1,12 @@
+void main() {
+  char x[10] = "hEllo";
+  toUpperCase(x, 10);
+  output(x, 10);
+}
+
+void toUpperCase(char x[], int size) {
+  for (int i = 0; i < size; i = i + 1) {
+    if (x[i] >= 'a' && x[i] <= 'z')
+      x[i] = x[i] - 32;
+  }
+}
