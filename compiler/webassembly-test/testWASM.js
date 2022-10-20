@@ -21,6 +21,10 @@ env: {
       var t = document.createTextNode("\n");
       p.appendChild(t);
       document.body.appendChild(p);
+   },
+
+   writeconsole: function writeconsole(intVar) {
+      document.write(intVar)
    }
 }
 })
