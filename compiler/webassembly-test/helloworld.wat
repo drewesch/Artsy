@@ -21,10 +21,10 @@
   (export "pagememory" (memory $0))
 
   ;; Define a function to be called from our host
-  (func $helloworld
+  (func $main
     (local $x i32)(local $y i32)(local $z i32) 
     (local.set $x
-      (i32.const 1)
+      (i32.const 101)
     )
     (local.set $y
       (i32.const 2)
@@ -45,5 +45,5 @@
   )
 
   ;; Export the wasmprint function for the host to call.
-  (export "helloworld" (func $helloworld))
+  (export "main" (func $main))
 )

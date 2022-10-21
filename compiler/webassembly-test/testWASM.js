@@ -31,5 +31,5 @@ env: {
 ).then(results => {
 instance = results.instance;
 memory = instance.exports.pagememory;
-instance.exports.helloworld();
+instance.exports.main();
 }).catch(console.error);
