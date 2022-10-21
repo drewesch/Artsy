@@ -1,0 +1,18 @@
+
+
+#### IR Optimized Code ####
+
+type int x
+type int y
+type int z
+type int k
+type int newVar
+assign x:2
+assign y:10
+assign k:17
+assign newVar:13
+assign z:17
+assign x:57
+output x
+output z
+output k

@@ -2,12 +2,14 @@ int x;
 int y;
 int z;
 int k;
+int newVar;
 
-x = 4;
-y = 5;
-k = 1;
+x = 2;
+y = 10;
+k = 17;
+newVar = 13;
 z = x + y + 1 + 4;
-x = z + y;
+x = z + y + k + newVar;
 
 write x;
 write z;

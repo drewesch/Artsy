@@ -3,17 +3,15 @@
 
 void initAssemblyFile();
 
-// ---- Functions to handle MIPS code generation ---- //
+void generateModule();
 
-void emitMIPSAsisgnment(char id1[50], char id2[50]);
+void generateDataVariables();
 
-void emitMIPSConstantIntAssignment(char id1[50], char id2[50]);
+void printNewLine();
 
-void emitMIPSWriteID(char * id);
+void generateTextSection();
 
-void emitMIPSAddOp(char * id1, char * id2);
-
-void emitEndOfAssemblyCode();
+void completeFile();
 
 void generateWATcode();
 

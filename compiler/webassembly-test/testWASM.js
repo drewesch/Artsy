@@ -1,6 +1,6 @@
 var memory;
 
-fetch('./helloworld.wasm').then(response =>
+fetch('./WASMcode.wasm').then(response =>
 response.arrayBuffer()
 ).then(bytes => WebAssembly.instantiate(bytes, {
 env: {

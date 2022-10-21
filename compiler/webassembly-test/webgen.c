@@ -1,4 +1,4 @@
-// Set of functions to emit MIPS code
+// Set of functions to emit WAT code
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -12,30 +12,37 @@ FILE * IRcode; // added for code generator
 char code[1000];
 
 // Function to open the files for IRcodeOptimized.ir and WATcode.asm
-// Required before generating any MIPS code
+// Required before generating any WAT code
 void initAssemblyFile(){
   
- printf("\nOpening WAT Code file\n\n"); // Creates a MIPS file with a generic header that needs to be in every file
+ printf("\nOpening WAT Code file\n\n"); // Creates a WAT file with a generic header that needs to be in every file
  IRcode = fopen("IRcodeOptimized.ir", "r");
  WATcode = fopen("WATcode.wat", "w");
     
 }
 
-// Function to generate the data section in MIPS
+void generateModule() {
+    fprintf(WATcode, "(module\n");
+    fprintf(WATcode, "\t(import \"env\" \"jsprint\" (func $jsprint (param i32)))\n");
+    fprintf(WATcode, "\t(import \"env\" \"newline\" (func $newline))\n");
+    fprintf(WATcode, "\t(import \"env\" \"writeconsole\" (func $writeconsole (param i32)))\n");
+    fprintf(WATcode, "\t(memory $0 1)\n");
+    fprintf(WATcode, "\t(export \"pagememory\" (memory $0))\n\n");
+    fprintf(WATcode, "\t(func $main\n");
+}
+
+// Function to generate the data section in WAT
 // Using all declared variables in the IRcode (e.g. int x, int y, int z)
 // Generate list of data variables for easier code generation
 // Acts as a helper function for managing temp variable declarations
-void generateDataSection(){
-    // Print ".data"
-    fprintf(WATcode, ".data\n");
-
+void generateDataVariables() {
     // Check the whole IRCodeOptimized.ir file
     // For each variable declared, add a .word
     while ( fgets(code, 1000, IRcode) != NULL){
         if (strncmp(code, "type ", 5) == 0){
             char *variable = code + 9;
             variable[strlen(variable) - 1] = 0;
-            fprintf(WATcode, "%s: .word 0\n", variable);
+            fprintf(WATcode, "\t\t(local $%s i32)\n", variable);
         }
         else if (strncmp(code, "#", 1) == 0){ // do nothing
             
@@ -49,30 +56,20 @@ void generateDataSection(){
         }
     }
 
-    // End by printing a standard variable called NewLine as a asciiz type
-    fprintf(WATcode, "NewLine: .asciiz \"\\n\"\n");
-
 }
 
 // Standard function to generate a new line of code
-// Used to print neater output in MIPS
-void printNewLine(){
-    fprintf(WATcode, "#-------- Print New Line\n");
-    fprintf(WATcode, "la $a0, NewLine\n");
-    fprintf(WATcode, "li $v0, 4\n");   
-    fprintf(WATcode, "syscall\n");
-    fprintf(WATcode, "#-----------------------\n"); 
+// Used to print neater output in WAT
+void printNewLine() {
+    fprintf(WATcode, "\t\t;; Print New Line\n");
+    fprintf(WATcode, "\t\t(call $newline)\n");
+    fprintf(WATcode, "\t\t;; ---------\n"); 
 }
 
 // Standard function to generate the main section and text section
-// Required before generating any MIPS statements
-void generateTextSection(){
-    fprintf(WATcode, ".text\n");
-    fprintf(WATcode, ".globl main\n");
-    fprintf(WATcode, "main:\n");
-    fprintf(WATcode, "# -----------------------\n");
-
-    // Loop through each line in the code and generate MIPS for each valid statement
+// Required before generating any WAT statements
+void generateTextSection() {
+    // Loop through each line in the code and generate WAT for each valid statement
     do {
         // If the IRcode calls a write/output statement
         if (strncmp(code, "output ", 7) == 0){
@@ -80,7 +77,7 @@ void generateTextSection(){
             variable[strlen(variable) - 1] = 0;
             // printf("Variable: %s\n", variable);
             int value = 0;
-            fprintf(WATcode, "# %s \n", code);
+            fprintf(WATcode, "\t\t;; %s \n", code);
 
             // If write statement uses a NUMBER
             if (isdigit(variable[0])){
@@ -89,21 +86,30 @@ void generateTextSection(){
                 int lower = value & 0xffff;
                 int upper = (value & 0xffff0000) >> 16;
                 // fprintf(WATcode, "syscall\n");
-                // Print MIPS code using upper and lower value
+                // Print WAT code using upper and lower value
                 // By default, this will be an integer write statement. However, this approach will be updated for the next iteration.
-                fprintf(WATcode, "lui $a0, %d\n", upper);  
-                fprintf(WATcode, "ori $a0, $a0, %d\n", lower);  
-                fprintf(WATcode, "li $v0, 1\n");
-                fprintf(WATcode, "syscall\n");
+                // fprintf(WATcode, "lui $a0, %d\n", upper);  
+                // fprintf(WATcode, "ori $a0, $a0, %d\n", lower);  
+                // fprintf(WATcode, "li $v0, 1\n");
+                // fprintf(WATcode, "syscall\n");
+
+                fprintf(WATcode, "\t\t(call $writeconsole\n");
+                fprintf(WATcode, "\t\t\t(i32.const %s)\n", lower);
+                fprintf(WATcode, "\t\t)\n");
+
                 printNewLine();
             }
             // Else, the variable uses a temporary register
-            // Print using the .word statement defined earlier in the MIPS file
+            // Print using the .word statement defined earlier in the WAT file
             else{
-                fprintf(WATcode, "la $t0, %s\n", variable);
-                fprintf(WATcode, "lw $a0, 0($t0)\n");
-                fprintf(WATcode, "li $v0, 1\n");
-                fprintf(WATcode, "syscall\n");
+                // fprintf(WATcode, "la $t0, %s\n", variable);
+                // fprintf(WATcode, "lw $a0, 0($t0)\n");
+                // fprintf(WATcode, "li $v0, 1\n");
+                // fprintf(WATcode, "syscall\n");
+
+                fprintf(WATcode, "\t\t(call $writeconsole\n");
+                fprintf(WATcode, "\t\t\t(local.get $%s)\n", variable);
+                fprintf(WATcode, "\t\t)\n");
                 printNewLine();
             }
             // fprintf(WATcode, "%s: .word\n", variable);
@@ -120,7 +126,7 @@ void generateTextSection(){
             char*start = code+7;
             char*end = start;
             
-            // While a ":" is not encountered, loop through and assign the corresponding variable in MIPS
+            // While a ":" is not encountered, loop through and assign the corresponding variable in WAT
             while (*end != ':') end++;
             char variable [256]; 
             strncpy(variable, start, (end - start));
@@ -129,14 +135,21 @@ void generateTextSection(){
             // Assign variable and number
             int lower = value & 0xffff;
             int upper = (value & 0xffff0000) >> 16;
-            // fprintf(WATcode, "syscall\n");
-            // Generate MIPS code using code, upper, lower, and variable
-            fprintf(WATcode, "#----------%s \n", code);
-            fprintf(WATcode, "lui $a0, %d\n", upper);  
-            fprintf(WATcode, "ori $a0, $a0, %d\n", lower);
-            fprintf(WATcode, "la $t0, %s\n", variable);
-            fprintf(WATcode, "sw $a0, 0($t0)\n");
-            fprintf(WATcode, "#---------- \n");
+
+            // Generate WAT code using code, upper, lower, and variable
+            // fprintf(WATcode, "#----------%s \n", code);
+            // fprintf(WATcode, "lui $a0, %d\n", upper);  
+            // fprintf(WATcode, "ori $a0, $a0, %d\n", lower);
+            // fprintf(WATcode, "la $t0, %s\n", variable);
+            // fprintf(WATcode, "sw $a0, 0($t0)\n");
+            // fprintf(WATcode, "#---------- \n");
+
+            fprintf(WATcode, "\t\t;; %s\n", code);
+            fprintf(WATcode, "\t\t(local.set $%s\n", variable);
+            fprintf(WATcode, "\t\t\t(i32.const %d)\n", lower);
+            fprintf(WATcode, "\t\t)\n");
+
+
         }
         else { //assignment statement //handles these things for printing //handle the last statment 
             printf("code: %s", code);
@@ -146,12 +159,16 @@ void generateTextSection(){
 
 }
 
-// Function to end MIPS generation once all commands are printed from the IRcodeOptimized.ir file
-void compleateAssemlyFile(){
-    // Print ending MIPS commands to the file
-    fprintf(WATcode, "li $v0, 10\n");
-    fprintf(WATcode, "syscall\n");
-    fprintf(WATcode, "# ----------------------- End of Main.\n");
+// Function to end WAT generation once all commands are printed from the IRcodeOptimized.ir file
+void completeFile() {
+    // Print ending WAT commands to the file
+    // fprintf(WATcode, "li $v0, 10\n");
+    // fprintf(WATcode, "syscall\n");
+    // fprintf(WATcode, "# ----------------------- End of Main.\n");
+    
+    fprintf(WATcode, "\t)\n");
+    fprintf(WATcode, "\t(export \"main\" (func $main))\n");
+    fprintf(WATcode, ")\n");
 
     // Closes all files once complete
     fclose(IRcode);
@@ -159,10 +176,11 @@ void compleateAssemlyFile(){
 }
 
 
-// Main driver function to generate all MIPS code
-void generateWATcode(){
+// Main driver function to generate all WAT code
+void generateWATcode() {
     initAssemblyFile();
-    generateDataSection();
+    generateModule();
+    generateDataVariables();
     generateTextSection();
-    compleateAssemlyFile();
+    completeFile();
 }
