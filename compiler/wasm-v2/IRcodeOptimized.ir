@@ -5,15 +5,11 @@
 type int x
 type int y
 type int z
-type int k
-type int newVar
 assign x:10
 assign y:11
-assign k:18
-assign newVar:2
-assign z:28
-assign x:41
+T0 = 21 + z
+assign x:T0
+assign y:21
 output x
+output y
 output z
-output k
-output newVar
