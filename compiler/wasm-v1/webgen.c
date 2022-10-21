@@ -13,7 +13,7 @@ char code[1000];
 
 // Function to open the files for IRcodeOptimized.ir and WATcode.asm
 // Required before generating any WAT code
-void initAssemblyFile(){
+void initAssemblyFile() {
   
  printf("\nOpening WAT Code file\n\n"); // Creates a WAT file with a generic header that needs to be in every file
  IRcode = fopen("IRcodeOptimized.ir", "r");
@@ -85,13 +85,9 @@ void generateTextSection() {
                 // Find upper and lower using the variable value
                 int lower = value & 0xffff;
                 int upper = (value & 0xffff0000) >> 16;
-                // fprintf(WATcode, "syscall\n");
+
                 // Print WAT code using upper and lower value
                 // By default, this will be an integer write statement. However, this approach will be updated for the next iteration.
-                // fprintf(WATcode, "lui $a0, %d\n", upper);  
-                // fprintf(WATcode, "ori $a0, $a0, %d\n", lower);  
-                // fprintf(WATcode, "li $v0, 1\n");
-                // fprintf(WATcode, "syscall\n");
 
                 fprintf(WATcode, "\t\t(call $writeconsole\n");
                 fprintf(WATcode, "\t\t\t(i32.const %s)\n", lower);
@@ -100,19 +96,12 @@ void generateTextSection() {
                 printNewLine();
             }
             // Else, the variable uses a temporary register
-            // Print using the .word statement defined earlier in the WAT file
             else{
-                // fprintf(WATcode, "la $t0, %s\n", variable);
-                // fprintf(WATcode, "lw $a0, 0($t0)\n");
-                // fprintf(WATcode, "li $v0, 1\n");
-                // fprintf(WATcode, "syscall\n");
-
                 fprintf(WATcode, "\t\t(call $writeconsole\n");
                 fprintf(WATcode, "\t\t\t(local.get $%s)\n", variable);
                 fprintf(WATcode, "\t\t)\n");
                 printNewLine();
             }
-            // fprintf(WATcode, "%s: .word\n", variable);
         }
         // If the file contains a newline, ignore the statement
         else if (strncmp(code, "\n", 1) == 0){//ignore
@@ -137,18 +126,10 @@ void generateTextSection() {
             int upper = (value & 0xffff0000) >> 16;
 
             // Generate WAT code using code, upper, lower, and variable
-            // fprintf(WATcode, "#----------%s \n", code);
-            // fprintf(WATcode, "lui $a0, %d\n", upper);  
-            // fprintf(WATcode, "ori $a0, $a0, %d\n", lower);
-            // fprintf(WATcode, "la $t0, %s\n", variable);
-            // fprintf(WATcode, "sw $a0, 0($t0)\n");
-            // fprintf(WATcode, "#---------- \n");
-
             fprintf(WATcode, "\t\t;; %s\n", code);
             fprintf(WATcode, "\t\t(local.set $%s\n", variable);
             fprintf(WATcode, "\t\t\t(i32.const %d)\n", lower);
             fprintf(WATcode, "\t\t)\n");
-
 
         }
         else { //assignment statement //handles these things for printing //handle the last statment 
@@ -161,11 +142,7 @@ void generateTextSection() {
 
 // Function to end WAT generation once all commands are printed from the IRcodeOptimized.ir file
 void completeFile() {
-    // Print ending WAT commands to the file
-    // fprintf(WATcode, "li $v0, 10\n");
-    // fprintf(WATcode, "syscall\n");
-    // fprintf(WATcode, "# ----------------------- End of Main.\n");
-    
+    // Print ending WAT commands to the file    
     fprintf(WATcode, "\t)\n");
     fprintf(WATcode, "\t(export \"main\" (func $main))\n");
     fprintf(WATcode, ")\n");

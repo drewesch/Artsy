@@ -1,0 +1,25 @@
+
+
+#### IR Code ####
+
+type int x
+type int y
+type int z
+type int k
+type int newVar
+x = 10
+y = 11
+k = 18
+newVar = 2
+T0 = 1 + 4
+T1 = newVar + T0
+T2 = y + T1
+T3 = x + T2
+z = T3
+T0 = y + newVar
+T1 = z + T0
+x = T1
+output x
+output z
+output k
+output newVar

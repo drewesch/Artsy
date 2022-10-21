@@ -7,12 +7,13 @@ type int y
 type int z
 type int k
 type int newVar
-assign x:2
-assign y:10
-assign k:17
-assign newVar:13
-assign z:17
-assign x:57
+assign x:10
+assign y:11
+assign k:18
+assign newVar:2
+assign z:28
+assign x:41
 output x
 output z
 output k
+output newVar

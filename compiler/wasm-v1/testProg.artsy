@@ -1,0 +1,17 @@
+int x;
+int y;
+int z;
+int k;
+int newVar;
+
+x = 10;
+y = 11;
+k = 18;
+newVar = 2;
+z = x + y + newVar + 1 + 4;
+x = z + y + newVar;
+
+write x;
+write z;
+write k;
+write newVar;
