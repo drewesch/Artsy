@@ -71,39 +71,27 @@ char currentScope[50]; // global or the name of the function
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
 %left MODULO
-%left EXPONENT
-%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Identifier
+%right EXPONENT
+%type <ast> Program DeclList VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Identifier
 
 
 %start Program
 
 %%
 
-Program: DeclList FunDeclList StmtList {
+Program: DeclList FunDeclList StmtList  {
 	// Main program parser rule, generates the whole AST for the program
 	$$ = AST_SingleChildNode("program",$1, $1);
-
 	printf("\n\n\n\n\n--------------------Parser End------------------------\n\n\n");
-
 	ast = $$;
-
-}
-;
-
-DeclList: // Grammar rule to generate the whole list of variable and regular declarations
-	| VarDecl DeclList	{ $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
-							}
-	| Decl	{ $$ = $1; }
-;
-
-Decl:	VarDecl {
-	// Basic Var Declaration Rule, generates AST for all variable declarations
-	$$ = $1;
 	}
-	| StmtList {
-		// Basic Statement list declaration rule, generates AST for all statement declarations
-		$$ = $1;
-		}
+;
+
+// Grammar rule to generate the whole list of variable and regular declarations
+DeclList: {}
+	| VarDecl DeclList	{ $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
+	}
+		| VarDecl	{ $$ = $1; }
 ;
 
 
@@ -128,7 +116,6 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 
 								  // Generate AST node as a doubly node
 								  $$ = AST_DoublyChildNodes("type",$1,$2,$1, $2);
-
 								}
 
 								| TYPE ID LEFTSQUARE NUMBER RIGHTSQUARE SEMICOLON {printf("Found Array declaration"); 
@@ -146,7 +133,7 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 									}
 									// If the variable has not been declared 
 									showSymTable();
-								}
+								}				
 ;
 
 FunDeclList: {}
@@ -198,22 +185,18 @@ ParamDecl: TYPE ID {$$ = AST_DoublyChildNodes("Variable parm",$1,$2,$1, $2);}
 
 
 StmtList:	Stmt
-	| Stmt StmtList {
-		// Generate a list of all statement declarations below vardecl
-		$$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);
-		}
+	| Stmt StmtList {$$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);} 
+	// Generate a list of all statement declarations below vardecl
 ;
 
 Stmt:	SEMICOLON	{}
-	| Expr SEMICOLON	{
-		// Simplest expr statement in grammar
-		$$ = $1;
+	| Expr SEMICOLON	{$$ = $1;} // Simplest expr statement in grammar
+	| WRITE Primary SEMICOLON	{ 
+		printf("\n RECOGNIZED RULE: WRITE statement\n");
+		// Generate write declarations as a statement in the parser
+		$$ = AST_SingleChildNode("write", $2, $2);
+		printf("Write AST generated!\n");
 		}
-	| WRITE Primary SEMICOLON	{ printf("\n RECOGNIZED RULE: WRITE statement\n");
-					// Generate write declarations as a statement in the parser
-					$$ = AST_SingleChildNode("write", $2, $2);
-					printf("Write AST generated!");
-				}
 	| RETURN SEMICOLON {$$ = AST_SingleChildNode("RETURN", 0,0);}
 	| READ ID SEMICOLON {$$ = AST_SingleChildNode("READ", $2, 0);}
 	| Block {$$ = $1;} //To do for next iteration
@@ -237,10 +220,6 @@ Primary :	 NUMBER	{$$ = AST_SingleChildNode("int", $1, $1); }
 	|  STRING {$$ = AST_SingleChildNode( "string", $1, $1);}
 	| FLOAT {$$ = AST_SingleChildNode( "float", $1, $1);}
 	| ID LEFTSQUARE Expr RIGHTSQUARE {$$ = AST_SingleChildNode($1, $1, $3);}
-;
-
-
-BinOp:	PLUS {}
 ;
 
 ExprListTail:	Expr	{ $$ = $1; }
@@ -352,45 +331,13 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {}
 ;
-
 %%
 
 
 
-/* [EType]  */
-
-
-
-
-/* 
-EType = CheckPrimaryType($1); */
-/* EType = CheckAssignmentType($1, $3);
-EType = CheckBinOpType($1, $3); */
-
-
-// int main(int argc, char**argv)
-// {
-// /* 
-// 	#ifdef YYDEBUG
-// 		yydebug = 1;
-// 	#endif */
-
-// 	printf("\n \n \n \n \n \n--------------------Parser Start------------------------\n\n\n");
-	
-// 	if (argc > 1){
-// 	  if(!(yyin = fopen(argv[1], "r")))
-//           {
-// 		perror(argv[1]);
-// 		return(1);
-// 	  }
-// 	}
-// 	yyparse();
-// }
-
 int parser_main(FILE*inputfile)
 {
-/* 
-	#ifdef YYDEBUG
+	/* #ifdef YYDEBUG
 		yydebug = 1;
 	#endif */
 

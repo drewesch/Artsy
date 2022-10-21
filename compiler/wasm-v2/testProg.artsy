@@ -1,4 +1,17 @@
 int x;
+int y;
+int z;
+int k;
+int newVar;
 
-x = 1 plus 2;
+x equals 10;
+y equals 11;
+k equals 18;
+newVar equals 2;
+z equals x plus y plus newVar plus 1 plus 4;
+x equals z plus y plus newVar;
+
 art x;
+art z;
+art k;
+art newVar;

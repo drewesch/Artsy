@@ -1,0 +1,70 @@
+int aNumber;
+float secondNumber;
+char someLetter;
+char message[50];
+
+float average(float a, float b, float c){
+    float avg;
+    avg = (a + b + c)/3.0;
+    return avg;
+}
+
+int unreachableFunction(float x, int y){
+   / 
+    This function does nothing and should
+    Be removed from IR code in the optimization step
+   /
+
+   int result;
+   result = x^y + xy;
+
+   return result;
+}
+
+int displayMessage(){
+    message[0] = 'I';
+    message[1] = ' ';
+    message[2] = 'c';
+    message[3] = 'a';
+    message[4] = 'n';
+    message[5] = ' ';
+    message[6] = 'p';
+    message[7] = 'r';
+    message[8] = 'i';
+    message[9] = 'n';
+    message[10] = 't';
+    message[11] = ':';
+
+    return(0);
+}
+
+float ambitiousFunction (float a, float b, float c){
+
+   /* great optimization opportunity /
+
+   float result;
+ 
+   result = (average(a, b, c) + average(a, b, c))/2.0;
+
+   return result;
+}
+
+justAverage = average(12.5, 13.7, 25.8);
+aNumber = displayMessage();
+write justAverage;
+writeln;
+
+justAverage = justAverage (justAverage + 2.0);
+justAverage = average(justAverage, 0.0, 0.0);
+aNumber = displayMessage();
+writeln;
+
+aNumber = displayMessage();
+aNumber = aNumber / (aNumber + aNumber * aNumber);
+write aNumber;
+writeln;
+
+justAverage = ambitiousFunction(1.0, 2.0, 3.0);
+aNumber = displayMessage();
+write justAverage;
+writeln;

@@ -16,30 +16,11 @@ int startIROptimized = 0;
 int lastIndex = 0;
 char outputId[50];
 char buffer[50];
-
-// Struct to handle temporary variable construction
-struct ConstantVar {
-    char var[50];
-    char scope[50];
-    int val;
-};
-
-// Generate symbol table of temporary variables
-struct ConstantVar cvTable[100];
-
 // Indexes to traverse these tables
 int cvIndex = 0;
 int uvIndex = 0;
-
-// Temporary variable struct to determine if a variable has been used in optimization
-struct Var {
-    char var[50];
-    int boolVal;
-    
-};
-
-// Generate symbol table for variable usage
-struct Var uvTable[100];
+int nodeIndex = 0;
+int bnodeIndex = 0;
 
 // Function to open unoptimized IRcode
 void initIRcodeFile() {
@@ -59,8 +40,6 @@ char* getVarConstant(char var[50]){
 		int str1 = strcmp(cvTable[i].var, var);
         if( str1 == 0){
             memset(buffer, 0, 50);
-            printf("cvTable[%d].var: %s\n", i, cvTable[i].var);
-            printf("cvTable[%d].val: %d\n", i, cvTable[i].val);
 			sprintf(buffer, "%d", cvTable[i].val);
             return buffer;
 		}
@@ -70,7 +49,6 @@ char* getVarConstant(char var[50]){
 
 // Function to update variable declarations if the variable is unused - part of the optimization process
 void updateUnusedVar(char var[50]) {
-
     printf("updateUnsed: %s\n", var);
 	for(int i=0; i<uvIndex; i++){
 		int str1 = strcmp(uvTable[i].var, var);
@@ -174,6 +152,27 @@ void emitAssignment(char * id1, char * id2){
     lastIndex = 0;
 }
 
+int isUninitializedNodeVar(char * id) {
+    int initNodeFlag = 1;
+    for(int i=0; i<nodeIndex; i++){
+        int str1 = strcmp(nodeTable[i].var, id);
+        if(str1 == 0){
+            return 0;
+        }
+    }
+    return 1;
+}
+
+int getNodeVarIndex(char var[50]){
+	for(int i=0; i<nodeIndex; i++){
+		int str1 = strcmp(nodeTable[i].var, var);
+        if( str1 == 0){
+            return i;
+		}
+	}
+	return -1;
+}
+
 // Optimized assignment operation function for IRcodeOptimized.ir
 void emitAssignmentOptimized(char * id1, char * id2){
     int flag = 1;
@@ -196,6 +195,21 @@ void emitAssignmentOptimized(char * id1, char * id2){
             cvIndex ++;
         }
     }
+    // else {
+    //     if(isUninitializedNodeVar(id2)) {
+    //         strcpy(nodeTable[nodeIndex].var, id2);
+    //         strcpy(nodeTable[nodeIndex].rootVar, id2);
+    //         nodeIndex ++;
+    //     }
+
+    //     if(isUninitializedNodeVar(id1)) {
+    //         strcpy(nodeTable[nodeIndex].var, id1);
+    //         strcpy(nodeTable[nodeIndex].rootVar, nodeTable[getNodeVarIndex(id2)].rootVar);
+    //         nodeIndex ++;
+    //     } else {
+    //         strcpy(nodeTable[getNodeVarIndex(id1)].rootVar, nodeTable[getNodeVarIndex(id2)].rootVar);
+    //     }
+    // }
     
     fprintf(IRcodeOptimized, "assign %s:%s\n", id1, id2);
 }
@@ -341,7 +355,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             ASTTraversalOptimized(root -> left);
             ASTTraversalOptimized(root -> right);
         }
-        if(strcmp(root->nodeType, "write") == 0) {
+        if(strcmp(root->nodeType, "art") == 0) {
             if(isUsedVar(root -> RHS)) {
                 emitWriteIdOptimized(root -> RHS);
             }
@@ -362,6 +376,15 @@ char* ASTTraversalOptimized(struct AST* root) {
             strcpy(rightVarOptimized, getVarConstant(leftVar));
             strcpy(leftVarOptimized, getVarConstant(rightVar));
             return emitBinaryOperationOptimized(root -> nodeType, rightVarOptimized, leftVarOptimized);
+        }
+        if(strcmp(root -> nodeType, "plus") == 0) {
+            strcpy(leftVar, ASTTraversalOptimized(root-> left));
+            strcpy(rightVar, ASTTraversalOptimized(root-> right));
+            char rightVarOptimized[50];
+            char leftVarOptimized[50];
+            strcpy(rightVarOptimized, getVarConstant(leftVar));
+            strcpy(leftVarOptimized, getVarConstant(rightVar));
+            return emitBinaryOperationOptimized('+', rightVarOptimized, leftVarOptimized);
         }
     }
 }

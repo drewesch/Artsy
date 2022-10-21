@@ -156,6 +156,14 @@ STRING		\"([^\\\"]|\\.)*\"
 			return TYPE;
 		}
 
+"write"	{
+			// The write operation is special, return as a KEYWORD token
+			words++; chars += strlen(yytext);
+			printf("%s : KEYWORD\n", yytext);
+			yylval.string = strdup(yytext); 
+			return WRITE;
+		}
+
 "art"	{
 			// The write operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
