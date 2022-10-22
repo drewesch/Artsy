@@ -28,6 +28,28 @@ void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLen
 	
 }
 
+struct Entry* getParamList(char * id, struct AST* paramlist) {
+	struct Entry * list = malloc(sizeof(struct Entry));	
+	if(strcmp(paramlist->nodeType, "Variable parm") == 0) {
+		list -> itemID = symTabIndex;
+		strcpy(list->itemName, paramlist->RHS);
+		strcpy(list->itemKind, "Var");
+		strcpy(list->itemType, paramlist->LHS);
+		list->arrayLength = 0;
+		strcpy(list->scope, id);
+		list->paramlist = 0;
+
+		return list;
+	}
+	else if(strcmp(paramlist->nodeType, "ParaDecl comma ParaDeclListTail") == 0) {
+		list = getParamList(id, paramlist -> left);
+		list->paramlist = getParamList(id, paramlist -> right);
+	}
+
+	return list;
+
+}
+
 void addFunction(char *type, char *id, struct AST* paramlist){
 	//printf("ADD Function:------------------------- %s\n---------------------\n", id);
 	//showAST(paramlist);
@@ -36,6 +58,7 @@ void addFunction(char *type, char *id, struct AST* paramlist){
 		symTabItems[symTabIndex].paramlist = 0;
 	}
 	else if (strcmp(paramlist->nodeType, "Variable parm") == 0){
+		
 		struct Entry* list = malloc(sizeof(struct Entry));
 		strcpy(list->itemName, paramlist->LHS);
 		strcpy(list->itemKind, "variable");
@@ -44,6 +67,9 @@ void addFunction(char *type, char *id, struct AST* paramlist){
 		strcpy(list->scope, id);
 		list->paramlist = 0;
 		symTabItems[symTabIndex].paramlist = list;
+	} else if(strcmp(paramlist->nodeType, "ParaDecl comma ParaDeclListTail") == 0) {		
+
+		symTabItems[symTabIndex].paramlist = getParamList(id, paramlist);
 	}
 
 	// Set entry struct item data for each parameter in the function
@@ -53,6 +79,7 @@ void addFunction(char *type, char *id, struct AST* paramlist){
 		strcpy(symTabItems[symTabIndex].itemType, type);
 		symTabItems[symTabIndex].arrayLength = 0;
 		strcpy(symTabItems[symTabIndex].scope, "global");
+		printf("check");
 
 		// Increment the symbol table index for this scope
 		symTabIndex++;
@@ -64,6 +91,13 @@ void showSymTable(){
 	printf("-----------------------------------------------------------------------\n");
 	for (int i=0; i<symTabIndex; i++){
 		printf("%5d %15s  %7s  %7s %6d %15s \n",symTabItems[i].itemID, symTabItems[i].itemName, symTabItems[i].itemKind, symTabItems[i].itemType, symTabItems[i].arrayLength, symTabItems[i].scope);
+		if(symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				printf("%5d %15s  %7s  %7s %6d %15s \n",tempList -> itemID, tempList -> itemName, tempList -> itemKind, tempList ->itemType, tempList  -> arrayLength, tempList ->scope);
+				tempList = tempList -> paramlist;
+			}
+		}
 	}
 	
 
@@ -78,10 +112,25 @@ int found(char itemName[50], char scope[50]){
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
 	for(int i=0; i<symTabIndex; i++){
+		if(symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				int str1 = strcmp(tempList -> itemName, itemName);
+				int str2 = strcmp(tempList -> scope,scope);
+				// If these strings are the same, return true
+				if( str1 == 0 && str2 == 0){
+					//printf("Found: %s\n-----------------------", itemName);
+					return 1; // found the ID in the table
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
 		int str2 = strcmp(symTabItems[i].scope,scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
 		// If these strings are the same, return true
-		if( str1 == 0 && str2 == 0){
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
 			//printf("Found: %s\n-----------------------", itemName);
 			return 1; // found the ID in the table
 		}

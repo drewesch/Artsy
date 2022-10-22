@@ -12,6 +12,8 @@ int aNumber;
 float secondNumber;
 string someLetter;  /* unused variable */
 string message[50];
+float justAverage;
+float a;
 
 function float average(float a, float b, float c){
 	float avg;
@@ -32,18 +34,18 @@ function int unreachableFunction(float x, int y){
 }
 
 function int displayMessage(){
-	message[0] = 'I';
-	message[1] = ' ';
-	message[2] = 'c';
-	message[3] = 'a';
-	message[4] = 'n';
-	message[5] = ' ';
-	message[6] = 'p';
-	message[7] = 'r';
-	message[8] = 'i';
-	message[9] = 'n';
-	message[10] = 't';
-	message[11] = ':';
+	message[0] = "I";
+	message[1] = " ";
+	message[2] = "c";
+	message[3] = "a";
+	message[4] = "n";
+	message[5] = " ";
+	message[6] = "p";
+	message[7] = "r";
+	message[8] = "i";
+	message[9] = "n";
+	message[10] = "t";
+	message[11] = ":";
 
     write message; 
 	
@@ -80,5 +82,7 @@ justAverage = ambitiousFunction(1.0, 2.0, 3.0);
 aNumber = displayMessage();
 write justAverage;
 writeln;
+
+
 
     

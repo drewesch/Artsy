@@ -10,9 +10,6 @@ int words = 0;
 int chars = 0;
 int lines = 0;
 
-//--------------------------------------------------------------------------------oct 12 changes
-// Grammar recognized for the language
-
 %}
 
 letter      [a-zA-Z]
@@ -26,6 +23,7 @@ LINEBREAK	(\n\r)|(\r\n)|[\n\r]
 ws          {delim}+
 CHAR		'([^'\n]|\\n|\\\\)'
 STRING		\"([^\\\"]|\\.)*\"
+COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 
 %%
 
@@ -90,6 +88,14 @@ STRING		\"([^\\\"]|\\.)*\"
 		}
 
 "char"	{
+			// Recognize chars as a TYPE, return as a token
+			words++; chars += strlen(yytext);
+			printf("%s : TYPE\n", yytext);
+			yylval.string = strdup(yytext); 
+			return TYPE;
+		}
+
+"string" {
 			// Recognize chars as a TYPE, return as a token
 			words++; chars += strlen(yytext);
 			printf("%s : TYPE\n", yytext);
@@ -164,6 +170,14 @@ STRING		\"([^\\\"]|\\.)*\"
 			return WRITE;
 		}
 
+"writeln"	{
+			// The write operation is special, return as a KEYWORD token
+			words++; chars += strlen(yytext);
+			printf("%s : KEYWORD\n", yytext);
+			yylval.string = strdup(yytext); 
+			return WRITELN;
+		}
+
 "art"	{
 			// The write operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
@@ -173,20 +187,36 @@ STRING		\"([^\\\"]|\\.)*\"
 		}
 
 "read"	{
-			// The write operation is special, return as a KEYWORD token
+			// The read operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
 			printf("%s : KEYWORD\n", yytext);
 			yylval.string = strdup(yytext); 
 			return READ;
 		}
 
-
-"report"	{
-			// The write operation is special, return as a KEYWORD token
+"return" {
+			// The return operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
 			printf("%s : KEYWORD\n", yytext);
 			yylval.string = strdup(yytext); 
 			return RETURN;
+		}
+
+
+"report"	{
+			// The report operation is special, return as a KEYWORD token
+			words++; chars += strlen(yytext);
+			printf("%s : KEYWORD\n", yytext);
+			yylval.string = strdup(yytext); 
+			return RETURN;
+		}
+		
+"function"	{
+			// The function operation is special, return as a FUNCTION token
+			words++; chars += strlen(yytext);
+			printf("%s : FUNCTION\n", yytext);
+			yylval.string = strdup(yytext); 
+			return FUNCTION;
 		}
 
 "action"	{
@@ -569,6 +599,8 @@ STRING		\"([^\\\"]|\\.)*\"
 			  yylval.string = strdup(yytext); 
 			  return STRING;
 			}
+\/\/.*		{ /* Ignored (comment) */ }
+{COMMENT}	{ /* Ignored (comment) */}
 
 {LINEBREAK}	{lines++; chars=0;}
 [ \t]	{chars++;}

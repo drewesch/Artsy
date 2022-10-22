@@ -16,6 +16,7 @@ extern FILE* yyin;
 
 void yyerror(const char* s);
 char currentScope[50]; // global or the name of the function
+char tempScopeStore[50];
 %}
 
 %union {
@@ -72,7 +73,7 @@ char currentScope[50]; // global or the name of the function
 %left MULTIPLY DIVIDE
 %left MODULO
 %left EXPONENT
-%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Identifier
+%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Identifier
 
 
 %start Program
@@ -89,6 +90,10 @@ Program: DeclList FunDeclList StmtList {
 
 }
 ;
+
+// Comment: DIVIDE MULTIPLY CommentBlock MULTIPLY DIVDE
+// 	| 
+// { }
 
 DeclList: // Grammar rule to generate the whole list of variable and regular declarations
 	| VarDecl DeclList	{ $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
@@ -158,7 +163,7 @@ FunDeclListTail: FunDecl {$$ = $1;}
 	| FunDecl FunDeclListTail {$$ = AST_DoublyChildNodes("FunDecl FunDeclListTail",$1,$2,$1, $2);}
 ;
 
-FunDecl: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN Block {
+FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 	symTabAccess();
 	int inSymTab = found($3, currentScope);
 	//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
@@ -177,10 +182,18 @@ FunDecl: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN Block {
 	//printf("2 Function okkkkkkkkkkkkkkkkkkkkkkkkkkkkk-----------------------\n");
 	// If the variable has not been declared 
 	showSymTable();
+	$$ = AST_DoublyChildNodes("Function Context", $3, $5, $3, $5);
 
+	strcpy(tempScopeStore, currentScope);
+	strcpy(currentScope, $3);
+}
+;
+
+FunDecl: FuncHeader Block {
 	// Generate AST node as a doubly node
-	$$ = AST_DoublyChildNodes("Function",$3,$5,$3, $5);
-	}
+	$$ = AST_DoublyChildNodes("Function",$1,$2,$1, $2);
+	strcpy(currentScope, tempScopeStore);
+}
 ;
 
 ParamDeclList: {}
@@ -214,8 +227,12 @@ Stmt:	SEMICOLON	{}
 					$$ = AST_SingleChildNode("write", $2, $2);
 					printf("Write AST generated!");
 				}
-	| RETURN SEMICOLON {$$ = AST_SingleChildNode("RETURN", 0,0);}
-	| READ ID SEMICOLON {$$ = AST_SingleChildNode("READ", $2, 0);}
+	| WRITELN SEMICOLON {
+		printf("\n RECOGNIZED RULE: WRITEIN statement\n");
+		$$ = AST_SingleChildNode("writeln", "\n", 0);
+	}
+	| RETURN Expr SEMICOLON { $$ = AST_SingleChildNode("return", $2,0); }
+	| READ ID SEMICOLON {$$ = AST_SingleChildNode("read", $2, 0);}
 	| Block {$$ = $1;} //To do for next iteration
 	| Loop {$$=$1;}
 	| If {$$=$1;} 
@@ -265,6 +282,7 @@ Block: {}
 
 Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 				$$ = $1;
+				printf("%s\n", $1);
 				strcpy($$->nodeType, CheckPrimaryType($1, currentScope));
 				}		
 	| ID EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment statement\n");
@@ -300,6 +318,41 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					// emitMIPSConstantIntAssignment($1, $3);
 
 					}
+	| ID LEFTSQUARE Expr RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment element statement\n");
+					// --- SEMANTIC CHECKS --- //
+					/*
+						int semanticCorrectness = FALSE;
+						1. Has ID been declared? If yes, semanticCorrectness = 1
+
+						2. Does RHS.type = LHS.type? if yes, semanticCorrectness = 1
+
+						If all tests == 1, then
+							perform SEMANTIC ACTIONS
+						
+					*/
+					
+					// Check to see if the ID exists in the symbol table
+					printf("ID Declare check\n");
+					CheckAssignmentType($1,$6, currentScope);
+					// printf("RHS LHS Check\n");
+					// if (compareTypes($1,$3, currentScope) != 0) {
+					// 	exit(1);
+					// }
+
+					// Generate AST tree nodes
+					printf("DEBUG -- GENERATE AST\n");
+					struct AST* arrElementNode = AST_DoublyChildNodes("element",$1,$3, $1, $3);
+					$$ = AST_DoublyChildNodes("=",arrElementNode,$6, arrElementNode, $6);
+					// Generate IRcode
+					// printf("Generate IR Code\n");
+					// emitConstantIntAssignment($1, $3);
+
+					// Generate MIPS code
+					// printf("Generate MIPS\n");
+					// emitMIPSConstantIntAssignment($1, $3);
+
+					}
+
 	| Expr PLUS Expr { printf("\n RECOGNIZED RULE: PLUS statement\n");
 					// Semantic checks
 					
@@ -389,10 +442,10 @@ EType = CheckBinOpType($1, $3); */
 
 int parser_main(FILE*inputfile)
 {
-/* 
-	#ifdef YYDEBUG
-		yydebug = 1;
-	#endif */
+
+	// #ifdef YYDEBUG
+	// 	yydebug = 1;
+	// #endif
 
 	printf("\n \n \n \n \n \n--------------------Parser Start------------------------\n\n\n");
 	strcpy(currentScope, "global");
