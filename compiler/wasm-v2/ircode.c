@@ -196,6 +196,22 @@ void emitAssignmentOptimized(char * id1, char * id2){
             cvIndex ++;
         }
     }
+
+        // else {
+    //     if(isUninitializedNodeVar(id2)) {
+    //         strcpy(nodeTable[nodeIndex].var, id2);
+    //         strcpy(nodeTable[nodeIndex].rootVar, id2);
+    //         nodeIndex ++;
+    //     }
+
+    //     if(isUninitializedNodeVar(id1)) {
+    //         strcpy(nodeTable[nodeIndex].var, id1);
+    //         strcpy(nodeTable[nodeIndex].rootVar, nodeTable[getNodeVarIndex(id2)].rootVar);
+    //         nodeIndex ++;
+    //     } else {
+    //         strcpy(nodeTable[getNodeVarIndex(id1)].rootVar, nodeTable[getNodeVarIndex(id2)].rootVar);
+    //     }
+    // }
     
     fprintf(IRcodeOptimized, "assign %s:%s\n", id1, id2);
 }
