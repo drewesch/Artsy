@@ -19,7 +19,7 @@ int main(int argc, char**argv){
     }
 
     // Call the ircode generator
-    generateIRCode();
+   generateIRCode();
 
     // Call the optimizer to generate optimized IRcode
     // Use this function to generate IRcode that the WAT code generator will actually use
