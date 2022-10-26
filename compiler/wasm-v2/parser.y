@@ -116,33 +116,39 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 									// Variable declaration rule
 									// Symbol Table
 									symTabAccess();
-									int inSymTab = found($2, currentScope);
+									// int inSymTab = found($2, currentScope);
 									//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
 									
-									// Check if the variable has been declared
+									// Check if the variable has been declared globally
+									CheckGlobal($2, currentScope);
+
+									// Otherwise, check to see if the variable exist
 									// If it has, throw an error
-									if (inSymTab == 0) 
+									// This is handled within the symbol table
+									if (found($2, currentScope) == 0) 
 										addItem($2, "Var", $1,0, currentScope);
 									else {
 										printf("SEMANTIC ERROR: Var %s is already in the symbol table", $2);
 										exit(1);
 									}
-									// If the variable has not been declared 
-									showSymTable();
-									
 
-								  // Generate AST node as a doubly node
-								  $$ = AST_DoublyChildNodes("type",$1,$2,$1, $2);
+									// Show the current symbol table
+									showSymTable();
+
+									// Generate AST node as a doubly node
+									$$ = AST_DoublyChildNodes("type",$1,$2,$1, $2);
 
 								}
 
 								| TYPE ID LEFTSQUARE NUMBER RIGHTSQUARE SEMICOLON {printf("Found Array declaration"); 
-									symTabAccess(); 
-									int inSymTab = found($2, currentScope);
-									//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
-														
+									symTabAccess();
+
+									// Check to see if this exists globally
+									CheckGlobal($2, currentScope);
+
 									// Check if the variable has been declared
 									// If it has, throw an error
+									int inSymTab = found($2, currentScope);				
 									if (inSymTab == 0) 
 										addItem($2, "Array", $1,atoi($4), currentScope);
 									else {

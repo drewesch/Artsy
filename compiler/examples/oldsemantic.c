@@ -7,16 +7,6 @@
 // References symbol table's function to find the time type for a scope
 char* getItemType(char itemName[50], char scope[50]);
 
-// NEW SEMANTIC CHANGE
-// Checks to see if a variable has been declared globally first
-void CheckGlobal(char* variableName, char* currentScope) {
-    int nonGlobal = strcmp(currentScope, "global");
-    if (nonGlobal != 0 && found(variableName, "global") == 1) {
-        printf("SEMANTIC ERROR: Var %s is already declared globally\n", variableName);
-        exit(1);
-    }
-}
-
 // Find an item's primary type using getItemType
 // Returns the actual primary token
 char* CheckPrimaryType(char*variableName, char*currentScope){
@@ -64,6 +54,8 @@ int checkDivisionError(int * num1, int * num2) {
     return 0;
 }
 */
+
+
 
 
 

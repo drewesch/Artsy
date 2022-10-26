@@ -1,7 +1,6 @@
 #ifndef SEMANTIC_H 
 #define SEMANTIC_H
 
-void CheckGlobal(char* variableName, char* currentScope);
 char* CheckPrimaryType(char*arg1, char*scope);
 char* CheckAssignmentType(char*identifier, char* exp, char* scope);
 
