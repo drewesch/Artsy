@@ -115,7 +115,7 @@ int found(char itemName[50], char scope[50]){
 				int str1 = strcmp(tempList -> itemName, itemName);
 				int str2 = strcmp(tempList -> scope, scope);
 
-				// If these strings are the same, return true
+				// If these strinus are the same, return true
 				if( str1 == 0 && str2 == 0){
 					return 1; // found the ID in the table
 				}
@@ -155,6 +155,8 @@ char* getItemType(char itemName[50], char scope[50]) {
 }
 */
 
+
+//updated getitemtype 
 char* getItemType(char itemName[50], char scope[50]) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
@@ -173,7 +175,7 @@ char* getItemType(char itemName[50], char scope[50]) {
 				tempList = tempList -> paramlist;
 			}
 		}
-		
+
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
 		int str2 = strcmp(symTabItems[i].scope, scope);
 		int str3 = strcmp(symTabItems[i].scope, "global");
@@ -188,6 +190,7 @@ char* getItemType(char itemName[50], char scope[50]) {
 	printf("SEMANTIC ERROR: Var %s is not in the symbol table", itemName);
 	exit(1);
 }
+
 
 
 int compareTypes(char item1[50], char item2[50], char scope[50]) {

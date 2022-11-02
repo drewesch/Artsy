@@ -13,7 +13,6 @@ float secondNumber;
 string someLetter;  /* unused variable */
 string message[50];
 float justAverage;
-float a;
 
 function float average(float a, float b, float c){
 	float avg;
@@ -82,7 +81,5 @@ justAverage = ambitiousFunction(1.0, 2.0, 3.0);
 aNumber = displayMessage();
 write justAverage;
 writeln;
-
-
 
     
