@@ -130,156 +130,62 @@ int compareTypes(char item1[50], char item2[50], char scope[50]) {
 
  %%
 
-//If statements
-//Order of operations
-//Booleans
 
+### IF STATEMENTS
+if (a > 0) {
+	write a;
+} else {
+	write 0;
+}
 
-
-int x;
-int y;
-int z;
-string a;
-string b;
-string c;
-string d;
-string e;
-
-
-x = 1;
-a = "less then 5 or equal";
-b = "greater"
-c = "greater then 5";
-d = "else statement";
-e = "done with loop";
-
-
-
-
-
-for ( x < 15){
-	if (x < 5 || x == 5){
-		write a;
-		write x;
-	}
-	else if (x > 5){
-		write b;
-		write x;
-	}
-	else {
-		write d;
-		write x;
+if (b < a) {
+	if (b > d) {
+		write something;
+	} else {
+		if (a > b) {
+			do something;
+		}
+		write somethingelse;
 	}
 }
 
-write e;
-write x;
+#### BNF Rules Options for IFs
+OPTION 1: Stmt: etc.
+	| IF LPAREN LogicExpr RPAREN Block {}
+;
 
-y = 1 + 5 * 2;
-wrtie y;
+OPTION 2:
+StmtList: Stmt StmtList {}
+;
 
-z = (1 + 5) * 2;
-write y;
+Stmt: All Options
+	| IfBlock {}
+;
 
+IfBlock: IF LPAREN LogicExpr RPAREN Block {}
+	| IF LPAREN LogicExpr RPAREN Block ELSE BLOCK {}
+;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+### DANGLING ELSE PROBLEM
+- Happens when you cannot match between the else and the ifs
+- Only manifests when you have nested IFs
+- Your code must support nested IFs
+- One way to eliminate the dangling else problem is to ensure IfBlocks are nested together in the AST
 
 
-/* 1. accept comments            */
-/* 2. functions= function int hi(int x, int y){x = 2; y = 3; return x;}
-/* 3. order of operation */
-/* 4. multiply float and int */ 
-/* 6. adding to an array of strings. (no char, and like python) */ 
-/* 7. everytime displayMessage, it should show message*/ 
-/* 8. writeln is line breaks*/ 
-
-
-int aNumber;
-float secondNumber;
-string someLetter;  /* unused variable */
-string message[50];
-float justAverage;
-
-function float average(float a, float b, float c){
-	float avg;
-	avg = (a + b + c)/3.0;
-	return avg;
-}
-
-function int unreachableFunction(float x, int y){
-   /* 
-	This function does nothing and should
-	Be removed from IR code in the optimization step
-   */
-
-   int result;
-   result = x^y + x*y;
-
-   return result;
-}
-
-function int displayMessage(){
-	message[0] = "I";
-	message[1] = " ";
-	message[2] = "c";
-	message[3] = "a";
-	message[4] = "n";
-	message[5] = " ";
-	message[6] = "p";
-	message[7] = "r";
-	message[8] = "i";
-	message[9] = "n";
-	message[10] = "t";
-	message[11] = ":";
-
-    write message; 
-	
-	return 0;
-}
-
-function float ambitiousFunction (float a, float b, float c){
-
-   /* great optimization opportunity */
-
-   float result;
- 
-   result = (average(a, b, c) + average(a, b, c))/2.0;
-
-   return result;
-}
-
-justAverage = average(12.5, 13.7, 25.8);
-aNumber = displayMessage();
-write justAverage;
-writeln;
-
-justAverage = justAverage * (justAverage + 2.0);
-justAverage = average(justAverage, 0.0, 0.0);
-aNumber = displayMessage();
-writeln;
-
-aNumber = displayMessage();
-aNumber = aNumber / (aNumber + aNumber * aNumber);
-write aNumber;
-writeln;
-
-justAverage = ambitiousFunction(1.0, 2.0, 3.0);
-aNumber = displayMessage();
-write justAverage;
-writeln;
-
-    
-
+### AST for IFs and ELSEs
+StmtList
+	\
+	IfBlock
+		\
+		IF
+	  /		\
+	cond	IfBlock
+	/	\		  \		
+   >   block		IF
+  / \	   	   /  		\
+ a	 0  	cond  		ELSE
+	  		/	\		/	\
+		   ==  block  block IfBlock
+								\
+								etc.

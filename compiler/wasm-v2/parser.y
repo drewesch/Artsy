@@ -237,7 +237,15 @@ Stmt:	SEMICOLON	{}
 		printf("\n RECOGNIZED RULE: WRITEIN statement\n");
 		$$ = AST_SingleChildNode("writeln", "\n", 0);
 	}
-	| RETURN Expr SEMICOLON { $$ = AST_SingleChildNode("return", $2,0); }
+	| RETURN Expr SEMICOLON { printf("\n RECOGNIZED RULE: Return Statement\n");
+		$$ = AST_SingleChildNode("return", $2,0); 
+
+		// Semantic check
+		// Determine if the return type (or Expr) matches the type of FuncHeader
+		// If it does not, throw a semantic error
+		// CheckAssignmentType($2, funcHeader, currentScope);
+
+	}
 	| READ ID SEMICOLON {$$ = AST_SingleChildNode("read", $2, 0);}
 	| Block {$$ = $1;} //To do for next iteration
 	| Loop {$$=$1;}
@@ -409,7 +417,15 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 ;
 
 
-FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {}
+FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
+	printf("\n RECOGNIZED RULE: Function Call\n");
+
+	// Implement two semantic checks
+	// 1. Check to see if the number of parameters in ExprList matches the function declaration
+	// 2. Check to see if each parameter type in ExprList matches the function declaration parameter types
+	// CheckNumParams($1, $3, currentScope);
+	// CheckParamTypes($1, $3, currentScope);
+}
 ;
 
 %%
