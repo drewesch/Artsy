@@ -129,3 +129,63 @@ int compareTypes(char item1[50], char item2[50], char scope[50]) {
  	| WRITE ID 	{ printf("\n RECOGNIZED RULE: WRITE statement\n"); }
 
  %%
+
+
+### IF STATEMENTS
+if (a > 0) {
+	write a;
+} else {
+	write 0;
+}
+
+if (b < a) {
+	if (b > d) {
+		write something;
+	} else {
+		if (a > b) {
+			do something;
+		}
+		write somethingelse;
+	}
+}
+
+#### BNF Rules Options for IFs
+OPTION 1: Stmt: etc.
+	| IF LPAREN LogicExpr RPAREN Block {}
+;
+
+OPTION 2:
+StmtList: Stmt StmtList {}
+;
+
+Stmt: All Options
+	| IfBlock {}
+;
+
+IfBlock: IF LPAREN LogicExpr RPAREN Block {}
+	| IF LPAREN LogicExpr RPAREN Block ELSE BLOCK {}
+;
+
+### DANGLING ELSE PROBLEM
+- Happens when you cannot match between the else and the ifs
+- Only manifests when you have nested IFs
+- Your code must support nested IFs
+- One way to eliminate the dangling else problem is to ensure IfBlocks are nested together in the AST
+
+
+### AST for IFs and ELSEs
+StmtList
+	\
+	IfBlock
+		\
+		IF
+	  /		\
+	cond	IfBlock
+	/	\		  \		
+   >   block		IF
+  / \	   	   /  		\
+ a	 0  	cond  		ELSE
+	  		/	\		/	\
+		   ==  block  block IfBlock
+								\
+								etc.
