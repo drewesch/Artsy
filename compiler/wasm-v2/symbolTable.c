@@ -28,6 +28,9 @@ void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLen
 	
 }
 
+// Returns all parameter nodes associated with a function as a list
+
+
 struct Entry* getParamList(char * id, struct AST* paramlist) {
 	struct Entry * list = malloc(sizeof(struct Entry));	
 	if(strcmp(paramlist->nodeType, "Variable parm") == 0) {
@@ -186,6 +189,40 @@ char* getItemType(char itemName[50], char scope[50]) {
 	}
 	// Else, return false
 	printf("SEMANTIC ERROR: Var %s is not in the symbol table", itemName);
+	exit(1);
+}
+
+struct Entry* getParams(char itemName[50], char scope[50]) {
+	// Lookup an identifier in the symbol table
+	// return TRUE or FALSE
+	// Later on, this may return additional information for an item being found
+	for(int i=0; i<symTabIndex; i++){
+		// if(symTabItems[i].paramlist) {
+		// 	struct Entry* tempList = symTabItems[i].paramlist;
+		// 	while(tempList) {
+		// 		int str1 = strcmp(tempList -> itemName, itemName);
+		// 		int str2 = strcmp(tempList -> scope,scope);
+
+		// 		// If these strings are the same, return true
+		// 		if( str1 == 0 && str2 == 0){
+		// 			return symTabItems[i].itemType;
+		// 		}
+		// 		tempList = tempList -> paramlist;
+		// 	}
+		// }
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+		int str2 = strcmp(symTabItems[i].scope, scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
+
+		// If these strings are the same, return true
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
+			//printf("Found: %s\n-----------------------", itemName);
+			return symTabItems[i].paramlist;
+		}
+	}
+	// Else, return false
+	printf("SEMANTIC ERROR: Function %s is not in the symbol table", itemName);
 	exit(1);
 }
 
