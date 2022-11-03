@@ -1,8 +1,0 @@
-
-
-#### IR Code ####
-
-type int aNumber
-type float secondNumber
-type string someLetter
-type float justAverage

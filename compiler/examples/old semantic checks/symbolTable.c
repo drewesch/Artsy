@@ -15,22 +15,25 @@ void symTabAccess(void){
 
 // Add a single entry struct to the symbol table for the appropriate scope
 void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLength, char scope[50]){
-		// Set entry struct item data for each parameter in the function
-		symTabItems[symTabIndex].itemID = symTabIndex;
-		strcpy(symTabItems[symTabIndex].itemName, itemName);
-		strcpy(symTabItems[symTabIndex].itemKind, itemKind);
-		strcpy(symTabItems[symTabIndex].itemType, itemType);
-		symTabItems[symTabIndex].arrayLength = arrayLength;
-		strcpy(symTabItems[symTabIndex].scope, scope);
+	// Set entry struct item data for each parameter in the function
+	symTabItems[symTabIndex].itemID = symTabIndex;
+	strcpy(symTabItems[symTabIndex].itemName, itemName);
+	strcpy(symTabItems[symTabIndex].itemKind, itemKind);
+	strcpy(symTabItems[symTabIndex].itemType, itemType);
+	symTabItems[symTabIndex].arrayLength = arrayLength;
+	strcpy(symTabItems[symTabIndex].scope, scope);
 
-		// Increment the symbol table index for this scope
-		symTabIndex++;
+	// Increment the symbol table index for this scope
+	symTabIndex++;
 	
 }
 
+// Returns all parameter nodes associated with a function as a list
+
+
 struct Entry* getParamList(char * id, struct AST* paramlist) {
 	struct Entry * list = malloc(sizeof(struct Entry));	
-	if(strcmp(paramlist->nodeType, "variable parm") == 0) {
+	if(strcmp(paramlist->nodeType, "Variable parm") == 0) {
 		list -> itemID = symTabIndex;
 		strcpy(list->itemName, paramlist->RHS);
 		strcpy(list->itemKind, "Var");
@@ -51,19 +54,24 @@ struct Entry* getParamList(char * id, struct AST* paramlist) {
 }
 
 void addFunction(char *type, char *id, struct AST* paramlist){
+	//printf("ADD Function:------------------------- %s\n---------------------\n", id);
+	//showAST(paramlist);
+	
 	if (paramlist == 0){
 		symTabItems[symTabIndex].paramlist = 0;
 	}
-	else if (strcmp(paramlist->nodeType, "variable parm") == 0){
+	else if (strcmp(paramlist->nodeType, "Variable parm") == 0){
+		
 		struct Entry* list = malloc(sizeof(struct Entry));
 		strcpy(list->itemName, paramlist->LHS);
-		strcpy(list->itemKind, "Var");
+		strcpy(list->itemKind, "variable");
 		strcpy(list->itemType, paramlist->RHS);
 		list->arrayLength = 0;
 		strcpy(list->scope, id);
 		list->paramlist = 0;
 		symTabItems[symTabIndex].paramlist = list;
 	} else if(strcmp(paramlist->nodeType, "ParaDecl comma ParaDeclListTail") == 0) {		
+
 		symTabItems[symTabIndex].paramlist = getParamList(id, paramlist);
 	}
 
@@ -74,6 +82,7 @@ void addFunction(char *type, char *id, struct AST* paramlist){
 		strcpy(symTabItems[symTabIndex].itemType, type);
 		symTabItems[symTabIndex].arrayLength = 0;
 		strcpy(symTabItems[symTabIndex].scope, "global");
+		printf("check");
 
 		// Increment the symbol table index for this scope
 		symTabIndex++;
@@ -102,15 +111,15 @@ int found(char itemName[50], char scope[50]){
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
-	for(int i=0; i<symTabIndex; i++){
-		if(symTabItems[i].paramlist) {
+	for(int i=0; i<symTabIndex; i++) {
+		if (symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope,scope);
-				// If these strings are the same, return true
+				int str2 = strcmp(tempList -> scope, scope);
+
+				// If these strinus are the same, return true
 				if( str1 == 0 && str2 == 0){
-					//printf("Found: %s\n-----------------------", itemName);
 					return 1; // found the ID in the table
 				}
 				tempList = tempList -> paramlist;
@@ -118,18 +127,39 @@ int found(char itemName[50], char scope[50]){
 		}
 		
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope,scope);
+		int str2 = strcmp(symTabItems[i].scope, scope);
 		int str3 = strcmp(symTabItems[i].scope, "global");
+
 		// If these strings are the same, return true
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			//printf("Found: %s\n-----------------------", itemName);
+		if (str1 == 0 && (str2 == 0 || str3 == 0)) {
 			return 1; // found the ID in the table
 		}
 	}
+	
 	// Else, return false
 	return 0;
 }
 
+/*
+char* getItemType(char itemName[50], char scope[50]) {
+	// Using a for loop for the scope, test to see if this item exists
+	// If it does, return the index's item type
+	for(int i=0; i<100; i++){
+		if (found(itemName, scope)) {
+			// found the type in the table
+			//printf("Found item! Item Type: %s\n", symTabItems[i].itemType);
+			return symTabItems[i].itemType;
+		}
+	}
+	
+	// If it isn't found, state this and return a semantic error
+	printf("ERROR: Item not found.\n\n");
+	exit(1);
+}
+*/
+
+
+//updated getitemtype 
 char* getItemType(char itemName[50], char scope[50]) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
@@ -148,7 +178,7 @@ char* getItemType(char itemName[50], char scope[50]) {
 				tempList = tempList -> paramlist;
 			}
 		}
-		
+
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
 		int str2 = strcmp(symTabItems[i].scope, scope);
 		int str3 = strcmp(symTabItems[i].scope, "global");
@@ -163,6 +193,42 @@ char* getItemType(char itemName[50], char scope[50]) {
 	printf("SEMANTIC ERROR: Var %s is not in the symbol table", itemName);
 	exit(1);
 }
+
+struct Entry* getParams(char itemName[50], char scope[50]) {
+	// Lookup an identifier in the symbol table
+	// return TRUE or FALSE
+	// Later on, this may return additional information for an item being found
+	for(int i=0; i<symTabIndex; i++){
+		// if(symTabItems[i].paramlist) {
+		// 	struct Entry* tempList = symTabItems[i].paramlist;
+		// 	while(tempList) {
+		// 		int str1 = strcmp(tempList -> itemName, itemName);
+		// 		int str2 = strcmp(tempList -> scope,scope);
+
+		// 		// If these strings are the same, return true
+		// 		if( str1 == 0 && str2 == 0){
+		// 			return symTabItems[i].itemType;
+		// 		}
+		// 		tempList = tempList -> paramlist;
+		// 	}
+		// }
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+		int str2 = strcmp(symTabItems[i].scope, scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
+
+		// If these strings are the same, return true
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
+			//printf("Found: %s\n-----------------------", itemName);
+			return symTabItems[i].paramlist;
+		}
+	}
+	// Else, return false
+	printf("SEMANTIC ERROR: Function %s is not in the symbol table", itemName);
+	exit(1);
+}
+
+
 
 int compareTypes(char item1[50], char item2[50], char scope[50]) {
 	// Compare two item types for any symbol table entry

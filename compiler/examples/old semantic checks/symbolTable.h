@@ -38,4 +38,6 @@ int found(char itemName[50], char scope[50]);
 
 char* getItemType(char itemName[50], char scope[50]);
 
+struct Entry* getParams(char itemName[50], char scope[50]);
+
 int compareTypes(char item1[50], char item2[50], char scope[50]);
