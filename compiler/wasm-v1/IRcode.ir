@@ -3,5 +3,23 @@
 #### IR Code ####
 
 type int x
-x = 3
+type int y
+type int z
+type int k
+type int newVar
+x = 10
+y = 21
+k = 20
+newVar = 2
+T0 = 3 + 4
+T1 = newVar + T0
+T2 = y + T1
+T3 = x + T2
+z = T3
+T0 = y + newVar
+T1 = z + T0
+x = T1
 output x
+output z
+output k
+output newVar

@@ -3,5 +3,17 @@
 #### IR Optimized Code ####
 
 type int x
-assign x:3
+type int y
+type int z
+type int k
+type int newVar
+assign x:10
+assign y:21
+assign k:20
+assign newVar:2
+assign z:40
+assign x:63
 output x
+output z
+output k
+output newVar
