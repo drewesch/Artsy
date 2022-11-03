@@ -9,7 +9,7 @@ lex.yy.c: lexer.l parser.tab.h
 artsy: lex.yy.c parser.tab.c parser.tab.h symbolTable.h symbolTable.c AST.c AST.h semantic.c semantic.h ircode.c ircode.h driver.c webgen.c webgen.h
 	gcc -o driver parser.tab.c lex.yy.c semantic.c ircode.c driver.c AST.c symbolTable.c webgen.c
 	./driver testProg.artsy
-	wat2wasm WATcode.wat -o WASMcode.wasm
+	# wat2wasm WATcode.wat -o WASMcode.wasm
 
 clean:
 	rm -f parser lexer parser.tab.c lex.yy.c parser.tab.h parser.output

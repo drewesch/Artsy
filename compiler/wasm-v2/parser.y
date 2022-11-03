@@ -73,7 +73,7 @@ char tempScopeStore[50];
 %left MULTIPLY DIVIDE
 %left MODULO
 %left EXPONENT
-%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Identifier
+%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop
 
 
 %start Program
@@ -82,7 +82,8 @@ char tempScopeStore[50];
 
 Program: DeclList FunDeclList StmtList {
 	// Main program parser rule, generates the whole AST for the program
-	$$ = AST_SingleChildNode("program",$1, $1);
+	struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
+	$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
 
 	printf("\n\n\n\n\n--------------------Parser End------------------------\n\n\n");
 
@@ -105,10 +106,6 @@ Decl:	VarDecl {
 	// Basic Var Declaration Rule, generates AST for all variable declarations
 	$$ = $1;
 	}
-	| StmtList {
-		// Basic Statement list declaration rule, generates AST for all statement declarations
-		$$ = $1;
-		}
 ;
 
 
@@ -116,39 +113,33 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 									// Variable declaration rule
 									// Symbol Table
 									symTabAccess();
-									// int inSymTab = found($2, currentScope);
+									int inSymTab = found($2, currentScope);
 									//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
 									
-									// Check if the variable has been declared globally
-									CheckGlobal($2, currentScope);
-
-									// Otherwise, check to see if the variable exist
+									// Check if the variable has been declared
 									// If it has, throw an error
-									// This is handled within the symbol table
-									if (found($2, currentScope) == 0) 
+									if (inSymTab == 0) 
 										addItem($2, "Var", $1,0, currentScope);
 									else {
 										printf("SEMANTIC ERROR: Var %s is already in the symbol table", $2);
 										exit(1);
 									}
-
-									// Show the current symbol table
+									// If the variable has not been declared 
 									showSymTable();
+									
 
-									// Generate AST node as a doubly node
-									$$ = AST_DoublyChildNodes("type",$1,$2,$1, $2);
+								  // Generate AST node as a doubly node
+								  $$ = AST_DoublyChildNodes("type",$1,$2,$1, $2);
 
 								}
 
 								| TYPE ID LEFTSQUARE NUMBER RIGHTSQUARE SEMICOLON {printf("Found Array declaration"); 
-									symTabAccess();
-
-									// Check to see if this exists globally
-									CheckGlobal($2, currentScope);
-
+									symTabAccess(); 
+									int inSymTab = found($2, currentScope);
+									//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
+														
 									// Check if the variable has been declared
 									// If it has, throw an error
-									int inSymTab = found($2, currentScope);				
 									if (inSymTab == 0) 
 										addItem($2, "Array", $1,atoi($4), currentScope);
 									else {
@@ -157,6 +148,10 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 									}
 									// If the variable has not been declared 
 									showSymTable();
+
+									struct AST* arraySize = AST_SingleChildNode("size", $4, $4); 
+									struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
+									$$ = AST_DoublyChildNodes("type",$1, array, $1, array);
 								}
 ;
 
@@ -188,7 +183,7 @@ FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 	//printf("2 Function okkkkkkkkkkkkkkkkkkkkkkkkkkkkk-----------------------\n");
 	// If the variable has not been declared 
 	showSymTable();
-	$$ = AST_DoublyChildNodes("Function Context", $3, $5, $3, $5);
+	$$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
 
 	strcpy(tempScopeStore, currentScope);
 	strcpy(currentScope, $3);
@@ -197,7 +192,7 @@ FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 
 FunDecl: FuncHeader Block {
 	// Generate AST node as a doubly node
-	$$ = AST_DoublyChildNodes("Function",$1,$2,$1, $2);
+	$$ = AST_DoublyChildNodes("function",$1,$2,$1, $2);
 	strcpy(currentScope, tempScopeStore);
 }
 ;
@@ -210,13 +205,13 @@ ParamDeclListTail: ParamDecl {$$ = $1;}
 	| ParamDecl COMMA ParamDeclListTail {$$ = AST_DoublyChildNodes("ParaDecl comma ParaDeclListTail",$1,$3,$1, $3);}
 ;
 
-ParamDecl: TYPE ID {$$ = AST_DoublyChildNodes("Variable parm",$1,$2,$1, $2);}
+ParamDecl: TYPE ID {$$ = AST_DoublyChildNodes("variable parm",$1,$2,$1, $2);}
 	| TYPE ID LEFTSQUARE RIGHTSQUARE {$$ = AST_DoublyChildNodes("array parm",$1,$2,$1, $2);}
 ;
 
-
-
-StmtList:	Stmt
+StmtList:	Stmt {
+		$$ = $1;
+	}
 	| Stmt StmtList {
 		// Generate a list of all statement declarations below vardecl
 		$$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);
@@ -237,22 +232,11 @@ Stmt:	SEMICOLON	{}
 		printf("\n RECOGNIZED RULE: WRITEIN statement\n");
 		$$ = AST_SingleChildNode("writeln", "\n", 0);
 	}
-	| RETURN Expr SEMICOLON { printf("\n RECOGNIZED RULE: Return Statement\n");
-		$$ = AST_SingleChildNode("return", $2,0); 
-
-		// Semantic check
-		// Determine if the return type (or Expr) matches the type of FuncHeader
-		// If it does not, throw a semantic error
-		// CheckAssignmentType($2, funcHeader, currentScope);
-
-	}
+	| RETURN Expr SEMICOLON { $$ = AST_SingleChildNode("return", $2,0); }
 	| READ ID SEMICOLON {$$ = AST_SingleChildNode("read", $2, 0);}
 	| Block {$$ = $1;} //To do for next iteration
 	| Loop {$$=$1;}
 	| If {$$=$1;} 
-;
-
-Identifier: ID {AST_SingleChildNode("ID", $1,$1);}
 ;
 
 
@@ -267,7 +251,9 @@ Primary :	 NUMBER	{$$ = AST_SingleChildNode("int", $1, $1); }
 	|  ID {$$ = AST_SingleChildNode($1, $1, $1);}
 	|  STRING {$$ = AST_SingleChildNode( "string", $1, $1);}
 	| FLOAT {$$ = AST_SingleChildNode( "float", $1, $1);}
-	| ID LEFTSQUARE Expr RIGHTSQUARE {$$ = AST_SingleChildNode($1, $1, $3);}
+	| ID LEFTSQUARE NUMBER RIGHTSQUARE {
+		$$ = AST_DoublyChildNodes($1, "array", $3, "array", $3);
+	}
 ;
 
 
@@ -275,24 +261,24 @@ BinOp:	PLUS {}
 ;
 
 ExprListTail:	Expr	{ $$ = $1; }
-	| Expr COMMA ExprListTail	{ $1->left = $3;
-							  $$ = $1;
-							}
+	| Expr COMMA ExprListTail	{
+			$$ = AST_DoublyChildNodes("ExprList ExprTail", $1, $3, $1, $3);
+		}
 ;
 
 ExprList: {}	
-	| ExprListTail
+	| ExprListTail {
+		$$ = $1;
+	}
 ;
 
 
 // Fix the AST tree for block
 Block: {}	
 	| LEFTBRACKET DeclList StmtList RIGHTBRACKET { printf("\n RECOGNIZED RULE: Block statement\n");
-		$$ = AST_DoublyChildNodes("BLOCK",$2,$3, $2, $3);
+		$$ = AST_DoublyChildNodes("block",$2,$3, $2, $3);
 		}
 ;
-
-
 
 Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 				$$ = $1;
@@ -332,7 +318,7 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					// emitMIPSConstantIntAssignment($1, $3);
 
 					}
-	| ID LEFTSQUARE Expr RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment element statement\n");
+	| ID LEFTSQUARE NUMBER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment element statement\n");
 					// --- SEMANTIC CHECKS --- //
 					/*
 						int semanticCorrectness = FALSE;
@@ -355,8 +341,9 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
-					struct AST* arrElementNode = AST_DoublyChildNodes("element",$1,$3, $1, $3);
-					$$ = AST_DoublyChildNodes("=",arrElementNode,$6, arrElementNode, $6);
+					struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $3, $6, $3, $6); 
+
+					$$ = AST_DoublyChildNodes("=",$1,arrayElement, $1, arrayElement);
 					// Generate IRcode
 					// printf("Generate IR Code\n");
 					// emitConstantIntAssignment($1, $3);
@@ -418,13 +405,7 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 
 FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
-	printf("\n RECOGNIZED RULE: Function Call\n");
-
-	// Implement two semantic checks
-	// 1. Check to see if the number of parameters in ExprList matches the function declaration
-	// 2. Check to see if each parameter type in ExprList matches the function declaration parameter types
-	// CheckNumParams($1, $3, currentScope);
-	// CheckParamTypes($1, $3, currentScope);
+	$$ = AST_DoublyChildNodes("function call", $1, $3, $1, $3);
 }
 ;
 

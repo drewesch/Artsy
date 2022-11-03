@@ -19,19 +19,19 @@ int main(int argc, char**argv){
     }
 
     // Call the ircode generator
-   generateIRCode();
+    generateIRCode();
 
     // Call the optimizer to generate optimized IRcode
     // Use this function to generate IRcode that the WAT code generator will actually use
     // Moreover, use this function to compare unoptimized IRcode to optimized IRcode
-    generateIRCodeOptimized(); 
+    // generateIRCodeOptimized(); 
 
     // Generate optimized WAT code as a .wat file
     // This function is in webgen.c and webgen.h
     // Once this process completes, the next command in the makefile compiles the .wat to a .wasm file
     // After the .wasm file is generated, the changes will be immediately live
     // on testProg.html using the LiveServer extension or on artsy-project.com
-    generateWATcode();
+    // generateWATcode();
 
     // End the program
     return 0;
