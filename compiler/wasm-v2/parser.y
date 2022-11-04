@@ -260,9 +260,9 @@ Primary :	 NUMBER	{$$ = AST_SingleChildNode("int", $1, $1); }
 BinOp:	PLUS {}
 ;
 
-ExprListTail:	Expr	{ $$ = $1; }
-	| Expr COMMA ExprListTail	{
-			$$ = AST_DoublyChildNodes("ExprList ExprTail", $1, $3, $1, $3);
+ExprListTail:	Primary	{ $$ = AST_SingleChildNode("exprlist end", $1, $1); }
+	| Primary COMMA ExprListTail	{
+			$$ = AST_DoublyChildNodes("exprlist exprtail", $1, $3, $1, $3);
 		}
 ;
 
@@ -405,7 +405,9 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 
 FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
-	$$ = AST_DoublyChildNodes("function call", $1, $3, $1, $3);
+	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", $3, $3);
+	$$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
+
 }
 ;
 

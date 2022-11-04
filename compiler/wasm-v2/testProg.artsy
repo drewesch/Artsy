@@ -27,7 +27,7 @@ function int unreachableFunction(float x, int y){
    */
 
    int result;
-   result = x^y + x*y;
+   result = x*y + x*y;
 
    return result;
 }

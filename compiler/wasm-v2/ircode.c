@@ -18,6 +18,8 @@ int lastArrayTempIndex = 0;
 char outputId[50];
 char buffer[50];
 char arrElVar[50];
+char c[50][50];
+int cindex = 0;
 
 // Struct to handle temporary variable construction
 struct ConstantVar {
@@ -243,6 +245,16 @@ void emitWriteId(char * id){
     fprintf(IRcode, "output %s\n", id);
 }
 
+void emitWriteLn(){
+    // Open IRfile if it is not open
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+
+    fprintf(IRcode, "output nextline\n");
+}
+
 // Optimized IRCode operation for writing 
 void emitWriteIdOptimized(char * id){
     // Opens IRcodeOptimized file is it is not open
@@ -341,6 +353,30 @@ void emitExit() {
     fprintf(IRcode, "exit\n");
 }
 
+char * emitFunctionCall(char *id) {
+    // Open IRfile if it is not open
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+
+    memset(outputId, 0, 50);
+    char currLabelIndexBuffer[50];
+    sprintf(currLabelIndexBuffer, "%d", lastIndex);
+    strcat(outputId, "T");
+    strcat(outputId, currLabelIndexBuffer);
+
+    fprintf(IRcode, "%s = call %s args", outputId, id);
+
+    for(int i = 0; i < cindex; i ++) {
+        fprintf(IRcode, " %s", c[i]);
+    }
+    fprintf(IRcode, "\n");
+    lastIndex += 1;
+
+    return outputId;
+}
+
 // Function to traverse the AST tree
 // This initializes creating all of the IRcode for unoptimized IRcode
 char* ASTTraversal(struct AST* root) {
@@ -378,6 +414,9 @@ char* ASTTraversal(struct AST* root) {
         if(strcmp(root->nodeType, "write") == 0) {
             emitWriteId(root -> RHS);
         }
+        if(strcmp(root->nodeType, "writeln") ==0) {
+            emitWriteLn();
+        }
         if(strcmp(root->nodeType, "function context") == 0) {
             emitEntry(root -> LHS);
             ASTTraversal(root -> right);
@@ -387,8 +426,26 @@ char* ASTTraversal(struct AST* root) {
             ASTTraversal(root -> right);
             emitExit();
         }
+        if(strcmp(root->nodeType, "exprlist end") == 0) {
+            strcpy(c[cindex], root -> right -> RHS);
+            cindex += 1;
+        }
+        if(strcmp(root->nodeType, "exprlist exprtail") == 0) {
+            strcpy(c[cindex], root -> left -> RHS);
+            cindex += 1;
+            ASTTraversal(root -> right);
+        }
+        if(strcmp(root->nodeType, "function call param list") == 0) {
+            memset(c, 0, 50 * 50);
+            ASTTraversal(root -> right);
+        }
         if(strcmp(root->nodeType, "function call") == 0) {
-            
+            ASTTraversal(root -> right);
+
+            memset(buffer, 0, 50);
+            strcpy(buffer, emitFunctionCall(root -> LHS));
+            cindex = 0;
+            return buffer;
         }
         if(strcmp(root->nodeType, "=") == 0) {
             strcpy(rightVar, ASTTraversal(root-> right));
