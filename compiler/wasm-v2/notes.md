@@ -192,3 +192,44 @@ StmtList
 
 
 
+
+
+
+
+/*project 4 */ 
+
+int x;
+int y;
+int z;
+
+x = 0;
+
+while (x < 4){
+	if (x < 1){
+		z = 5;
+		output z;
+		x = x + 1;
+	}
+
+	if else (x == 1 || x < 0){
+		z = 6;
+		output z;
+		x = x + 1;
+	}
+
+	if else (x == 2 && x > 1){
+		z = 7;
+		output z;
+		x = x + 1;
+	}
+	else{
+		z = 8;
+		output z;
+		x = x + 1;
+	}
+}
+
+z = 9;
+output z; 
+
+/*project 4 */ 
