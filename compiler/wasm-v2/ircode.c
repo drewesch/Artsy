@@ -469,6 +469,7 @@ char* ASTTraversal(struct AST* root) {
             strcat(arrElVar, root-> RHS);
             return arrElVar;
         }
+        return "";
     }
 }
 

@@ -1,0 +1,74 @@
+
+
+#### IR Code ####
+
+type int aNumber
+type float secondNumber
+type string someLetter
+type string array 50 size message
+type float justAverage
+entry average
+type float avg
+T0 = a + b
+T1 = T0 + c
+T2 = T1 / 3.0
+avg = T2
+exit
+entry unreachableFunction
+type int result
+T0 = x * y
+T1 = x * y
+T2 = T0 + T1
+result = T2
+exit
+entry displayMessage
+message[0] = "I"
+message[1] = " "
+message[2] = "c"
+message[3] = "a"
+message[4] = "n"
+message[5] = " "
+message[6] = "p"
+message[7] = "r"
+message[8] = "i"
+message[9] = "n"
+message[10] = "t"
+message[11] = ":"
+output message
+exit
+entry ambitiousFunction
+type float result
+T0 = call average args a b c
+T1 = call average args a b c
+T2 = T0 + T1
+T3 = T2 / 2.0
+result = T3
+exit
+T0 = call average args 12.5 13.7 25.8
+justAverage = T0
+T0 = call displayMessage args
+aNumber = T0
+output justAverage
+output nextline
+T0 = justAverage + 2.0
+T1 = justAverage * T0
+justAverage = T1
+T0 = call average args justAverage 0.0 0.0
+justAverage = T0
+T0 = call displayMessage args
+aNumber = T0
+output nextline
+T0 = call displayMessage args
+aNumber = T0
+T0 = aNumber * aNumber
+T1 = aNumber + T0
+T2 = aNumber / T1
+aNumber = T2
+output aNumber
+output nextline
+T0 = call ambitiousFunction args 1.0 2.0 3.0
+justAverage = T0
+T0 = call displayMessage args
+aNumber = T0
+output justAverage
+output nextline
