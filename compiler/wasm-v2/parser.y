@@ -232,7 +232,7 @@ Stmt:	SEMICOLON	{}
 		printf("\n RECOGNIZED RULE: WRITEIN statement\n");
 		$$ = AST_SingleChildNode("writeln", "\n", 0);
 	}
-	| RETURN Expr SEMICOLON { $$ = AST_SingleChildNode("return", $2,0); }
+	| RETURN Expr SEMICOLON { $$ = AST_SingleChildNode("return", $2,$2); }
 	| READ ID SEMICOLON {$$ = AST_SingleChildNode("read", $2, 0);}
 	| Block {$$ = $1;} //To do for next iteration
 	| Loop {$$=$1;}

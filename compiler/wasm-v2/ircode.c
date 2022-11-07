@@ -190,6 +190,18 @@ void emitAssignmentForElement(char *id1, char * elementNum, char * id2) {
     lastIndex = 0;
 }
 
+void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2) {
+    // Open IRfile if it is not open
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
+    }
+
+    // Print the assignment statement using the two basic IDs with an element number
+    fprintf(IRcodeOptimized, "%s[%s] = %s\n", id1, elementNum, id2);
+    lastIndex = 0;
+}
+
 // Optimized assignment operation function for IRcodeOptimized.ir
 void emitAssignmentOptimized(char * id1, char * id2){
     int flag = 1;
@@ -202,7 +214,7 @@ void emitAssignmentOptimized(char * id1, char * id2){
             int str1 = strcmp(cvTable[i].var, id1);
             if( str1 == 0){
                 cvTable[i].val = (int) strtol(id2, (char **)NULL, 10);
-                flag = 1;
+                flag = 0;
                 break;
             }
 	    }
@@ -229,7 +241,8 @@ void emitAssignmentOptimized(char * id1, char * id2){
     //     }
     // }
     
-    fprintf(IRcodeOptimized, "assign %s:%s\n", id1, id2);
+    fprintf(IRcodeOptimized, "%s = %s\n", id1, id2);
+    lastIndex = 0;
 }
 
 // Unoptimized IRcode operation for the write keyword
@@ -250,6 +263,16 @@ void emitWriteLn(){
     if (startIR == 0) {
         initIRcodeFile();
         startIR = 1;
+    }
+
+    fprintf(IRcode, "output nextline\n");
+}
+
+void emitWriteLnOptimized(){
+    // Open IRfile if it is not open
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
     }
 
     fprintf(IRcode, "output nextline\n");
@@ -320,8 +343,12 @@ void emitTypeArrayDeclaration(char * type, char * id, char * size){
         uvIndex ++;
     }
 
-    // Print variable declaration IRcode to file
-    fprintf(IRcode, "type %s array %s size %s\n", type, id, size);
+    if(atoi(size) >= 0) {
+        // Print variable declaration IRcode to file
+        fprintf(IRcode, "type %s array %s size %s\n", type, id, size);
+    } else {
+        fprintf(IRcode, "type %s array %s\n", type, id);
+    }
 }
 
 // Emit the type declaration for optimized IRcode file
@@ -337,20 +364,92 @@ void emitTypeDeclarationOptimized(char * type, char * id){
     fprintf(IRcodeOptimized, "type %s %s\n", type, id);
 }
 
+// Outputs the variable and type for variable declaration (unoptimized) (for array)
+void emitTypeArrayDeclarationOptimized(char * type, char * id, char * size){
+    // Flag variable for unused code optimization testing
+    int flag = 1;
+    
+    // Opens the IRcode file if it is not open already
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
+    }
+
+    // Already includes optimizations prior to this step, so doing optimization beforehand is redundant
+    // Print variable declaration IRcode to file
+    fprintf(IRcodeOptimized, "type %s array %s size %s\n", type, id, size);
+}
+
 void emitEntry(char * id) {
+    int flag = 1;
+    
     // Open IRfile if it is not open
     if (startIR == 0) {
         initIRcodeFile();
         startIR = 1;
     }
 
-    // Update the code if it is unused
-    updateUnusedVar(id);
+    // Check the whole UV table
+    // If the type is unused, do not generate IRcode
+    for(int i=0; i<uvIndex; i++){
+        int str1 = strcmp(uvTable[i].var, id);
+        if( str1 == 0){ flag = 0; break; }
+    }
+    // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
+    if(flag) {
+        strcpy(uvTable[uvIndex].var, id);
+        uvTable[uvIndex].boolVal = 0;
+        uvIndex ++;
+    }
+
     fprintf(IRcode, "entry %s\n", id);
 }
 
+void emitEntryOptimized(char * id) {    
+    // Open IRfile if it is not open
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
+    }
+
+    fprintf(IRcodeOptimized, "entry %s\n", id);
+}
+
+void emitReturn(char * id) {
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+
+    updateUnusedVar(id);
+    fprintf(IRcode, "return %s\n", id);
+}
+
+void emitReturnOptimized(char * id) {
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
+    }
+    
+    fprintf(IRcodeOptimized, "return %s\n", id);
+}
+
 void emitExit() {
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+
     fprintf(IRcode, "exit\n");
+}
+
+void emitExitOptimized() {
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
+    }
+
+    fprintf(IRcodeOptimized, "exit\n");
 }
 
 char * emitFunctionCall(char *id) {
@@ -366,12 +465,39 @@ char * emitFunctionCall(char *id) {
     strcat(outputId, "T");
     strcat(outputId, currLabelIndexBuffer);
 
+    // Update the code if it is unused
+    updateUnusedVar(id);
+
     fprintf(IRcode, "%s = call %s args", outputId, id);
 
     for(int i = 0; i < cindex; i ++) {
         fprintf(IRcode, " %s", c[i]);
     }
     fprintf(IRcode, "\n");
+    lastIndex += 1;
+
+    return outputId;
+}
+
+char * emitFunctionCallOptimized(char *id) {
+    // Open IRfile if it is not open
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
+    }
+
+    memset(outputId, 0, 50);
+    char currLabelIndexBuffer[50];
+    sprintf(currLabelIndexBuffer, "%d", lastIndex);
+    strcat(outputId, "T");
+    strcat(outputId, currLabelIndexBuffer);
+
+    fprintf(IRcodeOptimized, "%s = call %s args", outputId, id);
+
+    for(int i = 0; i < cindex; i ++) {
+        fprintf(IRcodeOptimized, " %s", c[i]);
+    }
+    fprintf(IRcodeOptimized, "\n");
     lastIndex += 1;
 
     return outputId;
@@ -400,16 +526,17 @@ char* ASTTraversal(struct AST* root) {
         if(strcmp(root->nodeType, "variable parm") == 0){
             emitTypeDeclaration(root -> LHS, root -> RHS);
         }
+        if(strcmp(root->nodeType, "array parm") == 0) {
+            emitTypeArrayDeclaration(root -> LHS, root ->RHS, "-1");
+        }
         if(strcmp(root->nodeType, "program") == 0 
             || strcmp(root->nodeType, "vardec") == 0
             || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
-            || strcmp(root->nodeType, "block") == 0) { 
+            || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
+            || strcmp(root->nodeType, "block") == 0
+            || strcmp(root->nodeType, "statements") == 0) { 
             ASTTraversal(root -> left);
             ASTTraversal(root -> right);
-        }
-        if(strcmp(root->nodeType, "statements") == 0) {
-            ASTTraversal(root -> left);
-            ASTTraversal(root-> right);
         }
         if(strcmp(root->nodeType, "write") == 0) {
             emitWriteId(root -> RHS);
@@ -446,6 +573,10 @@ char* ASTTraversal(struct AST* root) {
             strcpy(buffer, emitFunctionCall(root -> LHS));
             cindex = 0;
             return buffer;
+        }
+        if(strcmp(root -> nodeType, "return") == 0) {
+            strcpy(rightVar, ASTTraversal(root-> right));
+            emitReturn(rightVar);
         }
         if(strcmp(root->nodeType, "=") == 0) {
             strcpy(rightVar, ASTTraversal(root-> right));
@@ -488,7 +619,7 @@ void generateIRCode(){
  *          1. Constant Propogation
  *          2. Dead Code Elimination
  *          3. Constant Folding
- *          4. Copy propogation
+ *          4. Copy propogation (Currently disabled)
  * @param root 
  * @return * Code* 
  */
@@ -496,35 +627,110 @@ char* ASTTraversalOptimized(struct AST* root) {
     if(root != NULL) {
         char rightVar[50];
         char leftVar[50];
-        if(strcmp(root -> nodeType, "int") == 0) {
+        if(strcmp(root -> nodeType, "int") == 0
+            || strcmp(root -> nodeType, "float") == 0
+            || strcmp(root -> nodeType, "string") == 0) {
             return root -> RHS;
-        }
-        if(strcmp(root->nodeType, "program") == 0 ) {
-            ASTTraversalOptimized(root -> right);
         }
         if(strcmp(root->nodeType, "type") == 0) {
             if(isUsedVar(root -> RHS)) {
-                emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+                if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
+                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> right -> right -> RHS, root -> RHS);
+                } else {
+                    emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+                }
             }
         }
-        if(strcmp(root->nodeType, "statements") == 0 || strcmp(root->nodeType, "vardec") == 0) { 
+        if(strcmp(root->nodeType, "program") == 0 
+            || strcmp(root->nodeType, "vardec") == 0
+            || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
+            || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
+            || strcmp(root->nodeType, "block") == 0
+            || strcmp(root->nodeType, "statements") == 0) { 
             ASTTraversalOptimized(root -> left);
             ASTTraversalOptimized(root -> right);
+        }
+        if(strcmp(root->nodeType, "variable parm") == 0){
+            emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+        }
+        if(strcmp(root->nodeType, "array parm") == 0) {
+
         }
         if(strcmp(root->nodeType, "write") == 0) {
             if(isUsedVar(root -> RHS)) {
                 emitWriteIdOptimized(root -> RHS);
             }
         }
-        if(strcmp(root->nodeType, "=") == 0) {
-            if(isUsedVar(root -> LHS)) {
-                strcpy(rightVar, ASTTraversalOptimized(root-> right));
-                char rightVarOptimized[50];
-                strcpy(rightVarOptimized, getVarConstant(rightVar));
-                emitAssignmentOptimized(root -> LHS, rightVarOptimized);
+        if(strcmp(root->nodeType, "writeln") ==0) {
+            emitWriteLnOptimized();
+        }
+        if(strcmp(root->nodeType, "function context") == 0) {
+            emitEntryOptimized(root -> LHS);
+            ASTTraversalOptimized(root -> right);
+        }
+        if(strcmp(root->nodeType, "function") == 0) {
+            if(isUsedVar(root -> left -> LHS)) {
+                ASTTraversalOptimized(root -> left);
+                ASTTraversalOptimized(root -> right);
+                emitExit();
             }
         }
-        if(strcmp(root -> nodeType, "+") == 0) {
+        if(strcmp(root->nodeType, "exprlist end") == 0) {
+            strcpy(c[cindex], root -> right -> RHS);
+            cindex += 1;
+        }
+        if(strcmp(root->nodeType, "exprlist exprtail") == 0) {
+            strcpy(c[cindex], root -> left -> RHS);
+            cindex += 1;
+            if(isUsedVar(root -> RHS)) {
+                if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
+                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> right -> right -> RHS, root -> RHS);
+                } else {
+                    emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+                }
+            }
+            ASTTraversalOptimized(root -> right);
+        }
+        if(strcmp(root->nodeType, "function call param list") == 0) {
+            memset(c, 0, 50 * 50);
+            if(isUsedVar(root -> RHS)) {
+                if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
+                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> right -> right -> RHS, root -> RHS);
+                } else {
+                    emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+                }
+            }
+            ASTTraversalOptimized(root -> right);
+        }
+        if(strcmp(root->nodeType, "function call") == 0) {
+            ASTTraversalOptimized(root -> right);
+
+            memset(buffer, 0, 50);
+            strcpy(buffer, emitFunctionCallOptimized(root -> LHS));
+            cindex = 0;
+            return buffer;
+        }
+        if(strcmp(root -> nodeType, "return") == 0) {
+            strcpy(rightVar, ASTTraversalOptimized(root-> right));
+            emitReturnOptimized(rightVar);
+        }
+        if(strcmp(root->nodeType, "=") == 0) {
+            if(isUsedVar(root -> LHS)) {
+                printf("root -> = -> %s\n", root ->LHS);
+                strcpy(rightVar, ASTTraversalOptimized(root-> right));
+                if(strcmp(root -> right -> nodeType, "element assignment") == 0) {
+                    emitAssignmentForElementOptimized(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
+                } else {
+                    char rightVarOptimized[50];
+                    strcpy(rightVarOptimized, getVarConstant(rightVar));
+                    emitAssignmentOptimized(root -> LHS, rightVarOptimized);
+                }
+            }
+        }
+        if(strcmp(root -> nodeType, "+") == 0
+            || strcmp(root -> nodeType, "-") == 0
+            || strcmp(root -> nodeType, "*") == 0
+            || strcmp(root -> nodeType, "/") == 0) {
             strcpy(leftVar, ASTTraversalOptimized(root-> left));
             strcpy(rightVar, ASTTraversalOptimized(root-> right));
             char rightVarOptimized[50];
@@ -533,6 +739,13 @@ char* ASTTraversalOptimized(struct AST* root) {
             strcpy(leftVarOptimized, getVarConstant(rightVar));
             return emitBinaryOperationOptimized(root -> nodeType, rightVarOptimized, leftVarOptimized);
         }
+        if(strcmp(root -> LHS, "array") == 0) {
+            memcpy(arrElVar, 0, 50);
+            strcat(arrElVar, root -> nodeType);
+            strcat(arrElVar, root-> RHS);
+            return arrElVar;
+        }
+        return "";
     }
 }
 
