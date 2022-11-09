@@ -4,7 +4,6 @@
 /*boolean true / false */
 
 
-
 boolean n;
 boolean k;
 int a;
