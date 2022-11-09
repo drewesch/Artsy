@@ -73,7 +73,7 @@ char tempScopeStore[50];
 %left MULTIPLY DIVIDE
 %left MODULO
 %left EXPONENT
-%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop
+%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Elif Else
 
 
 %start Program
@@ -237,6 +237,8 @@ Stmt:	SEMICOLON	{}
 	| Block {$$ = $1;} //To do for next iteration
 	| Loop {$$=$1;}
 	| If {$$=$1;} 
+	| Elif {$$=$1;} 
+	| Else {$$=$1;} 
 ;
 
 
@@ -244,6 +246,12 @@ Loop: WHILE LEFTPAREN Expr RIGHTPAREN Block {}
 ;
 
 If: IF LEFTPAREN Expr RIGHTPAREN Block {}
+;
+
+Elif:  ELIF LEFTPAREN Expr RIGHTPAREN Block {}
+;
+
+Else:  ELSE Block {}
 ;
 
 

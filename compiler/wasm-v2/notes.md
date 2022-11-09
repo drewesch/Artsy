@@ -196,40 +196,64 @@ StmtList
 
 
 
-/*project 4 */ 
 
+/*project 4 and 5 */ 
+/* if statements and while */
+/*boolean true / false */
+
+
+
+boolean n;
+boolean k;
+int a;
+int b;
 int x;
 int y;
 int z;
+string c;
+string d;
 
 x = 0;
+a = 5;
+b=3;
+n = (a > b);
+k = (a < b);
+c = "c c c";
+d = "d d d";
 
 while (x < 4){
 	if (x < 1){
 		z = 5;
-		output z;
+		write z;
 		x = x + 1;
 	}
 
 	if else (x == 1 || x < 0){
 		z = 6;
-		output z;
+		write z;
 		x = x + 1;
 	}
 
 	if else (x == 2 && x > 1){
 		z = 7;
-		output z;
+		write z;
 		x = x + 1;
 	}
 	else{
 		z = 8;
-		output z;
+		write z;
 		x = x + 1;
+		if (n == true ){
+			write c; 
+			if (k == false){
+				write d; 
+			}
+		}
 	}
 }
 
 z = 9;
-output z; 
+write z; 
+
 
 /*project 4 */ 
