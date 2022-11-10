@@ -1,3 +1,4 @@
+
 /* 1. accept comments            */
 /* 2. functions= function int hi(int x, int y){x = 2; y = 3; return x;}
 /* 3. order of operation */
@@ -14,15 +15,15 @@ string message[50];
 float justAverage;
 
 function float average(float a, float b, float c){
-    float avg;
-    avg = (a + b + c)/3.0;
-    return avg;
+	float avg;
+	avg = (a + b + c)/3.0;
+	return avg;
 }
 
 function int unreachableFunction(float x, int y){
    /* 
-    This function does nothing and should
-    Be removed from IR code in the optimization step
+	This function does nothing and should
+	Be removed from IR code in the optimization step
    */
 
    int result;
@@ -32,22 +33,22 @@ function int unreachableFunction(float x, int y){
 }
 
 function int displayMessage(){
-    message[0] = "I";
-    message[1] = " ";
-    message[2] = "c";
-    message[3] = "a";
-    message[4] = "n";
-    message[5] = " ";
-    message[6] = "p";
-    message[7] = "r";
-    message[8] = "i";
-    message[9] = "n";
-    message[10] = "t";
-    message[11] = ":";
+	message[0] = "I";
+	message[1] = " ";
+	message[2] = "c";
+	message[3] = "a";
+	message[4] = "n";
+	message[5] = " ";
+	message[6] = "p";
+	message[7] = "r";
+	message[8] = "i";
+	message[9] = "n";
+	message[10] = "t";
+	message[11] = ":";
 
     write message; 
-    
-    return 0;
+	
+	return 0;
 }
 
 function float ambitiousFunction (float a, float b, float c){
@@ -80,3 +81,5 @@ justAverage = ambitiousFunction(1.0, 2.0, 3.0);
 aNumber = displayMessage();
 write justAverage;
 writeln;
+
+    

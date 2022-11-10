@@ -21,6 +21,9 @@ char arrElVar[50];
 char c[50][50];
 int cindex = 0;
 
+// Bool for checking if type is a parameter
+int isParam = 0;
+
 // Struct to handle temporary variable construction
 struct ConstantVar {
     char var[50];
@@ -47,13 +50,13 @@ struct Var uvTable[100];
 // Function to open unoptimized IRcode
 void initIRcodeFile() {
     IRcode = fopen("IRcode.ir", "w");
-    fprintf(IRcode, "\n\n#### IR Code ####\n\n");
+    fprintf(IRcode, "#### IR Code ####\n");
 }
 
 // Function to open optimized IRcode file
 void initIRcodeFileOptimized() {
     IRcodeOptimized = fopen("IRcodeOptimized.ir", "w");
-    fprintf(IRcodeOptimized, "\n\n#### IR Optimized Code ####\n\n");
+    fprintf(IRcodeOptimized, "#### Optimized IR Code ####\n");
 }
 
 // Use the cvTable to find the temporary variable for a given variable declaration
@@ -296,33 +299,8 @@ void emitTypeDeclaration(char * type, char * id){
     // Flag variable for unused code optimization testing
     int flag = 1;
     
-    // Opens the IRcode file if it is not open already
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
-    // Check the whole UV table
-    // If the type is unused, do not generate IRcode
-    for(int i=0; i<uvIndex; i++){
-        int str1 = strcmp(uvTable[i].var, id);
-        if( str1 == 0){ flag = 0; break; }
-    }
-    // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
-    if(flag) {
-        strcpy(uvTable[uvIndex].var, id);
-        uvTable[uvIndex].boolVal = 0;
-        uvIndex ++;
-    }
-
-    // Print variable declaration IRcode to file
-    fprintf(IRcode, "type %s %s\n", type, id);
-}
-
-// Outputs the variable and type for variable declaration (unoptimized) (for array)
-void emitTypeArrayDeclaration(char * type, char * id, char * size){
-    // Flag variable for unused code optimization testing
-    int flag = 1;
+    // Char variable to determine if the variable is a type or a parameter
+    char * varType = "type";
     
     // Opens the IRcode file if it is not open already
     if (startIR == 0) {
@@ -343,11 +321,50 @@ void emitTypeArrayDeclaration(char * type, char * id, char * size){
         uvIndex ++;
     }
 
+    if(isParam) {
+        varType = "param";
+    }
+
+    // Print variable declaration IRcode to file
+    fprintf(IRcode, "%s %s %s\n", varType, type, id);
+}
+
+// Outputs the variable and type for variable declaration (unoptimized) (for array)
+void emitTypeArrayDeclaration(char * type, char * id, char * size){
+    // Flag variable for unused code optimization testing
+    int flag = 1;
+
+    // Char variable to determine if the variable is a type or a parameter
+    char * varType = "type";
+    
+    // Opens the IRcode file if it is not open already
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+
+    // Check the whole UV table
+    // If the type is unused, do not generate IRcode
+    for(int i=0; i<uvIndex; i++){
+        int str1 = strcmp(uvTable[i].var, id);
+        if( str1 == 0){ flag = 0; break; }
+    }
+    // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
+    if(flag) {
+        strcpy(uvTable[uvIndex].var, id);
+        uvTable[uvIndex].boolVal = 0;
+        uvIndex ++;
+    }
+
+    if(isParam) {
+        varType = "param";
+    }
+
     if(atoi(size) >= 0) {
         // Print variable declaration IRcode to file
-        fprintf(IRcode, "type %s array %s size %s\n", type, id, size);
+        fprintf(IRcode, "%s %s array %s size %s\n", varType, type, id, size);
     } else {
-        fprintf(IRcode, "type %s array %s\n", type, id);
+        fprintf(IRcode, "%s %s array %s\n", varType, type, id);
     }
 }
 
@@ -359,9 +376,16 @@ void emitTypeDeclarationOptimized(char * type, char * id){
         startIROptimized = 1;
     }
 
+    // Char variable to determine if the variable is a type or a parameter
+    char * varType = "type";
+
+    if(isParam) {
+        varType = "param";
+    }
+
     // Already includes optimizations prior to this step, so doing optimization beforehand is redundant
     // Print variable declaration IRcode to file
-    fprintf(IRcodeOptimized, "type %s %s\n", type, id);
+    fprintf(IRcodeOptimized, "%s %s %s\n", varType, type, id);
 }
 
 // Outputs the variable and type for variable declaration (unoptimized) (for array)
@@ -375,9 +399,16 @@ void emitTypeArrayDeclarationOptimized(char * type, char * id, char * size){
         startIROptimized = 1;
     }
 
+    // Char variable to determine if the variable is a type or a parameter
+    char * varType = "type";
+
+    if(isParam) {
+        varType = "param";
+    }
+
     // Already includes optimizations prior to this step, so doing optimization beforehand is redundant
     // Print variable declaration IRcode to file
-    fprintf(IRcodeOptimized, "type %s array %s size %s\n", type, id, size);
+    fprintf(IRcodeOptimized, "%s %s array %s size %s\n", varType, type, id, size);
 }
 
 void emitEntry(char * id) {
@@ -405,14 +436,14 @@ void emitEntry(char * id) {
     fprintf(IRcode, "entry %s\n", id);
 }
 
-void emitEntryOptimized(char * id) {    
+void emitEntryOptimized(char * id, char * type) {    
     // Open IRfile if it is not open
     if (startIROptimized == 0) {
         initIRcodeFileOptimized();
         startIROptimized = 1;
     }
 
-    fprintf(IRcodeOptimized, "entry %s\n", id);
+    fprintf(IRcodeOptimized, "entry %s %s\n", type, id);
 }
 
 void emitReturn(char * id) {
@@ -524,7 +555,9 @@ char* ASTTraversal(struct AST* root) {
             }
         }
         if(strcmp(root->nodeType, "variable parm") == 0){
+            isParam = 1;
             emitTypeDeclaration(root -> LHS, root -> RHS);
+            isParam = 0;
         }
         if(strcmp(root->nodeType, "array parm") == 0) {
             emitTypeArrayDeclaration(root -> LHS, root ->RHS, "-1");
@@ -651,7 +684,9 @@ char* ASTTraversalOptimized(struct AST* root) {
             ASTTraversalOptimized(root -> right);
         }
         if(strcmp(root->nodeType, "variable parm") == 0){
+            isParam = 1;
             emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+            isParam = 0;
         }
         if(strcmp(root->nodeType, "array parm") == 0) {
             emitTypeArrayDeclarationOptimized(root -> LHS, root ->RHS, "-1");
@@ -665,7 +700,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitWriteLnOptimized();
         }
         if(strcmp(root->nodeType, "function context") == 0) {
-            emitEntryOptimized(root -> LHS);
+            emitEntryOptimized(root -> LHS, root->right->RHS);
             ASTTraversalOptimized(root -> right);
         }
         if(strcmp(root->nodeType, "function") == 0) {

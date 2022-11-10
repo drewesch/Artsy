@@ -5,6 +5,10 @@ void initAssemblyFile();
 
 void generateModule();
 
+char * getWATType(char * phrase);
+
+int getMoveAmount(char * phrase);
+
 void generateDataVariables();
 
 void printNewLine();

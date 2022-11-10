@@ -26,20 +26,20 @@
 		(local.set $k
 			(i32.const 20)
 		)
-		;; assign newVar:2
+		;; assign newVar:23
 
 		(local.set $newVar
-			(i32.const 2)
+			(i32.const 23)
 		)
-		;; assign z:40
+		;; assign z:71
 
 		(local.set $z
-			(i32.const 40)
+			(i32.const 71)
 		)
-		;; assign x:63
+		;; assign x:115
 
 		(local.set $x
-			(i32.const 63)
+			(i32.const 115)
 		)
 		;; output x 
 		(call $writeconsole

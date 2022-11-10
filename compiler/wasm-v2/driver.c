@@ -31,7 +31,7 @@ int main(int argc, char**argv){
     // Once this process completes, the next command in the makefile compiles the .wat to a .wasm file
     // After the .wasm file is generated, the changes will be immediately live
     // on testProg.html using the LiveServer extension or on artsy-project.com
-    // generateWATcode();
+    generateWATcode();
 
     // End the program
     return 0;

@@ -10,9 +10,9 @@ type int newVar
 assign x:10
 assign y:21
 assign k:20
-assign newVar:2
-assign z:40
-assign x:63
+assign newVar:23
+assign z:71
+assign x:115
 output x
 output z
 output k
