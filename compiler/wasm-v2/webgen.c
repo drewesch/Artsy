@@ -9,7 +9,10 @@
 FILE * WATcode;
 int startASM = 0;
 FILE * IRcode; // added for code generator 
-char code[1000];
+char code[10000];
+
+// Variables to detect if declared types are within a function
+int isGlobal = 1;
 
 // Function to open the files for IRcodeOptimized.ir and WATcode.asm
 // Required before generating any WAT code
@@ -23,12 +26,13 @@ void initAssemblyFile() {
 
 void generateModule() {
     fprintf(WATcode, "(module\n");
+    fprintf(WATcode, "\t;; WAT Setup Declarations\n");
     fprintf(WATcode, "\t(import \"env\" \"jsprint\" (func $jsprint (param i32)))\n");
     fprintf(WATcode, "\t(import \"env\" \"newline\" (func $newline))\n");
     fprintf(WATcode, "\t(import \"env\" \"writeconsole\" (func $writeconsole (param i32)))\n");
     fprintf(WATcode, "\t(memory $0 1)\n");
     fprintf(WATcode, "\t(export \"pagememory\" (memory $0))\n\n");
-    fprintf(WATcode, "\t(func $main\n");
+    fprintf(WATcode, "\t;; Artsy Program in WAT\n");
 }
 
 // Function to generate the data section in WAT
@@ -37,12 +41,19 @@ void generateModule() {
 // Acts as a helper function for managing temp variable declarations
 void generateDataVariables() {
     // Check the whole IRCodeOptimized.ir file
-    // For each variable declared, add a .word
-    while ( fgets(code, 1000, IRcode) != NULL){
+    // For each variable declared, add a local or global variable
+    while ( fgets(code, 10000, IRcode) != NULL){
         if (strncmp(code, "type ", 5) == 0){
             char *variable = code + 9;
             variable[strlen(variable) - 1] = 0;
-            fprintf(WATcode, "\t\t(local $%s i32)\n", variable);
+
+            char * scopeType = "global";
+
+            if (!isGlobal) {
+                scopeType = "local";
+            }
+
+            fprintf(WATcode, "\t\t(%s $%s i32)\n", scopeType, variable);
         }
         else if (strncmp(code, "#", 1) == 0){ // do nothing
             
@@ -58,6 +69,31 @@ void generateDataVariables() {
 
 }
 
+char * getWATType(char * phrase) {
+    char * watType = "";
+
+    if (strncmp(phrase, "float", 5) == 0) {
+        watType = "f32";
+        return watType;
+    } else if (strncmp(phrase, "int", 3) == 0) {
+        watType = "i32";
+        return watType;
+    } else if (strncmp(phrase, "string", 6) == 0) {
+        watType = "i64";
+        return watType;
+    }
+}
+
+int getMoveAmount(char * phrase) {
+    if (strncmp(phrase, "float", 5) == 0) {
+        return 6;
+    } else if (strncmp(phrase, "int", 3) == 0) {
+        return 4;
+    } else if (strncmp(phrase, "string", 6) == 0) {
+        return 7;
+    }
+}
+
 // Standard function to generate a new line of code
 // Used to print neater output in WAT
 void printNewLine() {
@@ -68,11 +104,57 @@ void printNewLine() {
 
 // Standard function to generate the main section and text section
 // Required before generating any WAT statements
-void generateTextSection() {
+void generateText() {
     // Loop through each line in the code and generate WAT for each valid statement
-    do {
-        // If the IRcode calls a write/output statement
-        if (strncmp(code, "output ", 7) == 0){
+    while (fgets(code, 10000, IRcode) != NULL) {
+        if (strncmp(code, "type ", 5) == 0){
+            char * nextPart = code + 5;
+            nextPart[strlen(nextPart) - 1] = 0;
+
+            // Get the rest of the string
+            char * newType = getWATType(nextPart);
+            int moveAmount = getMoveAmount(nextPart);
+
+            char * variable = nextPart + moveAmount;
+
+            // Set scope to global by default
+            char * scopeType = "(global";
+
+            if (!isGlobal) { // If its within a function, set the scope to local
+                scopeType = "\t(local";
+            }
+
+            fprintf(WATcode, "\t%s $%s %s)\n", scopeType, variable, newType);
+        }
+        if (strncmp(code, "param ", 6) == 0){
+            char * nextPart = code + 6;
+            nextPart[strlen(nextPart) - 1] = 0;
+
+            // Get the rest of the string
+            char * newType = getWATType(nextPart);
+            int moveAmount = getMoveAmount(nextPart);
+
+            char * variable = nextPart + moveAmount;
+
+            fprintf(WATcode, "\t\t(param $%s %s)\n", variable, newType);
+        }
+        if (strncmp(code, "entry ", 6) == 0){
+            // Set all types after this to local declarations
+            isGlobal = 0;
+
+            char *variable = code + 6;
+            variable[strlen(variable) - 1] = 0;
+
+            fprintf(WATcode, "\t(export \"%s\" (func $%s)\n", variable, variable);
+            fprintf(WATcode, "\t(func $%s\n", variable);
+        }
+        if (strncmp(code, "exit", 4) == 0) {
+            // Set all types after this to global declarations
+            isGlobal = 1;
+
+            fprintf(WATcode, "\t)\n");
+        }
+        if (strncmp(code, "output ", 7) == 0) { // If the IRcode calls a write/output statement
             char *variable = code + 7; 
             variable[strlen(variable) - 1] = 0;
             // printf("Variable: %s\n", variable);
@@ -94,9 +176,7 @@ void generateTextSection() {
                 fprintf(WATcode, "\t\t)\n");
 
                 printNewLine();
-            }
-            // Else, the variable uses a temporary register
-            else{
+            } else { // Else, the variable uses a temporary register
                 fprintf(WATcode, "\t\t(call $writeconsole\n");
                 fprintf(WATcode, "\t\t\t(local.get $%s)\n", variable);
                 fprintf(WATcode, "\t\t)\n");
@@ -132,19 +212,13 @@ void generateTextSection() {
             fprintf(WATcode, "\t\t)\n");
 
         }
-        else { //assignment statement //handles these things for printing //handle the last statment 
-            printf("code: %s", code);
-        }
-    // Loop element for all lines in code[]
-    } while (fgets(code, 1000, IRcode) != NULL);
+    }
 
 }
 
 // Function to end WAT generation once all commands are printed from the IRcodeOptimized.ir file
 void completeFile() {
     // Print ending WAT commands to the file    
-    fprintf(WATcode, "\t)\n");
-    fprintf(WATcode, "\t(export \"main\" (func $main))\n");
     fprintf(WATcode, ")\n");
 
     // Closes all files once complete
@@ -157,7 +231,6 @@ void completeFile() {
 void generateWATcode() {
     initAssemblyFile();
     generateModule();
-    generateDataVariables();
-    generateTextSection();
+    generateText();
     completeFile();
 }

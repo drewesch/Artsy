@@ -1,14 +1,11 @@
-
-
-#### IR Optimized Code ####
-
+#### Optimized IR Code ####
 type int aNumber
 type string array message size 50
 type float justAverage
-entry average
-type float a
-type float b
-type float c
+entry float average
+param float a
+param float b
+param float c
 type float avg
 T0 = a + b
 T1 = T0 + c
@@ -16,7 +13,7 @@ T2 = T1 / 3.0
 avg = T2
 return avg
 exit
-entry displayMessage
+entry int displayMessage
 message[0] = "I"
 message[1] = " "
 message[2] = "c"
@@ -36,6 +33,10 @@ entry ambitiousFunction
 type float a
 type float b
 type float c
+entry float ambitiousFunction
+param float a
+param float b
+param float c
 type float result
 T0 = call average args a b c
 T1 = call average args a b c

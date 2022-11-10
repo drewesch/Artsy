@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ircode.h"
+#include "symbolTable.h"
 #include "AST.h"
 
 
@@ -433,15 +434,19 @@ void emitEntry(char * id) {
         uvIndex ++;
     }
 
-    fprintf(IRcode, "entry %s\n", id);
+    char * type = getItemType(id, "global");
+
+    fprintf(IRcode, "entry %s %s\n", type, id);
 }
 
-void emitEntryOptimized(char * id, char * type) {    
+void emitEntryOptimized(char * id) {    
     // Open IRfile if it is not open
     if (startIROptimized == 0) {
         initIRcodeFileOptimized();
         startIROptimized = 1;
     }
+
+    char * type = getItemType(id, "global");
 
     fprintf(IRcodeOptimized, "entry %s %s\n", type, id);
 }
@@ -700,7 +705,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitWriteLnOptimized();
         }
         if(strcmp(root->nodeType, "function context") == 0) {
-            emitEntryOptimized(root -> LHS, root->right->RHS);
+            emitEntryOptimized(root -> LHS);
             ASTTraversalOptimized(root -> right);
         }
         if(strcmp(root->nodeType, "function") == 0) {
