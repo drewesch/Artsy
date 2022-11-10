@@ -518,7 +518,7 @@ char* ASTTraversal(struct AST* root) {
         }
         if(strcmp(root->nodeType, "type") == 0) {
             if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
-                emitTypeArrayDeclaration(root -> LHS, root -> right -> right -> RHS, root -> RHS);
+                emitTypeArrayDeclaration(root -> LHS, root -> RHS, root -> right -> right -> RHS);
             } else {
                 emitTypeDeclaration(root -> LHS, root -> RHS);
             }
@@ -635,7 +635,7 @@ char* ASTTraversalOptimized(struct AST* root) {
         if(strcmp(root->nodeType, "type") == 0) {
             if(isUsedVar(root -> RHS)) {
                 if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
-                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> right -> right -> RHS, root -> RHS);
+                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> RHS, root -> right -> right -> RHS);
                 } else {
                     emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
                 }
@@ -654,7 +654,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
         }
         if(strcmp(root->nodeType, "array parm") == 0) {
-
+            emitTypeArrayDeclarationOptimized(root -> LHS, root ->RHS, "-1");
         }
         if(strcmp(root->nodeType, "write") == 0) {
             if(isUsedVar(root -> RHS)) {
@@ -716,7 +716,6 @@ char* ASTTraversalOptimized(struct AST* root) {
         }
         if(strcmp(root->nodeType, "=") == 0) {
             if(isUsedVar(root -> LHS)) {
-                printf("root -> = -> %s\n", root ->LHS);
                 strcpy(rightVar, ASTTraversalOptimized(root-> right));
                 if(strcmp(root -> right -> nodeType, "element assignment") == 0) {
                     emitAssignmentForElementOptimized(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
