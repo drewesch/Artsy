@@ -29,10 +29,6 @@ message[11] = ":"
 output message
 return 0
 exit
-entry ambitiousFunction
-type float a
-type float b
-type float c
 entry float ambitiousFunction
 param float a
 param float b
