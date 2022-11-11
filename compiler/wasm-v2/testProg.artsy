@@ -81,5 +81,3 @@ justAverage = ambitiousFunction(1.0, 2.0, 3.0);
 aNumber = displayMessage();
 write justAverage;
 writeln;
-
-    

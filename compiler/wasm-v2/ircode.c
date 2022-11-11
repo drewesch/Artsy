@@ -269,7 +269,7 @@ void emitWriteLn(){
         startIR = 1;
     }
 
-    fprintf(IRcode, "output nextline\n");
+    fprintf(IRcode, "nextline\n");
 }
 
 void emitWriteLnOptimized(){
@@ -279,7 +279,7 @@ void emitWriteLnOptimized(){
         startIROptimized = 1;
     }
 
-    fprintf(IRcode, "output nextline\n");
+    fprintf(IRcode, "nextline\n");
 }
 
 // Optimized IRCode operation for writing 
@@ -409,7 +409,7 @@ void emitTypeArrayDeclarationOptimized(char * type, char * id, char * size){
 
     // Already includes optimizations prior to this step, so doing optimization beforehand is redundant
     // Print variable declaration IRcode to file
-    fprintf(IRcodeOptimized, "%s %s array %s size %s\n", varType, type, id, size);
+    // fprintf(IRcodeOptimized, "%s %s array %s size %s\n", varType, type, id, size);
 }
 
 void emitEntry(char * id) {

@@ -8,31 +8,27 @@
 
 	;; Artsy Program in WAT
 	(global $aNumber i32)
-	(global $array message size 50 i64)
 	(global $justAverage f32)
-	(export "float average" (func $float average)
-	(func $float average
-		(param $a f32)
-		(param $b f32)
-		(param $c f32)
+	(export "average" (func $average))
+	(func $average (param $a f32) (param $b f32) (param $c f32) (result f32)
 		(local $avg f32)
+		;; return avg
+		(local.get $avg)
 	)
-	(export "int displayMessage" (func $int displayMessage)
-	(func $int displayMessage
+	(export "displayMessage" (func $displayMessage))
+	(func $displayMessage (result i32)
 		;; output message 
 		(call $writeconsole
 			(local.get $message)
 		)
-		;; Print New Line
-		(call $newline)
-		;; ---------
+		;; return 0
+		(local.get $0)
 	)
-	(export "float ambitiousFunction" (func $float ambitiousFunction)
-	(func $float ambitiousFunction
-		(param $a f32)
-		(param $b f32)
-		(param $c f32)
+	(export "ambitiousFunction" (func $ambitiousFunction))
+	(func $ambitiousFunction (param $a f32) (param $b f32) (param $c f32) (result f32)
 		(local $result f32)
+		;; return result
+		(local.get $result)
 	)
 		;; output justAverage 
 		(call $writeconsole
@@ -40,47 +36,18 @@
 		)
 		;; Print New Line
 		(call $newline)
-		;; ---------
-		;; output nextline 
-		(call $writeconsole
-			(local.get $nextline)
-		)
 		;; Print New Line
 		(call $newline)
-		;; ---------
-		;; output nextline 
-		(call $writeconsole
-			(local.get $nextline)
-		)
-		;; Print New Line
-		(call $newline)
-		;; ---------
 		;; output aNumber 
 		(call $writeconsole
 			(local.get $aNumber)
 		)
 		;; Print New Line
 		(call $newline)
-		;; ---------
-		;; output nextline 
-		(call $writeconsole
-			(local.get $nextline)
-		)
-		;; Print New Line
-		(call $newline)
-		;; ---------
 		;; output justAverage 
 		(call $writeconsole
 			(local.get $justAverage)
 		)
 		;; Print New Line
 		(call $newline)
-		;; ---------
-		;; output nextline 
-		(call $writeconsole
-			(local.get $nextline)
-		)
-		;; Print New Line
-		(call $newline)
-		;; ---------
 )
