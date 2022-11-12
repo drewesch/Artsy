@@ -25,6 +25,13 @@ int cindex = 0;
 // Bool for checking if type is a parameter
 int isParam = 0;
 
+// Variable to detect current scope
+char * currIRScope = "global";
+
+// Variables to detect suboperation starts
+int startSubOp = 0;
+int startSubOpOptimized = 0;
+
 // Struct to handle temporary variable construction
 struct ConstantVar {
     char var[50];
@@ -120,6 +127,13 @@ char* emitBinaryOperation(char op[1], const char* id1, const char* id2){
     updateUnusedVar(id1);
     updateUnusedVar(id2);
 
+    // Output suboperation type (for webgen parsing)
+    if (!startSubOp) {
+        char * opType = getItemType(id1, currIRScope);
+        fprintf(IRcode, "subop %s\n", opType);
+        startSubOp = 1;
+    }
+
     // Print the unoptimized iRcode using outputIDs, the operator, and the other ids
     fprintf(IRcode, "%s = %s %s %s\n", outputId, id1, op, id2);
     lastIndex += 1;
@@ -161,7 +175,15 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
     sprintf(currLabelIndexBuffer, "%d", lastIndex);
     strcat(outputId, "T");
     strcat(outputId, currLabelIndexBuffer);
+    
+    // Output suboperation type (for webgen parsing)
+    if (!startSubOpOptimized) {
+        char * opType = getItemType(id1, currIRScope);
+        fprintf(IRcodeOptimized, "subop %s\n", opType);
+        startSubOpOptimized = 1;
+    }
 
+    // Output optimized suboperation line
     fprintf(IRcodeOptimized, "%s = %s %s %s\n", outputId, id1, op, id2);
     lastIndex += 1;
 
@@ -179,6 +201,10 @@ void emitAssignment(char * id1, char * id2){
     // Print the assignment statement using the two basic IDs
     fprintf(IRcode, "%s = %s\n", id1, id2);
     lastIndex = 0;
+
+    // Indicate subop stop
+    // TK ERROR HERE
+    startSubOp = 0;
 }
 
 // Unoptimized IRcode operation for variable assignment (for array)
@@ -244,8 +270,13 @@ void emitAssignmentOptimized(char * id1, char * id2){
     //         strcpy(nodeTable[getNodeVarIndex(id1)].rootVar, nodeTable[getNodeVarIndex(id2)].rootVar);
     //     }
     // }
-    
+
     fprintf(IRcodeOptimized, "%s = %s\n", id1, id2);
+    
+    // Indicate subop stop
+    // TK ERROR HERE
+    startSubOpOptimized = 0;
+
     lastIndex = 0;
 }
 
@@ -434,7 +465,9 @@ void emitEntry(char * id) {
         uvIndex ++;
     }
 
-    char * type = getItemType(id, "global");
+    // Get type and update current scope
+    char * type = getItemType(id, currIRScope);
+    currIRScope = id;
 
     fprintf(IRcode, "entry %s %s\n", type, id);
 }
@@ -446,7 +479,8 @@ void emitEntryOptimized(char * id) {
         startIROptimized = 1;
     }
 
-    char * type = getItemType(id, "global");
+    char * type = getItemType(id, currIRScope);
+    currIRScope = id;
 
     fprintf(IRcodeOptimized, "entry %s %s\n", type, id);
 }
@@ -476,6 +510,7 @@ void emitExit() {
         startIR = 1;
     }
 
+    currIRScope = "global";
     fprintf(IRcode, "exit\n");
 }
 
@@ -485,6 +520,7 @@ void emitExitOptimized() {
         startIROptimized = 1;
     }
 
+    currIRScope = "global";
     fprintf(IRcodeOptimized, "exit\n");
 }
 
@@ -503,6 +539,13 @@ char * emitFunctionCall(char *id) {
 
     // Update the code if it is unused
     updateUnusedVar(id);
+
+    // Output suboperation type (for webgen parsing)
+    if (!startSubOp) {
+        char * opType = getItemType(id, currIRScope);
+        fprintf(IRcode, "subop %s\n", opType);
+        startSubOp = 1;
+    }
 
     fprintf(IRcode, "%s = call %s args", outputId, id);
 
@@ -527,6 +570,13 @@ char * emitFunctionCallOptimized(char *id) {
     sprintf(currLabelIndexBuffer, "%d", lastIndex);
     strcat(outputId, "T");
     strcat(outputId, currLabelIndexBuffer);
+
+    // Output suboperation type (for webgen parsing)
+    if (!startSubOpOptimized) {
+        char * opType = getItemType(id, currIRScope);
+        fprintf(IRcodeOptimized, "subop %s\n", opType);
+        startSubOpOptimized = 1;
+    }
 
     fprintf(IRcodeOptimized, "%s = call %s args", outputId, id);
 

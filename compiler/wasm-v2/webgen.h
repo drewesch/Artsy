@@ -9,7 +9,13 @@ char * getWATType(char * phrase);
 
 int getMoveAmount(char * phrase);
 
-void generateDataVariables();
+int isAlpha(char * phrase);
+
+int isInt(char * phrase);
+
+int isFloat(char * phrase);
+
+char * getPrimaryType(char * phrase);
 
 void printNewLine();
 
@@ -18,6 +24,5 @@ void generateTextSection();
 void completeFile();
 
 void generateWATcode();
-
 
 #endif
