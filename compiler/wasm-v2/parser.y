@@ -97,12 +97,13 @@ Program: DeclList FunDeclList StmtList {
 // { }
 
 DeclList: // Grammar rule to generate the whole list of variable and regular declarations
-	| VarDecl DeclList	{ $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
+	VarDecl DeclList	{ $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
 							}
 	| Decl	{ $$ = $1; }
 ;
 
-Decl:	VarDecl {
+Decl: { $$ = AST_SingleChildNode("empty", "empty", "empty");}
+	| VarDecl {
 	// Basic Var Declaration Rule, generates AST for all variable declarations
 	$$ = $1;
 	}
@@ -209,10 +210,11 @@ ParamDecl: TYPE ID {$$ = AST_DoublyChildNodes("variable parm",$1,$2,$1, $2);}
 	| TYPE ID LEFTSQUARE RIGHTSQUARE {$$ = AST_DoublyChildNodes("array parm",$1,$2,$1, $2);}
 ;
 
-StmtList:	Stmt {
+StmtList: Stmt {
 		$$ = $1;
 	}
 	| Stmt StmtList {
+		printf("\n RECOGNIZED RULE: StmtList statement\n");
 		// Generate a list of all statement declarations below vardecl
 		$$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);
 		}
@@ -226,7 +228,7 @@ Stmt:	SEMICOLON	{}
 	| WRITE Primary SEMICOLON	{ printf("\n RECOGNIZED RULE: WRITE statement\n");
 					// Generate write declarations as a statement in the parser
 					$$ = AST_SingleChildNode("write", $2, $2);
-					printf("Write AST generated!");
+					printf("Write AST generated!\n");
 				}
 	| WRITELN SEMICOLON {
 		printf("\n RECOGNIZED RULE: WRITEIN statement\n");
@@ -242,7 +244,7 @@ Stmt:	SEMICOLON	{}
 ;
 
 
-Loop: WHILE LEFTPAREN Expr RIGHTPAREN Block {}
+Loop: WHILE LEFTPAREN Expr RIGHTPAREN Block { }
 ;
 
 If: IF LEFTPAREN Expr RIGHTPAREN Block {}
@@ -282,8 +284,7 @@ ExprList: {}
 
 
 // Fix the AST tree for block
-Block: {}	
-	| LEFTBRACKET DeclList StmtList RIGHTBRACKET { printf("\n RECOGNIZED RULE: Block statement\n");
+Block:  LEFTBRACKET DeclList StmtList RIGHTBRACKET { printf("\n RECOGNIZED RULE: Block statement\n");
 		$$ = AST_DoublyChildNodes("block",$2,$3, $2, $3);
 		}
 ;
