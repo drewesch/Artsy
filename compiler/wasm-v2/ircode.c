@@ -200,10 +200,9 @@ void emitAssignment(char * id1, char * id2){
 
     // Print the assignment statement using the two basic IDs
     fprintf(IRcode, "%s = %s\n", id1, id2);
-    lastIndex = 0;
+    // lastIndex = 0;
 
     // Indicate subop stop
-    // TK ERROR HERE
     startSubOp = 0;
 }
 
@@ -217,7 +216,7 @@ void emitAssignmentForElement(char *id1, char * elementNum, char * id2) {
 
     // Print the assignment statement using the two basic IDs with an element number
     fprintf(IRcode, "%s[%s] = %s\n", id1, elementNum, id2);
-    lastIndex = 0;
+    // lastIndex = 0;
 }
 
 void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2) {
@@ -229,7 +228,7 @@ void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2)
 
     // Print the assignment statement using the two basic IDs with an element number
     fprintf(IRcodeOptimized, "%s[%s] = %s\n", id1, elementNum, id2);
-    lastIndex = 0;
+    // lastIndex = 0;
 }
 
 // Optimized assignment operation function for IRcodeOptimized.ir
@@ -274,10 +273,9 @@ void emitAssignmentOptimized(char * id1, char * id2){
     fprintf(IRcodeOptimized, "%s = %s\n", id1, id2);
     
     // Indicate subop stop
-    // TK ERROR HERE
     startSubOpOptimized = 0;
 
-    lastIndex = 0;
+    // lastIndex = 0;
 }
 
 // Unoptimized IRcode operation for the write keyword
@@ -394,9 +392,9 @@ void emitTypeArrayDeclaration(char * type, char * id, char * size){
 
     if(atoi(size) >= 0) {
         // Print variable declaration IRcode to file
-        fprintf(IRcode, "%s %s array %s size %s\n", varType, type, id, size);
+        fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
     } else {
-        fprintf(IRcode, "%s %s array %s\n", varType, type, id);
+        fprintf(IRcode, "%s %s %s array\n", varType, type, id);
     }
 }
 
@@ -440,7 +438,7 @@ void emitTypeArrayDeclarationOptimized(char * type, char * id, char * size){
 
     // Already includes optimizations prior to this step, so doing optimization beforehand is redundant
     // Print variable declaration IRcode to file
-    // fprintf(IRcodeOptimized, "%s %s array %s size %s\n", varType, type, id, size);
+    fprintf(IRcodeOptimized, "%s %s %s array %s\n", varType, type, id, size);
 }
 
 void emitEntry(char * id) {
@@ -842,6 +840,9 @@ char* ASTTraversalOptimized(struct AST* root) {
 // After IRcode is generated, close the file
 // Moreover, flush the stdout buffer prior to proceeding to the next step
 void generateIRCodeOptimized() {
+    // Reset temp variable number
+    lastIndex = 0;
+
     ASTTraversalOptimized(ast);
     fclose(IRcodeOptimized);
     fflush(stdout);

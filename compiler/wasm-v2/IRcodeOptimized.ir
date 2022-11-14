@@ -14,19 +14,6 @@ avg = T2
 return avg
 exit
 entry int displayMessage
-message[0] = "I"
-message[1] = " "
-message[2] = "c"
-message[3] = "a"
-message[4] = "n"
-message[5] = " "
-message[6] = "p"
-message[7] = "r"
-message[8] = "i"
-message[9] = "n"
-message[10] = "t"
-message[11] = ":"
-output message
 return 0
 exit
 entry float ambitiousFunction
@@ -35,47 +22,47 @@ param float b
 param float c
 type float result
 subop float
-T0 = call average args a b c
-T1 = call average args a b c
-T2 = T0 + T1
-T3 = T2 / 2.0
-result = T3
+T3 = call average args a b c
+T4 = call average args a b c
+T5 = T3 + T4
+T6 = T5 / 2.0
+result = T6
 return result
 exit
 subop float
-T0 = call average args 12.5 13.7 25.8
-justAverage = T0
+T7 = call average args 12.5 13.7 25.8
+justAverage = T7
 subop int
-T0 = call displayMessage args
-aNumber = T0
+T8 = call displayMessage args
+aNumber = T8
 output justAverage
 nextline
 subop float
-T0 = justAverage + 2.0
-T1 = justAverage * T0
-justAverage = T1
+T9 = justAverage + 2.0
+T10 = justAverage * T9
+justAverage = T10
 subop float
-T0 = call average args justAverage 0.0 0.0
-justAverage = T0
+T11 = call average args justAverage 0.0 0.0
+justAverage = T11
 subop int
-T0 = call displayMessage args
-aNumber = T0
+T12 = call displayMessage args
+aNumber = T12
 nextline
 subop int
-T0 = call displayMessage args
-aNumber = T0
+T13 = call displayMessage args
+aNumber = T13
 subop int
-T0 = aNumber * aNumber
-T1 = aNumber + T0
-T2 = aNumber / T1
-aNumber = T2
+T14 = aNumber * aNumber
+T15 = aNumber + T14
+T16 = aNumber / T15
+aNumber = T16
 output aNumber
 nextline
 subop float
-T0 = call ambitiousFunction args 1.0 2.0 3.0
-justAverage = T0
+T17 = call ambitiousFunction args 1.0 2.0 3.0
+justAverage = T17
 subop int
-T0 = call displayMessage args
-aNumber = T0
+T18 = call displayMessage args
+aNumber = T18
 output justAverage
 nextline

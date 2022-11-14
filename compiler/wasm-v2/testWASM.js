@@ -23,8 +23,16 @@ env: {
       document.body.appendChild(p);
    },
 
-   writeconsole: function writeconsole(intVar) {
-      document.write(intVar)
+   writeconsoleInt: function writeconsole(wVar) {
+      document.write(wVar)
+   },
+
+   writeconsoleFloat: function writeconsole(wVar) {
+      document.write(wVar)
+   },
+
+   writeconsoleString: function writeconsole(wVar) {
+      document.write(wVar)
    }
 }
 })

@@ -17,9 +17,9 @@ int isFloat(char * phrase);
 
 char * getPrimaryType(char * phrase);
 
-void printNewLine();
+void generateText();
 
-void generateTextSection();
+void generateMain();
 
 void completeFile();
 

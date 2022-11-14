@@ -6,20 +6,20 @@
 #include "webgen.h"
 #include "symbolTable.h"
 
-// Initialize WATcode file, IRcode file, and other required variables
+// Initialize WATcode file, IRcode file, MAINcode file, and other required variables
 FILE * WATcode;
-int startASM = 0;
-FILE * IRcode; // added for code generator 
+FILE * IRcode;
+FILE * MAINcode;
 char code[10000];
+char temp[10000];
 
 // Function to open the files for IRcodeOptimized.ir and WATcode.asm
 // Required before generating any WAT code
 void initAssemblyFile() {
-  
- printf("\nOpening WAT Code file\n\n"); // Creates a WAT file with a generic header that needs to be in every file
- IRcode = fopen("IRcodeOptimized.ir", "r");
- WATcode = fopen("WATcode.wat", "w");
-    
+    printf("\nOpening WAT Code file\n\n"); // Creates a WAT file with a generic header that needs to be in every file
+    IRcode = fopen("IRcodeOptimized.ir", "r");
+    WATcode = fopen("WATcode.wat", "w");
+    MAINcode = fopen("MAINcode.wat", "w");
 }
 
 // Function to generate the initial set of lines required for proper WebAssembly output
@@ -154,11 +154,6 @@ char * getPrimaryType(char * phrase) {
     }
 }
 
-// Standard function to generate a new line of code
-// Used to print neater output in WAT
-void printNewLine() {
-}
-
 // Standard function to generate the main section and text section
 // Required before generating any WAT statements
 void generateText() {
@@ -166,14 +161,14 @@ void generateText() {
     int isGlobal = 1;
     int inParams = 0;
 
-    // Current scope variable
-    char * currScope = "global";
-
     // Current operation variable
     char * currOp = "";
 
     // Global return type variable for a given function
     char * returnType = "";
+
+    // Current scope variable
+    char * currScope = "global";
 
     // Loop through each line in the code and generate WAT for each valid statement
     while (fgets(code, 10000, IRcode) != NULL) {
@@ -197,11 +192,21 @@ void generateText() {
             // Set scope to global by default
             char * scopeType = "(global";
 
-            if (!isGlobal) { // If its within a function, set the scope to local
+            if (!isGlobal) { // If its not global, set the scope to local
                 scopeType = "\t(local";
             }
 
-            fprintf(WATcode, "\t%s $%s %s)\n", scopeType, variable, newType);
+            // Print declaration to WATcode
+            if (isGlobal) {
+                char * placeholder = "0";
+                if (newType == "f32") {
+                    placeholder = "0.0";
+                }
+
+                fprintf(WATcode, "\t%s $%s (mut %s) (%s.const %s)\n", scopeType, variable, newType, newType, placeholder);
+            } else {
+                fprintf(WATcode, "\t%s $%s %s)\n", scopeType, variable, newType);
+            }
         }
         // Case for parameter declarations in functions
         else if (strncmp(code, "param ", 6) == 0) {
@@ -253,14 +258,23 @@ void generateText() {
         // Case for return statements in functions
         else if (strncmp(code, "return ", 7) == 0) {
             // Output comment
-            fprintf(WATcode, "\t\t;; %s", code);
+            fprintf(WATcode, "\n\t\t;; %s", code);
 
             // Get variable name
             char * variable = code + 7;
             variable[strlen(variable) - 1] = 0;
 
             // Print function ending code
-            fprintf(WATcode, "\t\t(local.get $%s)\n", variable);
+            
+            // If it's not a variable, return the value as it's WAT type
+            if (getPrimaryType(variable) != "var") {
+                // Get WAT Type for printing to the console
+                char * WATType = getWATType(getPrimaryType(variable));
+                fprintf(WATcode, "\t\t%s.const %s\n", WATType, variable);
+                fprintf(WATcode, "\t\treturn\n");
+            } else { // Else, it is a variable
+                fprintf(WATcode, "\t\t(local.get $%s)\n", variable);      
+            }
         }
         // If the IRcode calls a write/output statement
         else if (strncmp(code, "output ", 7) == 0) {
@@ -270,24 +284,26 @@ void generateText() {
                 fprintf(WATcode, "(result %s)\n", returnType);
             }
 
-            // Determine if the operation assignment within global or within a function
-            char * progScope = "";
-            if (!isGlobal) { // If its within a function, add a tab
-                progScope = "\t";
-            }
-
             char *variable = code + 7; 
             variable[strlen(variable) - 1] = 0;
-            fprintf(WATcode, "\t\t;; %s \n", code);
 
             // If the write statement does not use a variable
             if (getPrimaryType(variable) != "var") {
                 // Get WAT Type for printing to the console
                 char * WATType = getWATType(variable);
 
-                fprintf(WATcode, "\t%s(call $writeconsole\n", progScope);
-                fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, WATType, variable);
-                fprintf(WATcode, "\t%s)\n", progScope);
+                if (!isGlobal) { // If its within a function, write to WATcode
+                    fprintf(WATcode, "\t\t(call $writeconsole\n");
+                    fprintf(WATcode, "\t\t\t(%s.const %s)\n", WATType, variable);
+                    fprintf(WATcode, "\t\t)\n");
+                }
+                // Else, write to the MAINcode file
+                else {
+                    fprintf(MAINcode, "\t\t(call $writeconsole\n");
+                    fprintf(MAINcode, "\t\t\t(%s.const %s)\n", WATType, variable);
+                    fprintf(MAINcode, "\t\t)\n");
+                }
+
             } else { // Else, the variable uses a variable
                 // Determine if the variable is global or variable
                 char * scopeType = "global";
@@ -296,23 +312,29 @@ void generateText() {
                     scopeType = "local";
                 }
 
-                fprintf(WATcode, "\t%s(call $writeconsole\n", progScope);
-                fprintf(WATcode, "\t\t%s(%s.get $%s)\n", progScope, scopeType, variable);
-                fprintf(WATcode, "\t%s)\n", progScope);
-                                
+                if (!isGlobal) { // If its within a function, write to WATcode
+                    fprintf(WATcode, "\t\t(call $writeconsole\n");
+                    fprintf(WATcode, "\t\t\t(%s.get $%s)\n", scopeType, variable);
+                    fprintf(WATcode, "\t\t)\n");
+                }
+                // Else, write to the MAINcode file
+                else {
+                    fprintf(MAINcode, "\t\t(call $writeconsole\n");
+                    fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", scopeType, variable);
+                    fprintf(MAINcode, "\t\t)\n");
+                }
             }
         }
         // If the code contains a writeln statement, print a new line
         else if (strncmp(code, "nextline", 8) == 0) {
             // Call print line function
-            // Determine if the operation assignment within global or within a function
-            char * progScope = "";
-            if (!isGlobal) { // If its within a function, add a tab
-                progScope = "\t";
+            if (isGlobal) {
+                fprintf(MAINcode, "\t\t;; Print New Line\n");
+                fprintf(MAINcode, "\t\t(call $newline)\n");
+            } else {
+                fprintf(WATcode, "\t\t;; Print New Line\n");
+                fprintf(WATcode, "\t\t(call $newline)\n");
             }
-            
-            fprintf(WATcode, "\t%s;; Print New Line\n", progScope);
-            fprintf(WATcode, "\t%s(call $newline)\n", progScope);
         }
         // Case for handling suboperation states
         else if (strncmp(code, "subop ", 6) == 0) {
@@ -321,20 +343,19 @@ void generateText() {
             variable[strlen(variable) - 1] = 0;
 
             // Set current operation
-            // TK ERROR HERE
             currOp = malloc(strlen(variable)*sizeof(char));
             strcpy(currOp, variable);
         }
         // If the file contains a newline or a comment, ignore the statement
         else if (strncmp(code, "\n", 1) == 0 || strncmp(code, "#", 1) == 0){
         }
-        // If the IRcode calls an assignment statement
+        // If the IRcode declares an assignment, operation, or call statement
         else {
             // Algorithm
             // Step 1: Break apart the line into an iterable array of strings
             // Set the delimiter for separating terms by word
             char ** strArr;
-            int maxArrSize = 100;
+            int maxArrSize = 1000;
             strArr = malloc(maxArrSize * sizeof(char *));
             char delimiter[] = " ";
             char * token = strtok(code, delimiter);
@@ -354,7 +375,7 @@ void generateText() {
             lenIndex--;
             strArr[lenIndex][strlen(strArr[lenIndex])-1] = '\0';
 
-            // Step 2: Build out case statements for the supported features
+            // Build out case statements for the supported features
 
             // a. Assignment Statements
             // - Total Strings = 3
@@ -363,17 +384,203 @@ void generateText() {
             // Assignment Operation
             if (strArr[3] == NULL) {
                 printf("Assign Op\n");
-                // emitMIPSAddOp(strArr[0], strArr[2], strArr[4]);
+                
+                // Set function return type first if this is the first call in a function
+                if (inParams) {
+                    inParams = 0;
+                    fprintf(WATcode, "(result %s)\n", returnType);
+                }
+
+                // Declare all three variables
+                char * assignVar = strArr[0];
+                char * var2 = malloc(strlen("$") + strlen(strArr[2]) + 1);
+                
+                // Declare operation type variable
+                char * opType;
+
+                // Determine if the variable is global or variable
+                char * scopeType = "global";
+
+                if (!found(strArr[0], "global")) {
+                    scopeType = "local";
+                }
+
+                // Determine the operation type
+                opType = getWATType(currOp);
+
+                // Output the assignVar call line
+                if (isGlobal) { // If it's a temp variable in global, print to MAINcode
+                    fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
+                }
+                // Else, print to WATcode
+                else {
+                    fprintf(WATcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
+                }
+
+                // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
+                if (getPrimaryType(strArr[2]) == "var") {
+                    // Determine if the variable is global or variable
+                    char * varScopeType = "global";
+
+                    if (!found(strArr[2], "global")) {
+                        varScopeType = "local";
+                    }
+
+                    strcat(var2, "$");
+                    strcat(var2, strArr[2]);
+
+                    if (isGlobal) { // If it's a temp variable in global, print to MAINcode
+                        fprintf(MAINcode, "\t\t\t(%s.get %s)\n", varScopeType, var2);
+                    }
+                    // Else, print to WATcode
+                    else {
+                        fprintf(WATcode, "\t\t\t(%s.get %s)\n", varScopeType, var2);
+                    }
+                } else {
+                    var2 = strArr[2];
+
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", opType, var2);
+                    } else {
+                        fprintf(WATcode, "\t\t\t(%s.const %s)\n", opType, var2);
+                    }
+                }
+
+                // End assignment statement
+                if (isGlobal) { // If it's a temp variable in global, print to MAINcode
+                    fprintf(MAINcode, "\t\t)\n");
+                }
+                // Else, print to WATcode
+                else {
+                    fprintf(WATcode, "\t\t)\n");
+                }
             }
 
-            // b. Basic Operations
+            // b. Function Calls
+            // - Contains a "call" token at index 3
+            // - Always acts as an assignment statement, but calls a function register with a set of parameters
+
+            else if (strcmp(strArr[2], "call") == 0) {
+                printf("Call Op\n");
+
+                // Declare all three variables
+                char * assignVar = strArr[0];
+                char * funcVar = strArr[3];
+                
+                // Declare operation type variable
+                char * opType;
+
+                // Determine if the variable is global or variable
+                char * scopeType = "global";
+
+                if (!found(strArr[0], "global")) {
+                    scopeType = "local";
+                }
+
+                // Determine the operation type
+                opType = getWATType(currOp);
+
+                // Set function return type first if this is the first call in a function
+                if (inParams) {
+                    inParams = 0;
+                    fprintf(WATcode, "(result %s)\n", returnType);
+                }
+                // Else, print a temporary variable declaration line with the WAT type
+                else {
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
+                    } else {
+                        fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
+                    }
+                }
+
+                // Output the assignVar call line
+                if (isGlobal) {
+                    fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
+                } else {
+                    fprintf(WATcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
+                }
+
+                // Output function call lines
+                // If there are no arguments after the "args" token, generate the call on a single line
+                if (strArr[5] == NULL) {
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t(call $%s)\n", funcVar);
+                    } else {
+                        fprintf(WATcode, "\t\t\t(call $%s)\n", funcVar);
+                    }
+                }
+                // Otherwise, generate the call with the list of parameters
+                else {
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t(call $%s\n", funcVar);
+                    } else {
+                        fprintf(WATcode, "\t\t\t(call $%s\n", funcVar);
+                    }
+
+
+                    // Loop through and add all available parameters as lines under the function call
+                    // Determine if each one is a variable or not, and assign accordingly
+                    int index = 5;
+                    while (strArr[index] != NULL) {
+                        char * arg = strArr[index];
+                        char * callVar = malloc(strlen("$") + strlen(strArr[index]) + 1);;
+                        
+                        // If var references an actual variable, add a dollar sign in front and build the line accordingly
+                        if (getPrimaryType(strArr[index]) == "var") {
+                            // Determine if the variable is global or variable
+                            char * varScopeType = "global";
+
+                            if (!found(strArr[index], "global")) {
+                                varScopeType = "local";
+                            }
+
+                            strcat(callVar, "$");
+                            strcat(callVar, strArr[index]);
+
+                            if (isGlobal) {
+                                fprintf(MAINcode, "\t\t\t\t(%s.get %s)\n", varScopeType, callVar);
+                            } else {
+                                fprintf(WATcode, "\t\t\t\t(%s.get %s)\n", varScopeType, callVar);
+                            }
+                            
+                        } else {
+                            callVar = strArr[index];
+                            opType = getWATType(getPrimaryType(strArr[index]));
+
+                            if (isGlobal) {
+                                fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, callVar);
+                            } else {
+                                fprintf(WATcode, "\t\t\t\t(%s.const %s)\n", opType, callVar);
+                            }
+                        }
+                        index++;
+                    }
+
+                    // End the call statement with parameters
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t)\n");
+                    } else {
+                        fprintf(WATcode, "\t\t\t)\n");
+                    }
+                }
+
+                // End assignment statement
+                if (isGlobal) {
+                    fprintf(MAINcode, "\t\t)\n");
+                } else {
+                    fprintf(WATcode, "\t\t)\n");
+                }
+                
+            }
+
+            // c. Basic Operations
             // - Total Strings = 5
             // - STR1 = Var, STR2 = "=", STR3 = primary/variable,
             // - STR4 = Operand, STR5 = primary/variable
 
-            // Add operation
-            else if (strcmp(strArr[3], "+") == 0) {
-                printf("Add Op\n");
+            else if (strcmp(strArr[3], "+") == 0 || strcmp(strArr[3], "-") == 0 || strcmp(strArr[3], "*") == 0 || strcmp(strArr[3], "/") == 0) {
+                printf("Operation\n");
                 
                 // Declare all three variables
                 char * assignVar = strArr[0];
@@ -383,317 +590,150 @@ void generateText() {
                 // Declare operation type variable
                 char * opType;
 
-                // Determine if the operation assignment within global or within a function
-                char * progScope = "";
-                if (!isGlobal) { // If its within a function, add a tab
-                    progScope = "\t";
-                }
-
                 // Determine if the variable is global or variable
                 char * scopeType = "global";
 
                 if (!found(assignVar, "global")) {
                     scopeType = "local";
                 }
-
                 // Determine the operation type
                 opType = getWATType(currOp);
 
-                // Output the variable set line
-                fprintf(WATcode, "\t%s(%s $%s %s)\n", progScope, scopeType, assignVar, opType);
-                fprintf(WATcode, "\t%s(%s.set $%s\n", progScope, scopeType, assignVar);
-
-                // If var1 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[2]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
-
-                    if (!found(strArr[2], "global")) {
-                        varScopeType = "local";
+                // If not in parameters, print a temporary variable declaration line with the WAT type
+                if (!inParams) {
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
+                    } else {
+                        fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
                     }
-
-                    strcat(var1, "$");
-                    strcat(var1, strArr[2]);
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var1);
-                } else {
-                    var1 = strArr[2];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var1);
+                    
                 }
-
-                // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[4]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
-
-                    if (!found(strArr[4], "global")) {
-                        varScopeType = "local";
-                    }
-
-                    strcat(var2, "$");
-                    strcat(var2, strArr[4]);
-
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var2);
-                } else {
-                    var2 = strArr[4];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var2);
-                }
-
-                // Perform operation and end the call
-                fprintf(WATcode, "\t\t%s%s.add\n", progScope, opType);
-                fprintf(WATcode, "\t%s)\n", progScope);
-            }
-            // Sub operation
-            else if (strcmp(strArr[3], "-") == 0) {
-                printf("Sub Op\n");
-                // Declare all three variables
-                char * assignVar = strArr[0];
-                char * var1 = malloc(strlen("$") + strlen(strArr[2]) + 1);
-                char * var2 = malloc(strlen("$") + strlen(strArr[4]) + 1);
-                
-                // Declare operation type variable
-                char * opType;
-
-                // Determine if the operation assignment within global or within a function
-                char * progScope = "";
-                if (!isGlobal) { // If its within a function, add a tab
-                    progScope = "\t";
-                }
-
-                // Determine if the variable is global or variable
-                char * scopeType = "global";
-
-                if (!found(assignVar, "global")) {
-                    scopeType = "local";
-                }
-
-                // Determine the operation type
-                opType = getWATType(currOp);
 
                 // Output the variable set line
-                fprintf(WATcode, "\t%s(%s $%s %s)\n", progScope, scopeType, assignVar, opType);
-                fprintf(WATcode, "\t%s(%s.set $%s\n", progScope, scopeType, assignVar);
-
-                // If var1 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[2]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
-
-                    if (!found(strArr[2], "global")) {
-                        varScopeType = "local";
-                    }
-
-                    strcat(var1, "$");
-                    strcat(var1, strArr[2]);
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var1);
+                if (isGlobal) {
+                    fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
                 } else {
-                    var1 = strArr[2];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var1);
+                    fprintf(WATcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
                 }
 
-                // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[4]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
+                // Determine operation WAT call
+                // "+" = "add", "-" = sub, "*" = mul, and "/" = "div" or "div_s" 
+                char * opCall = "";
+                char * specialOp = "";
 
-                    if (!found(strArr[4], "global")) {
-                        varScopeType = "local";
-                    }
-
-                    strcat(var2, "$");
-                    strcat(var2, strArr[4]);
-
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var2);
-                } else {
-                    var2 = strArr[4];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var2);
-                }
-
-                // Perform operation and end the call
-                fprintf(WATcode, "\t\t%s%s.sub\n", progScope, opType);
-                fprintf(WATcode, "\t%s)\n", progScope);
-            }
-            // Mul operation
-            else if (strcmp(strArr[3], "*") == 0) {
-                printf("Mul Op\n");
-                // Declare all three variables
-                char * assignVar = strArr[0];
-                char * var1 = malloc(strlen("$") + strlen(strArr[2]) + 1);
-                char * var2 = malloc(strlen("$") + strlen(strArr[4]) + 1);
-                
-                // Declare operation type variable
-                char * opType;
-
-                // Determine if the operation assignment within global or within a function
-                char * progScope = "";
-                if (!isGlobal) { // If its within a function, add a tab
-                    progScope = "\t";
-                }
-
-                // Determine if the variable is global or variable
-                char * scopeType = "global";
-
-                if (!found(assignVar, "global")) {
-                    scopeType = "local";
-                }
-
-                // Determine the operation type
-                opType = getWATType(currOp);
-
-                // Output the variable set line
-                fprintf(WATcode, "\t%s(%s $%s %s)\n", progScope, scopeType, assignVar, opType);
-                fprintf(WATcode, "\t%s(%s.set $%s\n", progScope, scopeType, assignVar);
-
-                // If var1 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[2]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
-
-                    if (!found(strArr[2], "global")) {
-                        varScopeType = "local";
-                    }
-
-                    strcat(var1, "$");
-                    strcat(var1, strArr[2]);
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var1);
-                } else {
-                    var1 = strArr[2];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var1);
-                }
-
-                // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[4]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
-
-                    if (!found(strArr[4], "global")) {
-                        varScopeType = "local";
-                    }
-
-                    strcat(var2, "$");
-                    strcat(var2, strArr[4]);
-
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var2);
-                } else {
-                    var2 = strArr[4];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var2);
-                }
-
-                // Perform operation and end the call
-                fprintf(WATcode, "\t\t%s%s.mul\n", progScope, opType);
-                fprintf(WATcode, "\t%s)\n", progScope);
-            }
-            // Div operation
-            else if (strcmp(strArr[3], "/") == 0) {
-                printf("Div Op\n");
-                // Declare all three variables
-                char * assignVar = strArr[0];
-                char * var1 = malloc(strlen("$") + strlen(strArr[2]) + 1);
-                char * var2 = malloc(strlen("$") + strlen(strArr[4]) + 1);
-                
-                // Declare operation type variable
-                char * opType;
-
-                // Determine if the operation assignment within global or within a function
-                char * progScope = "";
-                if (!isGlobal) { // If its within a function, add a tab
-                    progScope = "\t";
-                }
-
-                // Determine if the variable is global or variable
-                char * scopeType = "global";
-
-                if (!found(assignVar, "global")) {
-                    scopeType = "local";
-                }
-
-                // Determine the operation type
-                opType = getWATType(currOp);
-
-                // Output the variable set line
-                fprintf(WATcode, "\t%s(%s $%s %s)\n", progScope, scopeType, assignVar, opType);
-                fprintf(WATcode, "\t%s(%s.set $%s\n", progScope, scopeType, assignVar);
-
-                // If var1 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[2]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
-
-                    if (!found(strArr[2], "global")) {
-                        varScopeType = "local";
-                    }
-
-                    strcat(var1, "$");
-                    strcat(var1, strArr[2]);
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var1);
-                } else {
-                    var1 = strArr[2];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var1);
-                }
-
-                // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[4]) == "var") {
-                    // Determine if the variable is global or variable
-                    char * varScopeType = "global";
-
-                    if (!found(strArr[4], "global")) {
-                        varScopeType = "local";
-                    }
-
-                    strcat(var2, "$");
-                    strcat(var2, strArr[4]);
-
-                    fprintf(WATcode, "\t\t%s(%s.get %s)\n", progScope, varScopeType, var2);
-                } else {
-                    var2 = strArr[4];
-                    fprintf(WATcode, "\t\t%s(%s.const %s)\n", progScope, opType, var2);
+                if (strcmp(strArr[3], "+") == 0) {
+                    opCall = "add";
+                } else if (strcmp(strArr[3], "-") == 0) {
+                    opCall = "sub";
+                } else if (strcmp(strArr[3], "*") == 0) {
+                    opCall = "mul";
+                } else if (strcmp(strArr[3], "/") == 0) {
+                    opCall = "div";
                 }
 
                 // Special case for division
                 // If the operation is an integer, specify "div_s"
-                char * specialOp = "";
-                if (opType == "i32") {
+                if (strcmp(opCall, "div") == 0 && strcmp(opType, "i32") == 0) {
                     specialOp = "_s";
                 }
 
-                // Perform operation and end the call
-                fprintf(WATcode, "\t\t%s%s.div%s\n", progScope, opType, specialOp);
-                fprintf(WATcode, "\t%s)\n", progScope);
+                // Start the operation call
+                if (isGlobal) {
+                    fprintf(MAINcode, "\t\t\t(%s.%s%s\n", opType, opCall, specialOp);
+                } else {
+                    fprintf(WATcode, "\t\t\t(%s.%s%s\n", opType, opCall, specialOp);
+                }
+
+                // Declare variables for the operation
+
+                // If var1 references an actual variable, add a dollar sign in front and build the line accordingly
+                if (getPrimaryType(strArr[2]) == "var") {
+                    // Determine if the variable is global or variable
+                    char * varScopeType = "global";
+
+                    if (!found(strArr[2], "global")) {
+                        varScopeType = "local";
+                    }
+
+                    strcat(var1, "$");
+                    strcat(var1, strArr[2]);
+
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t\t(%s.get %s)\n", varScopeType, var1);
+                    } else {
+                        fprintf(WATcode, "\t\t\t\t(%s.get %s)\n", varScopeType, var1);
+                    }
+                } else {
+                    var1 = strArr[2];
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, var1);   
+                    } else {
+                        fprintf(WATcode, "\t\t\t\t(%s.const %s)\n", opType, var1);
+                    }
+                }
+
+                // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
+                if (getPrimaryType(strArr[4]) == "var") {
+                    // Determine if the variable is global or variable
+                    char * varScopeType = "global";
+
+                    if (!found(strArr[4], "global")) {
+                        varScopeType = "local";
+                    }
+
+                    strcat(var2, "$");
+                    strcat(var2, strArr[4]);
+
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t\t(%s.get %s)\n", varScopeType, var2);
+                    } else {
+                        fprintf(WATcode, "\t\t\t\t(%s.get %s)\n", varScopeType, var2);
+                    }
+                } else {
+                    var2 = strArr[4];
+
+                    if (isGlobal) {
+                        fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, var2);
+                    } else {
+                        fprintf(WATcode, "\t\t\t\t(%s.const %s)\n", opType, var2);
+                    }
+                }
+
+                // End the operation call
+                if (isGlobal) {
+                    fprintf(MAINcode, "\t\t\t)\n");
+                    fprintf(MAINcode, "\t\t)\n");
+                } else {
+                    fprintf(WATcode, "\t\t\t)\n");
+                    fprintf(WATcode, "\t\t)\n");
+                }
             }
-
-
-            // c. Function Calls
-            // - Contains a "call"
 
             // Free specific string index for loop reuse
             strArr[3] = "\0";
-
-            // OLD CODE BELOW
-
-            // Set function return type first if this is the first call in a function
-
-            // Declare start and end chars
-            // char*start = code+7;
-            // char*end = start;
             
-            // While a ":" is not encountered, loop through and assign the corresponding variable in WAT
-            // while (*end != ':') end++;
-            // char variable [256]; 
-            // strncpy(variable, start, (end - start));
-            // variable[end - start] = 0;
-            // int value = atoi(++end);
-            // Assign variable and number
-            // int lower = value & 0xffff;
-            // int upper = (value & 0xffff0000) >> 16;
-
-            // Generate WAT code using code, upper, lower, and variable
-            // fprintf(WATcode, "\t\t;; %s\n", code);
-            // fprintf(WATcode, "\t\t(local.set $%s\n", variable);
-            // fprintf(WATcode, "\t\t\t(i32.const %d)\n", lower);
-            // fprintf(WATcode, "\t\t)\n");
-
         }
     }
 
+}
+
+void generateMain() {
+    // Open MAINcode file in read mode
+    fclose(MAINcode);
+    MAINcode = fopen("MAINcode.wat", "r");
+
+    // Generate the starting code for the main function
+    fprintf(WATcode, "\t;; Start Main Function\n");
+    fprintf(WATcode, "\t(func $main\n");
+
+    // Read all WAT code that was inserted into the main file
+    while (fgets(temp, 10000, MAINcode) != NULL) {
+        fprintf(WATcode, "%s", temp);
+    }
+
+    // End the main function
+    fprintf(WATcode, "\t)\n");
+    fprintf(WATcode, "\t(start $main)\n");
 }
 
 // Function to end WAT generation once all commands are printed from the IRcodeOptimized.ir file
@@ -704,6 +744,7 @@ void completeFile() {
     // Closes all files once complete
     fclose(IRcode);
     fclose(WATcode);
+    fclose(MAINcode);
 }
 
 
@@ -712,5 +753,6 @@ void generateWATcode() {
     initAssemblyFile();
     generateModule();
     generateText();
+    generateMain();
     completeFile();
 }
