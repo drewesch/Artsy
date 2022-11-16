@@ -19,6 +19,8 @@ char * getPrimaryType(char * phrase);
 
 void generateText();
 
+void generateLocalOperations();
+
 void generateMain();
 
 void completeFile();

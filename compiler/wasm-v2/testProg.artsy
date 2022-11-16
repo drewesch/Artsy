@@ -32,7 +32,7 @@ function int unreachableFunction(float x, int y){
 }
 
 function int displayMessage(){
-	return 0;
+	return 1;
 }
 
 function float ambitiousFunction (float a, float b, float c){
@@ -46,7 +46,7 @@ function float ambitiousFunction (float a, float b, float c){
    return result;
 }
 
-justAverage = average(12.5, 13.7, 25.8);
+justAverage = average(12.5, 300.7, 25.8);
 aNumber = displayMessage();
 write justAverage;
 writeln;
@@ -61,7 +61,7 @@ aNumber = aNumber / (aNumber + aNumber * aNumber);
 write aNumber;
 writeln;
 
-justAverage = ambitiousFunction(1.0, 2.0, 3.0);
+justAverage = ambitiousFunction(1.0, 3.0, 5.0);
 aNumber = displayMessage();
 write justAverage;
 writeln;

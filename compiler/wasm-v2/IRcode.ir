@@ -27,7 +27,7 @@ result = T5
 return result
 exit
 entry int displayMessage
-return 0
+return 1
 exit
 entry float ambitiousFunction
 param float a
@@ -43,7 +43,7 @@ result = T9
 return result
 exit
 subop float
-T10 = call average args 12.5 13.7 25.8
+T10 = call average args 12.5 300.7 25.8
 justAverage = T10
 subop int
 T11 = call displayMessage args
@@ -72,7 +72,7 @@ aNumber = T19
 output aNumber
 nextline
 subop float
-T20 = call ambitiousFunction args 1.0 2.0 3.0
+T20 = call ambitiousFunction args 1.0 3.0 5.0
 justAverage = T20
 subop int
 T21 = call displayMessage args
