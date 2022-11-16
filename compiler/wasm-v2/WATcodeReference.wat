@@ -44,8 +44,7 @@
 	(export "average" (func $average))
 	(func $displayMessage (result i32)
 		;; return 0
-		(i32.const 0)
-		return
+		(return (i32.const 1))
 	)
 	(export "displayMessage" (func $displayMessage))
 	(func $ambitiousFunction (param $a f32) (param $b f32) (param $c f32) (result f32)
@@ -141,8 +140,8 @@
 		(local.set $T11
 			(call $average
 				(global.get $justAverage)
-				(f32.const 0.0)
-				(f32.const 0.0)
+				(f32.const 1.0)
+				(f32.const 1.0)
 			)
 		)
 		(global.set $justAverage

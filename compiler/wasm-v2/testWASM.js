@@ -32,7 +32,7 @@ env: {
    },
 
    writeconsoleString: function writeconsole(wVar) {
-      document.write(wVar)
+      document.write(String(wVar))
    }
 }
 })
