@@ -1,81 +1,30 @@
 #### IR Code ####
-type int aNumber
-type float secondNumber
-type string someLetter
-type float justAverage
-entry float average
-param float a
-param float b
-param float c
-type float avg
-subop float
-T0 = a + b
-T1 = T0 + c
-T2 = T1 / 3.0
-avg = T2
-return avg
-exit
-entry int unreachableFunction
-param float x
-param int y
-type int result
-subop int
-T3 = x * y
-T4 = x * y
-T5 = T3 + T4
-result = T5
-return result
-exit
-entry int displayMessage
-return 0
-exit
-entry float ambitiousFunction
-param float a
-param float b
-param float c
-type float result
-subop float
-T6 = call average args a b c
-T7 = call average args a b c
-T8 = T6 + T7
-T9 = T8 / 2.0
-result = T9
-return result
-exit
-subop float
-T10 = call average args 12.5 13.7 25.8
-justAverage = T10
-subop int
-T11 = call displayMessage args
-aNumber = T11
-output justAverage
-nextline
-subop float
-T12 = justAverage + 2.0
-T13 = justAverage * T12
-justAverage = T13
-subop float
-T14 = call average args justAverage 0.0 0.0
-justAverage = T14
-subop int
-T15 = call displayMessage args
-aNumber = T15
-nextline
-subop int
-T16 = call displayMessage args
-aNumber = T16
-subop int
-T17 = aNumber * aNumber
-T18 = aNumber + T17
-T19 = aNumber / T18
-aNumber = T19
-output aNumber
-nextline
-subop float
-T20 = call ambitiousFunction args 1.0 2.0 3.0
-justAverage = T20
-subop int
-T21 = call displayMessage args
-aNumber = T21
-output justAverage
-nextline
+type boolean n
+type boolean k
+type boolean aws
+type int a
+type int b
+type int x
+type int y
+type int z
+type string c
+type string d
+type boolean k
+type boolean aws
+type int a
+type int b
+type int x
+type int y
+type int z
+type string c
+type string d
+x = 0
+a = 5
+b = 3
+n = 
+k = 
+c = "c c c"
+d = "d d d"
+aws = 
+z = 9
+output z

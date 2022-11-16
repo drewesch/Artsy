@@ -149,29 +149,24 @@ if (b < a) {
 	}
 }
 
-#### BNF Rules Options for IFs
+#### BNF Rules Options for IFs  
 OPTION 1: Stmt: etc.
 	| IF LPAREN LogicExpr RPAREN Block {}
 ;
-
 OPTION 2:
 StmtList: Stmt StmtList {}
 ;
-
 Stmt: All Options
 	| IfBlock {}
 ;
-
 IfBlock: IF LPAREN LogicExpr RPAREN Block {}
 	| IF LPAREN LogicExpr RPAREN Block ELSE BLOCK {}
 ;
-
 ### DANGLING ELSE PROBLEM
 - Happens when you cannot match between the else and the ifs
 - Only manifests when you have nested IFs
 - Your code must support nested IFs
 - One way to eliminate the dangling else problem is to ensure IfBlocks are nested together in the AST
-
 
 ### AST for IFs and ELSEs
 StmtList
@@ -359,3 +354,13 @@ write z;
 
 
 /*project 4 */ 
+
+
+
+scope check
+type if a > b 
+
+1. Has it been declared ? global scope vs if scope (might not have a scope)
+2. Types ? if a > b, a is 5 and b is string 
+
+extra if function returns a value then it can > 
