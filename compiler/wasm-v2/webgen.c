@@ -13,7 +13,6 @@ FILE * MAINcode;
 FILE * VARScode;
 FILE * LOCALcode;
 char code[10000];
-char tempGlobal[10000];
 
 // Function to open the files for IRcodeOptimized.ir and WATcode.asm
 // Required before generating any WAT code
