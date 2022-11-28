@@ -570,6 +570,13 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 			  return ID;
 			}
 
+{INTEGER}	{
+			  words++; chars += strlen(yytext);
+			  printf("%s : INTEGER\n",yytext);
+			  yylval.string = strdup(yytext); 
+			  return INTEGER;
+			}
+
 {FLOAT}		{
 			  words++; chars += strlen(yytext);
 			  printf("%s : FLOAT\n",yytext);

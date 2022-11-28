@@ -9,14 +9,6 @@ char * getWATType(char * phrase);
 
 int getMoveAmount(char * phrase);
 
-int isAlpha(char * phrase);
-
-int isInt(char * phrase);
-
-int isFloat(char * phrase);
-
-char * getPrimaryType(char * phrase);
-
 void generateText();
 
 void generateLocalOperations();

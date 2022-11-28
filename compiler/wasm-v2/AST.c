@@ -70,3 +70,42 @@ void showAST(struct AST * ASTNode) {
     printf("\nAST Node: %s----------------\n", ASTNode->nodeType); // Print field in tree position
     showSingleAST(ASTNode->right); // Traverse RHS of tree
 }
+
+int evaluateIntExpr(struct AST * root) {
+    if (root == NULL)
+        return 0;
+	int val = 0;
+	if (isInt(root->nodeType)) {
+		printf("\nDetected Int Val");
+		val = atoi(root->nodeType);
+	}
+
+    return (val + evaluateIntExpr(root->left) + evaluateIntExpr(root->right));
+}
+
+float evaluateFloatExpr(struct AST * root) {
+    if (root == NULL)
+        return 0.0;
+	float val = 0.0;
+	if (isFloat(root->nodeType)) {
+		val = atof(root->nodeType);
+	}
+
+    return (val + evaluateFloatExpr(root->left) + evaluateFloatExpr(root->right));
+}
+
+int containsNonVars(struct AST * root) {
+	if (root == NULL) {
+		return 0;
+	}
+	if (isNotVar(root->nodeType)) {
+		return 1;
+	}
+
+	if (strncmp(root->LHS, "", 1) != 0) {
+		containsNonVars(root->left);
+	}
+	if (strncmp(root->RHS, "", 1) != 0) {
+		containsNonVars(root->right);
+	}
+}

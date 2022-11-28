@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include "semantic.h"
 #include "webgen.h"
 #include "symbolTable.h"
 
@@ -66,99 +67,6 @@ int getMoveAmount(char * phrase) {
     }
 }
 
-// Helper function to check if a string is alphanumeric
-int isAlpha(char * phrase) {
-    // Get length of string
-    int len;
-    for (len = 0; phrase[len] != '\0'; ++len);
-
-    // Loop through each character
-    // If there is an alphabetical character, return true
-    for (int i = 0; i < len; i++) {
-        if (isalpha(phrase[i])) {
-            return 1;
-        }
-    }
-    // If nothing is caught, return false
-    return 0;
-}
-
-// Helper function to determine if the string is an integer
-int isInt(char * phrase) {
-    // Get length of string
-    int len;
-    for (len = 0; phrase[len] != '\0'; ++len);
-
-    // Loop through each character
-    // If there is a non-numerical character, return false
-    for (int i = 0; i < len; i++) {
-        if (!isdigit(phrase[i])) {
-            return 0;
-        }
-    }
-
-    // If nothing is caught, return true
-    return 1;
-}
-
-// Helper function to determine if the string is a float
-int isFloat(char * phrase) {
-    // Get length of string
-    int len;
-    for (len = 0; phrase[len] != '\0'; ++len);
-
-    // Set a var for float condition (must require one and only one "." symbol)
-    int condition = 0;
-
-    // Loop through each character
-    for (int i = 0; i < len; i++) {
-        if (!isdigit(phrase[i]) && phrase[i] != '.') {
-            // If there is a non-numerical character, return false
-            return 0;
-        } else if (phrase[i] == '.' && condition == 0) {
-            // Set float condition to true, requirement for string to be a float
-            condition = 1;
-        } else if (phrase[i] == '.' && condition == 1) {
-            // Return false if string has two "." symbols
-            return 0;
-        }
-    }
-
-    // If condition is true and nothing is caught, return true
-    if (condition == 1) {
-        return 1;
-    }
-    // Else return false
-    return 0;
-}
-
-// Helper function to determine the type of a token
-// within a given assignment or operation statement
-char * getPrimaryType(char * phrase) {
-    // If the phrase is a type of string or char
-    if (phrase[0] == '\"' || phrase[0] == '\'') {
-        // If it has three characters, it must be a char
-        // Commented out for now until we implement chars
-        // if (strlen(phrase) == 3) {
-        //     return "char";
-        // }
-        // Otherwise, return as a string
-        return "string";
-    }
-    // Check if the phrase is an float
-    else if (isFloat(phrase)) {
-        return "float";
-    }
-    // Check if the phrase is an int
-    else if (isInt(phrase)) {
-        return "int";
-    }
-    // If all cases fail, the type must be a variable
-    else {
-        return "var";
-    }
-}
-
 // Standard function to generate the main section and text section
 // Required before generating any WAT statements
 void generateText() {
@@ -178,6 +86,7 @@ void generateText() {
     // Loop through each line in the code and generate WAT for each valid statement
     while (fgets(code, 10000, IRcode) != NULL) {
         // Case for type declarations
+        printf("%s", code);
         if (strncmp(code, "type ", 5) == 0){
             // Set function return type first if this is the first call in a function
             if (inParams) {
@@ -197,13 +106,13 @@ void generateText() {
             // Print declaration to WATcode
             if (isGlobal) {
                 char * placeholder = "0";
-                if (newType == "f32") {
+                if (strncmp(newType, "f32", 3) == 0) {
                     placeholder = "0.0";
                 }
 
                 fprintf(WATcode, "\t(global $%s (mut %s) (%s.const %s))\n", variable, newType, newType, placeholder);
             } else {
-                if (strcmp(currScope, "global") == 0) {
+                if (strncmp(currScope, "global", 6) == 0) {
                     fprintf(VARScode, "\t\t(local $%s %s)\n", variable, newType);
                 } else {
                     fprintf(WATcode, "\t\t(local $%s %s)\n", variable, newType);
@@ -278,7 +187,7 @@ void generateText() {
             // Print function ending code
             
             // If it's not a variable, return the value as it's WAT type
-            if (getPrimaryType(variable) != "var") {
+            if (strncmp(getPrimaryType(variable), "var", 3) != 0) {
                 // Get WAT Type for printing to the console
                 char * WATType = getWATType(getPrimaryType(variable));
                 fprintf(LOCALcode, "\t\t(return (%s.const %s))", WATType, variable);
@@ -298,7 +207,7 @@ void generateText() {
             variable[strlen(variable) - 1] = 0;
 
             // If the write statement does not use a variable
-            if (getPrimaryType(variable) != "var") {
+            if (strncmp(getPrimaryType(variable), "var", 3) != 0) {
                 // Get WAT Type for printing to the console
                 char * WATType = getWATType(variable);
 
@@ -399,7 +308,6 @@ void generateText() {
             while(token != NULL) {
                 // Assign to string array
                 strArr[lenIndex] = token;
-                printf("%s\n", strArr[lenIndex]);
                 lenIndex++;
                 token = strtok(NULL, delimiter);
             }
@@ -449,7 +357,7 @@ void generateText() {
                 }
 
                 // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[2]) == "var") {
+                if (strncmp(getPrimaryType(strArr[2]), "var", 3) == 0) {
                     // Determine if the variable is global or variable
                     char * varScopeType = "global";
 
@@ -486,7 +394,7 @@ void generateText() {
             // - Contains a "call" token at index 3
             // - Always acts as an assignment statement, but calls a function register with a set of parameters
 
-            else if (strcmp(strArr[2], "call") == 0) {
+            else if (strncmp(strArr[2], "call", 4) == 0) {
                 // Declare all three variables
                 char * assignVar = strArr[0];
                 char * funcVar = strArr[3];
@@ -517,6 +425,8 @@ void generateText() {
                         fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
                     }
                 }
+
+                printf("Set assign var call lines\n");
 
                 // Output the assignVar call line
                 if (isGlobal) {
@@ -550,7 +460,7 @@ void generateText() {
                         char * callVar = strArr[index];
                         
                         // If var references an actual variable, add a dollar sign in front and build the line accordingly
-                        if (getPrimaryType(strArr[index]) == "var") {
+                        if (strncmp(getPrimaryType(strArr[index]), "var", 3) == 0) {
                             // Determine if the variable is global or variable
                             char * varScopeType = "global";
 
@@ -598,7 +508,7 @@ void generateText() {
             // - STR1 = Var, STR2 = "=", STR3 = primary/variable,
             // - STR4 = Operand, STR5 = primary/variable
 
-            else if (strcmp(strArr[3], "+") == 0 || strcmp(strArr[3], "-") == 0 || strcmp(strArr[3], "*") == 0 || strcmp(strArr[3], "/") == 0) {
+            else if (strncmp(strArr[3], "+", 1) == 0 || strncmp(strArr[3], "-", 1) == 0 || strncmp(strArr[3], "*", 1) == 0 || strncmp(strArr[3], "/", 1) == 0) {
                 // Declare all three variables
                 char * assignVar = strArr[0];
                 char * var1 = strArr[2];
@@ -638,19 +548,19 @@ void generateText() {
                 char * opCall = "";
                 char * specialOp = "";
 
-                if (strcmp(strArr[3], "+") == 0) {
+                if (strncmp(strArr[3], "+", 1) == 0) {
                     opCall = "add";
-                } else if (strcmp(strArr[3], "-") == 0) {
+                } else if (strncmp(strArr[3], "-", 1) == 0) {
                     opCall = "sub";
-                } else if (strcmp(strArr[3], "*") == 0) {
+                } else if (strncmp(strArr[3], "*", 1) == 0) {
                     opCall = "mul";
-                } else if (strcmp(strArr[3], "/") == 0) {
+                } else if (strncmp(strArr[3], "/", 1) == 0) {
                     opCall = "div";
                 }
 
                 // Special case for division
                 // If the operation is an integer, specify "div_s"
-                if (strcmp(opCall, "div") == 0 && strcmp(opType, "i32") == 0) {
+                if (strncmp(opCall, "div", 3) == 0 && strncmp(opType, "i32", 3) == 0) {
                     specialOp = "_s";
                 }
 
@@ -664,7 +574,7 @@ void generateText() {
                 // Declare variables for the operation
 
                 // If var1 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[2]) == "var") {
+                if (strncmp(getPrimaryType(strArr[2]), "var", 3) == 0) {
                     // Determine if the variable is global or variable
                     char * varScopeType = "global";
 
@@ -686,7 +596,7 @@ void generateText() {
                 }
 
                 // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (getPrimaryType(strArr[4]) == "var") {
+                if (strncmp(getPrimaryType(strArr[4]), "var", 3) == 0) {
                     // Determine if the variable is global or variable
                     char * varScopeType = "global";
 
