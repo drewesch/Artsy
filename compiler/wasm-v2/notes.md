@@ -364,3 +364,82 @@ type if a > b
 2. Types ? if a > b, a is 5 and b is string 
 
 extra if function returns a value then it can > 
+
+
+
+
+new 2-------
+
+
+int x;
+int y;
+int z;
+
+x = 3;
+y = x + 5;
+z = y + 7;
+
+write x;
+write y;
+write z;
+
+
+
+new 2---------
+
+
+error 1-----------
+int x;
+int y ;
+
+
+
+function int add(int z, int a){
+	z = z + 2;
+	return z;
+}
+
+
+function int addtwo(int b, int c){
+	b = b + 2;
+	return b;
+}
+
+
+x = 5;
+y = 10;
+
+add(x);
+
+error 1--------------------------
+
+
+error 2----------------------------
+
+int x;
+int y ;
+
+
+
+function float average(float a, float b, float c){
+	a = a + 2;
+	return a;
+}
+
+function int add(int z){
+	z = z + 1;
+	return z;
+}
+
+function int addtwo(int a){
+	a = a + 1;
+	return a;
+}
+
+x = 5;
+y = 10;
+
+add(x);
+
+
+error 2--------------------

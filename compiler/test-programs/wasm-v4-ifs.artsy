@@ -1,59 +1,24 @@
-
-/*project 4 and 5 */ 
-/* if statements and while */
-/*boolean true / false */
-
-
-boolean n;
-boolean k;
-int a;
-int b;
 int x;
-int y;
-int z;
-string c;
-string d;
+int y ;
 
-x = 0;
-a = 5;
-b=3;
-n = (a > b);
-k = (a < b);
-c = "c c c";
-d = "d d d";
 
-while (x < 4){
-	if (x < 1){
-		z = 5;
-		write z;
-		x = x + 1;
-	}
 
-	elif (x == 1 || x < 0){
-		z = 6;
-		write z;
-		x = x + 1;
-	}
-
-	elif (x == 2 && x > 1){
-		z = 7;
-		write z;
-		x = x + 1;
-	}
-	else{
-		z = 8;
-		write z;
-		x = x + 1;
-		if (n == true ){
-			write c; 
-			if (k == false){
-				write d; 
-			}
-		}
-	}
+function float average(float a, float b, float c){
+	a = a + 2;
+	return a;
 }
 
-z = 9;
-write z; 
+function int add(int z){
+	z = z + 1;
+	return z;
+}
 
-/*project 4 */ 
+function int addtwo(int a){
+	a = a + 1;
+	return a;
+}
+
+x = 5;
+y = 10;
+
+add(x);
