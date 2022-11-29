@@ -31,6 +31,7 @@ char tempScopeStore[50];
 
 %token <string> TYPE
 %token <string> ID
+%token <string> INTEGER
 %token <string> FLOAT
 %token <string> STRING
 %token <string> LOGICALOPERATOR
@@ -134,7 +135,7 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 
 								}
 
-								| TYPE ID LEFTSQUARE NUMBER RIGHTSQUARE SEMICOLON {printf("Found Array declaration"); 
+								| TYPE ID LEFTSQUARE INTEGER RIGHTSQUARE SEMICOLON {printf("Found Array declaration"); 
 									symTabAccess(); 
 									int inSymTab = found($2, currentScope);
 									//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
@@ -257,7 +258,8 @@ Else:  ELSE Block {}
 ;
 
 
-Primary :	 NUMBER	{$$ = AST_SingleChildNode("int", $1, $1); }
+Primary :	 INTEGER	{$$ = AST_SingleChildNode("int", $1, $1); }
+	|	NUMBER	{$$ = AST_SingleChildNode("float", $1, $1); }
 	|  ID {$$ = AST_SingleChildNode($1, $1, $1);}
 	|  STRING {$$ = AST_SingleChildNode( "string", $1, $1);}
 	| FLOAT {$$ = AST_SingleChildNode( "float", $1, $1);}
@@ -386,7 +388,7 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					// Check if both exprs exist
 					
 					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("*",$1,$3, $1, $3);
+					$$ = AST_DoublyChildNodes("*", $1, $3, $1, $3);
 				}
 	| Expr DIVIDE Expr { printf("\n RECOGNIZED RULE: DIVIDE statement\n");
 					// Semantic checks
@@ -394,7 +396,36 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					// Check if both exprs exist
 					
 					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("/",$1,$3, $1, $3);
+					$$ = AST_DoublyChildNodes("/", $1, $3, $1, $3);
+
+					// If the RHS is an int, check for integer division error
+					if (strncmp($3, "int", 3) == 0) {
+						int numerator = 1;
+						int denominator = 1;
+
+						// Assign expression values if it's not just a sequence of vars
+						if (containsNonVars($1)) {
+							numerator = evaluateIntExpr($1);
+						}
+						if (containsNonVars($3)) {
+							denominator = evaluateIntExpr($3);
+						}
+						checkIntDivisionError(numerator, denominator);
+					} else if (strncmp($3, "float", 5) == 0) {
+						// float numerator = evaluateFloatExpr($1);
+						float numerator = 1.0;
+						float denominator = 1.0;
+
+						// Assign expression values if it's not just a sequence of vars
+						if (containsNonVars($1)) {
+							numerator = evaluateFloatExpr($1);
+						}
+						if (containsNonVars($3)) {
+							denominator = evaluateFloatExpr($3);
+						}
+						checkFloatDivisionError(numerator, denominator);
+					}
+
 				}
 	| Expr EXPONENT Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
@@ -402,10 +433,10 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 				// Check if both exprs exist
 				
 				// Generate AST Nodes (doubly linked)
-				$$ = AST_DoublyChildNodes("EXP ",$1,$3, $1, $3);
+				$$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
 			}
-	| Expr COMPARSIONOPERATOR Expr {$$ = AST_DoublyChildNodes("Comparsion",$1,$3, $1, $3);}
-	| Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical",$1,$3, $1, $3);}			
+	| Expr COMPARSIONOPERATOR Expr {$$ = AST_DoublyChildNodes("Comparsion", $1, $3, $1, $3);}
+	| Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical", $1, $3, $1, $3);}			
 	| LEFTPAREN Expr RIGHTPAREN {$$ = $2;}
 	| FunctionCall {$$ = $1;}
 	| TRUEZ {$$ = AST_SingleChildNode("TRUE", $1, $1);}

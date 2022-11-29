@@ -1,0 +1,68 @@
+#### Optimized IR Code ####
+type int aNumber
+type float justAverage
+entry float average
+param float a
+param float b
+param float c
+type float avg
+subop float
+T0 = a + b
+T1 = T0 + c
+T2 = T1 / 3.0
+avg = T2
+return avg
+exit
+entry int displayMessage
+return 1
+exit
+entry float ambitiousFunction
+param float a
+param float b
+param float c
+type float result
+subop float
+T3 = call average args a b c
+T4 = call average args a b c
+T5 = T3 + T4
+T6 = T5 / 2.0
+result = T6
+return result
+exit
+subop float
+T7 = call average args 12.5 331.7 25.8
+justAverage = T7
+subop int
+T8 = call displayMessage args
+aNumber = T8
+output justAverage
+nextline
+subop float
+T9 = justAverage + 2.0
+T10 = justAverage * T9
+justAverage = T10
+subop float
+T11 = call average args justAverage 0.0 0.0
+justAverage = T11
+subop int
+T12 = call displayMessage args
+aNumber = T12
+nextline
+subop int
+T13 = call displayMessage args
+aNumber = T13
+subop int
+T14 = aNumber * aNumber
+T15 = aNumber + T14
+T16 = aNumber / T15
+aNumber = T16
+output aNumber
+nextline
+subop float
+T17 = call ambitiousFunction args 1.25 3.0 5.537
+justAverage = T17
+subop int
+T18 = call displayMessage args
+aNumber = T18
+output justAverage
+nextline

@@ -32,4 +32,8 @@ void showSingleAST(struct AST * ASTNode);
 
 void showAST(struct AST * ASTNode);
 
+int evaluateIntExpr(struct AST * root);
+
+float evaluateFloatExpr(struct AST * root);
+
 #endif
