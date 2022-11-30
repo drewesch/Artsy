@@ -9,12 +9,12 @@ type float avg
 subop float
 T0 = a + b
 T1 = T0 + c
-T2 = T1 / 3.0
+T2 = T1 / 2.3
 avg = T2
 return avg
 exit
 entry int displayMessage
-return 1
+return 2
 exit
 entry float ambitiousFunction
 param float a
@@ -52,17 +52,18 @@ subop int
 T13 = call displayMessage args
 aNumber = T13
 subop int
-T14 = aNumber * aNumber
-T15 = aNumber + T14
-T16 = aNumber / T15
-aNumber = T16
+T14 = aNumber + 4
+T15 = aNumber * aNumber
+T16 = T14 + T15
+T17 = aNumber / T16
+aNumber = T17
 output aNumber
 nextline
 subop float
-T17 = call ambitiousFunction args 1.25 3.0 5.537
-justAverage = T17
+T18 = call ambitiousFunction args 1.25 3.0 5.537
+justAverage = T18
 subop int
-T18 = call displayMessage args
-aNumber = T18
+T19 = call displayMessage args
+aNumber = T19
 output justAverage
 nextline

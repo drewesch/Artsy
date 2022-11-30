@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-#include "semantic.h"
 #include "webgen.h"
+#include "semantic.h"
 #include "symbolTable.h"
 
 // Initialize WATcode file, IRcode file, MAINcode file, and other required variables
@@ -425,8 +425,6 @@ void generateText() {
                         fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
                     }
                 }
-
-                printf("Set assign var call lines\n");
 
                 // Output the assignVar call line
                 if (isGlobal) {

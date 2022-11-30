@@ -109,3 +109,24 @@ int containsNonVars(struct AST * root) {
 		containsNonVars(root->right);
 	}
 }
+
+int getNumExprs(struct AST * root) {
+	if (root == NULL) {
+		return 0;
+	}
+	int count = 0;
+	// printf("%s\n", root->nodeType);
+	if (strncmp(root->nodeType, "function call param list", 24) != 0 && strncmp(root->nodeType, "exprlist exprtail", 17) != 0 && strncmp(root->nodeType, "exprlist end", 12) != 0 && strncmp(root->nodeType, "exprlist exprtail", 17) != 0 && strncmp(root->nodeType, ")", 1) != 0 && strncmp(root->nodeType, ",", 1) != 0) {
+		count++;
+	} else {
+		if (strncmp(root->LHS, "", 1) != 0) {
+			count += getNumExprs(root->left);
+		}
+
+		if (strncmp(root->RHS, "", 1) != 0) {
+			count += getNumExprs(root->right);
+		}
+	}
+
+	return count;
+}

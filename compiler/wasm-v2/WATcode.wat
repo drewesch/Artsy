@@ -31,7 +31,7 @@
 		(local.set $T2
 			(f32.div
 				(local.get $T1)
-				(f32.const 3.0)
+				(f32.const 2.3)
 			)
 		)
 		(local.set $avg
@@ -41,7 +41,7 @@
 	)
 	(export "average" (func $average))
 	(func $displayMessage (result i32)
-		(return (i32.const 1))		
+		(return (i32.const 2))		
 	)
 	(export "displayMessage" (func $displayMessage))
 	(func $ambitiousFunction (param $a f32) (param $b f32) (param $c f32) (result f32)
@@ -94,8 +94,9 @@
 		(local $T14 i32)
 		(local $T15 i32)
 		(local $T16 i32)
-		(local $T17 f32)
-		(local $T18 i32)
+		(local $T17 i32)
+		(local $T18 f32)
+		(local $T19 i32)
 
 		(local.set $T7
 			(call $average
@@ -156,31 +157,37 @@
 			(local.get $T13)
 		)
 		(local.set $T14
+			(i32.add
+				(global.get $aNumber)
+				(i32.const 4)
+			)
+		)
+		(local.set $T15
 			(i32.mul
 				(global.get $aNumber)
 				(global.get $aNumber)
 			)
 		)
-		(local.set $T15
-			(i32.add
-				(global.get $aNumber)
-				(local.get $T14)
-			)
-		)
 		(local.set $T16
-			(i32.div_s
-				(global.get $aNumber)
+			(i32.add
+				(local.get $T14)
 				(local.get $T15)
 			)
 		)
+		(local.set $T17
+			(i32.div_s
+				(global.get $aNumber)
+				(local.get $T16)
+			)
+		)
 		(global.set $aNumber
-			(local.get $T16)
+			(local.get $T17)
 		)
 		(call $writeconsoleInt
 			(global.get $aNumber)
 		)
 		(call $newline)
-		(local.set $T17
+		(local.set $T18
 			(call $ambitiousFunction
 				(f32.const 1.25)
 				(f32.const 3.0)
@@ -188,13 +195,13 @@
 			)
 		)
 		(global.set $justAverage
-			(local.get $T17)
+			(local.get $T18)
 		)
-		(local.set $T18
+		(local.set $T19
 			(call $displayMessage)
 		)
 		(global.set $aNumber
-			(local.get $T18)
+			(local.get $T19)
 		)
 		(call $writeconsoleFloat
 			(global.get $justAverage)
