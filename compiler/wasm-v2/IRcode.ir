@@ -1,0 +1,91 @@
+#### IR Code ####
+type int aNumber
+type float secondNumber
+type string someLetter
+type float justAverage
+entry float average
+param float a
+param float b
+param float c
+type float avg
+subop float
+T0 = a + b
+T1 = T0 + c
+T2 = T1 / 2.3
+avg = T2
+return avg
+exit
+entry int unreachableFunction
+param float x
+param int y
+type int result
+subop int
+T3 = x * y
+T4 = x * y
+T5 = T3 + T4
+result = T5
+return result
+exit
+entry int displayMessage
+return 2
+exit
+entry float ambitiousFunction
+param float a
+param float b
+param float c
+type float result
+subop float
+T6 = call average args a b c
+T7 = call average args a b c
+T8 = T6 + T7
+T9 = T8 / 2.0
+result = T9
+return result
+exit
+entry float divide
+param float a
+param float b
+type float result
+subop float
+T10 = a / 1.0
+result = T10
+return result
+exit
+subop float
+T11 = call average args 12.5 331.7 25.8
+justAverage = T11
+subop int
+T12 = call displayMessage args
+aNumber = T12
+output justAverage
+nextline
+subop float
+T13 = justAverage + 2.0
+T14 = justAverage * T13
+justAverage = T14
+subop float
+T15 = call average args justAverage 0.0 0.0
+justAverage = T15
+subop int
+T16 = call displayMessage args
+aNumber = T16
+nextline
+subop int
+T17 = call displayMessage args
+aNumber = T17
+subop int
+T18 = aNumber + 4
+T19 = aNumber * aNumber
+T20 = T18 + T19
+T21 = aNumber / T20
+aNumber = T21
+output aNumber
+nextline
+subop float
+T22 = call ambitiousFunction args 1.25 3.0 5.537
+justAverage = T22
+subop int
+T23 = call displayMessage args
+aNumber = T23
+output justAverage
+nextline

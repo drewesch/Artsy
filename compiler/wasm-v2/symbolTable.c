@@ -130,6 +130,40 @@ int found(char itemName[50], char scope[50]){
 	return 0;
 }
 
+int getItemID(char itemName[50], char scope[50]) {
+	// Lookup an identifier in the symbol table
+	// return TRUE or FALSE
+	// Later on, this may return additional information for an item being found
+	for(int i=0; i<symTabIndex; i++){
+		if(symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				int str1 = strcmp(tempList -> itemName, itemName);
+				int str2 = strcmp(tempList -> scope,scope);
+
+				// If these strings are the same, return true
+				if( str1 == 0 && str2 == 0){
+					return symTabItems[i].itemType;
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+		int str2 = strcmp(symTabItems[i].scope, scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
+
+		// If these strings are the same, return true
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
+			//printf("Found: %s\n-----------------------", itemName);
+			return symTabItems[i].itemID;
+		}
+	}
+	// Else, return false
+	printf("SEMANTIC ERROR: Var %s is not in the symbol table", itemName);
+	exit(1);
+}
+
 char* getItemType(char itemName[50], char scope[50]) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
@@ -174,4 +208,28 @@ int compareTypes(char item1[50], char item2[50], char scope[50]) {
 
 	// Return true or false to state if these items are the same
 	return strcmp(idType1, idType2);
+}
+
+int countParams(int itemID) {
+	// Count variable
+	int totalParams = 0;
+
+	// Loop through all symbol table items
+	for (int i = 0; i < symTabIndex; i++){
+		// If both of these conditions are true, then add one parameter to the count
+		if (symTabItems[i].itemID == itemID && symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				totalParams++;
+				tempList = tempList -> paramlist;
+			}
+		}
+	}
+	
+	// Return total count
+	return totalParams;
+}
+
+int getNumFuncParams(char itemName[50]) {
+	return countParams(getItemID(itemName, "global"));
 }

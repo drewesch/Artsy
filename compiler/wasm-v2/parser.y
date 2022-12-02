@@ -169,20 +169,17 @@ FunDeclListTail: FunDecl {$$ = $1;}
 FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 	symTabAccess();
 	int inSymTab = found($3, currentScope);
-	//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
 
-	// Check if the variable has been declared
+	// Check if the function variable has already been declared
 	// If it has, throw an error
-	//printf("0 Function okkkkkkkkkkkkkkkkkkkkkkkkkkkkk-----------------------\n");
 	if (inSymTab == 0){
-		//printf("Function okkkkkkkkkkkkkkkkkkkkkkkkkkkkk-----------------------\n");
 		addFunction($2, $3, $5); //id
 	}
 	else {
 		printf("SEMANTIC ERROR: Function %s is already in the symbol table", $3);
 		exit(1);
 	}
-	//printf("2 Function okkkkkkkkkkkkkkkkkkkkkkkkkkkkk-----------------------\n");
+
 	// If the variable has not been declared 
 	showSymTable();
 	$$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
@@ -447,6 +444,18 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
 	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", $3, $3);
 	$$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
+
+	int funcParams = getNumFuncParams($1);
+	// printf("Num Func Params: %d\n", funcParams);
+	// printf("Call Params\n");
+	int callParams = getNumExprs(funcCallParamList);
+	// printf("End Call Params\n");
+	// printf("Num Call Params: %d\n", callParams);
+
+	if (funcParams != callParams) {
+		printf("\nSEMANTIC ERROR: The total number of call parameters for \"%s\" (%d) does not match function declaration (%d).\n", $1, callParams, funcParams);
+		exit(1);
+	}
 
 }
 ;

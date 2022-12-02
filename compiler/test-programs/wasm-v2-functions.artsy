@@ -1,11 +1,11 @@
 
-/* 1. accept comments            */
+/* 1. accept comments */
 /* 2. functions= function int hi(int x, int y){x = 2; y = 3; return x;}
 /* 3. order of operation */
 /* 4. multiply float and int */ 
 /* 6. adding to an array of strings. (no char, and like python) */ 
 /* 7. everytime displayMessage, it should show message*/ 
-/* 8. writeln is line breaks*/ 
+/* 8. writeln is line breaks */ 
 
 
 int aNumber;
@@ -15,7 +15,7 @@ float justAverage;
 
 function float average(float a, float b, float c){
 	float avg;
-	avg = (a + b + c)/3.0;
+	avg = (a + b + c)/2.3;
 	return avg;
 }
 
@@ -32,7 +32,7 @@ function int unreachableFunction(float x, int y){
 }
 
 function int displayMessage(){
-	return 1;
+	return 2;
 }
 
 function float ambitiousFunction (float a, float b, float c){
@@ -63,7 +63,7 @@ aNumber = displayMessage();
 writeln;
 
 aNumber = displayMessage();
-aNumber = aNumber / (aNumber + aNumber * aNumber);
+aNumber = aNumber / (aNumber + 4 + aNumber * aNumber);
 write aNumber;
 writeln;
 
