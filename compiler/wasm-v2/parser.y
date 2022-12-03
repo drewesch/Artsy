@@ -57,8 +57,8 @@ char tempScopeStore[50];
 %token WHILE
 %token BREAK
 %token FOR
-%token <string> TRUEZ
-%token <string> FALSEZ
+%token <string> TRUE
+%token <string> FALSE
 %token FUNCTION
 
 //function decl
@@ -440,8 +440,8 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 	| Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical", $1, $3, $1, $3);}			
 	| LEFTPAREN Expr RIGHTPAREN {$$ = $2;}
 	| FunctionCall {$$ = $1;}
-	| TRUEZ {$$ = AST_SingleChildNode("TRUE", $1, $1);}
-	| FALSEZ {$$ = AST_SingleChildNode("FALSE",$1, $1);}
+	| TRUE {$$ = AST_SingleChildNode("boolean", $1, $1);}
+	| FALSE {$$ = AST_SingleChildNode("boolean",$1, $1);}
 ;
 
 

@@ -77,12 +77,17 @@ char * getExprOp(struct AST * root) {
 		return "none";
 	}
 	// printf("Node: %s, LHS: %s, RHS: %s\n", root->nodeType, root->LHS, root->RHS);
-	if (strncmp(root->nodeType, "int", 3) == 0 || strncmp(root->nodeType, "float", 5) == 0 || strncmp(root->nodeType, "string", 6) == 0) {
+	if (strncmp(root->nodeType, "int", 3) == 0
+		|| strncmp(root->nodeType, "float", 5) == 0
+		|| strncmp(root->nodeType, "string", 6) == 0
+		|| strncmp(root->nodeType, "boolean", 7) == 0) {
 		char * op = "";
 
 		// Assign number/variable type to operation type variable
 		op = malloc(strlen(root->nodeType)*sizeof(char));
 		strcpy(op, root->nodeType);
+		printf("%s\n", op);
+		fflush(stdout);
 
 		// Return operation type
 		return op;
@@ -99,12 +104,12 @@ char * getExprOp(struct AST * root) {
 
 		// Return operation type
 		return op;
+	} else if (strncmp(root -> nodeType, "Comparsion", 10) == 0) {
+		return "boolean";
 	} else if (strncmp(root->LHS, "", 1) != 0) {
 		return getExprOp(root->left);
 	} else if (strncmp(root->RHS, "", 1) != 0) {
 		return getExprOp(root->right);
-	} else {
-		return;
 	}
 }
 
