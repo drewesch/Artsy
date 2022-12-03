@@ -74,8 +74,7 @@ char tempScopeStore[50];
 %left MULTIPLY DIVIDE
 %left MODULO
 %left EXPONENT
-%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Elif Else
-
+%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Elif Else ForL
 
 %start Program
 
@@ -238,9 +237,12 @@ Stmt:	SEMICOLON	{}
 	| Loop {$$=$1;}
 	| If {$$=$1;} 
 	| Elif {$$=$1;} 
-	| Else {$$=$1;} 
+	| Else {$$=$1;}
+	| ForL {$$=$1;}  
 ;
 
+ForL: FOR LEFTPAREN Expr RIGHTPAREN Block { }
+;
 
 Loop: WHILE LEFTPAREN Expr RIGHTPAREN Block { }
 ;
@@ -425,6 +427,14 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 				}
 	| Expr EXPONENT Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
+				// Semantic checks
+				
+				// Check if both exprs exist
+				
+				// Generate AST Nodes (doubly linked)
+				$$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
+			}
+	| Expr COMMA Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
 				
 				// Check if both exprs exist

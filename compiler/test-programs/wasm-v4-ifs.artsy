@@ -1,83 +1,80 @@
-
-/* 1. accept comments            */
-/* 2. functions= function int hi(int x, int y){x = 2; y = 3; return x;}
-/* 3. order of operation */
-/* 4. multiply float and int */ 
-/* 6. adding to an array of strings. (no char, and like python) */ 
-/* 7. everytime displayMessage, it should show message*/ 
-/* 8. writeln is line breaks*/ 
+/*project 4 and 5 */ 
+/* if statements and while */
+/*boolean true / false */
 
 
-int aNumber;
-float secondNumber;
-string someLetter;  /* unused variable */
-string message[50];
-float justAverage;
+boolean n;
+boolean k;
+int a;
+int b;
+int x;
+int y;
+int z;
+string c;
+string d;
 
-function float average(float a, float b, float c){
-	float avg;
-	avg = (a + b + c)/3.0;
-	return avg;
+
+
+x = 0;
+a = 5;
+b=3;
+n = (a > b);
+k = (a < b);
+c = "c c c";
+d = "d d d";
+
+while (x < 4){
+	if (x < 1){
+		z = 5;
+		write z;
+		x = x + 1;
+	}
+
+	elif (x == 1 || x < 0){
+		z = 6;
+		write z;
+		x = x + 1;
+	}
+
+	elif (x == 2 && x > 1){
+		z = 7;
+		write z;
+		x = x + 1;
+	}
+	else{
+		z = 8;
+		write z;
+		x = x + 1;
+		if (n == true ){
+			write c; 
+			if (k == false){
+				write d; 
+			}
+		}
+	}
 }
 
-function int unreachableFunction(float x, int y){
-   /* 
-	This function does nothing and should
-	Be removed from IR code in the optimization step
-   */
 
-   int result;
-   result = x*y + x*y;
+z = 9;
+write z; 
 
-   return result;
-}
 
-function int displayMessage(){
-	message[0] = "I";
-	message[1] = " ";
-	message[2] = "c";
-	message[3] = "a";
-	message[4] = "n";
-	message[5] = " ";
-	message[6] = "p";
-	message[7] = "r";
-	message[8] = "i";
-	message[9] = "n";
-	message[10] = "t";
-	message[11] = ":";
+/*project 4 */ 
 
-    write message; 
-	
-	return 0;
-}
 
-function float ambitiousFunction (float a, float b, float c){
 
-   /* great optimization opportunity */
 
-   float result;
- 
-   result = (average(a, b, c) + average(a, b, c))/2.0;
 
-   return result;
-}
 
-justAverage = average(12.5, 13.7, 25.8);
-aNumber = displayMessage();
-write justAverage;
-writeln;
 
-justAverage = justAverage * (justAverage + 2.0);
-justAverage = average(justAverage, 0.0, 0.0);
-aNumber = displayMessage();
-writeln;
 
-aNumber = displayMessage();
-aNumber = aNumber / (aNumber + aNumber * aNumber);
-write aNumber;
-writeln;
 
-justAverage = ambitiousFunction(1.0, 2.0, 3.0);
-aNumber = displayMessage();
-write justAverage;
-writeln;
+
+
+
+
+
+
+
+
+
