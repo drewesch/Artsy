@@ -231,7 +231,12 @@ Stmt:	SEMICOLON	{}
 		printf("\n RECOGNIZED RULE: WRITEIN statement\n");
 		$$ = AST_SingleChildNode("writeln", "\n", 0);
 	}
-	| RETURN Expr SEMICOLON { $$ = AST_SingleChildNode("return", $2,$2); }
+	| RETURN Expr SEMICOLON { 
+		$$ = AST_SingleChildNode("return", $2,$2); 
+
+		// Check if the return type matches the function type
+		CheckAssignmentType(currentScope, getExprOp($2), currentScope);
+	}
 	| READ ID SEMICOLON {$$ = AST_SingleChildNode("read", $2, 0);}
 	| Block {$$ = $1;} //To do for next iteration
 	| Loop {$$=$1;}
@@ -271,7 +276,10 @@ Primary :	 INTEGER	{$$ = AST_SingleChildNode("int", $1, $1); }
 BinOp:	PLUS {}
 ;
 
-ExprListTail:	Primary	{ $$ = AST_SingleChildNode("exprlist end", $1, $1); }
+ExprListTail: {$$ = AST_SingleChildNode("exprlist end", "\n", 0);}	
+	| Primary	{ 
+			$$ = AST_SingleChildNode("exprlist end", $1, $1); 
+		}
 	| Primary COMMA ExprListTail	{
 			$$ = AST_DoublyChildNodes("exprlist exprtail", $1, $3, $1, $3);
 		}
@@ -286,13 +294,12 @@ ExprList: {}
 
 // Fix the AST tree for block
 Block:  LEFTBRACKET DeclList StmtList RIGHTBRACKET { printf("\n RECOGNIZED RULE: Block statement\n");
-		$$ = AST_DoublyChildNodes("block",$2,$3, $2, $3);
+		$$ = AST_DoublyChildNodes("block",$2, $3, $2, $3);
 		}
 ;
 
 Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 				$$ = $1;
-				printf("%s\n", $1);
 				strcpy($$->nodeType, CheckPrimaryType($1, currentScope));
 				}		
 	| ID EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment statement\n");
@@ -309,23 +316,14 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					*/
 					
 					// Check to see if the ID exists in the symbol table
-					printf("ID Declare check\n");
-					CheckAssignmentType($1,$3, currentScope);
-					// printf("RHS LHS Check\n");
-					// if (compareTypes($1,$3, currentScope) != 0) {
-					// 	exit(1);
-					// }
+					checkID($1, currentScope);
+
+					// Check to see if the LHS matches the RHS
+					CheckAssignmentType($1, getExprOp($3), currentScope);
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
-					$$ = AST_DoublyChildNodes("=",$1,$3, $1, $3);
-					// Generate IRcode
-					// printf("Generate IR Code\n");
-					// emitConstantIntAssignment($1, $3);
-
-					// Generate MIPS code
-					// printf("Generate MIPS\n");
-					// emitMIPSConstantIntAssignment($1, $3);
+					$$ = AST_DoublyChildNodes("=",$1, $3, $1, $3);
 
 					}
 	| ID LEFTSQUARE NUMBER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment element statement\n");
@@ -342,41 +340,34 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					*/
 					
 					// Check to see if the ID exists in the symbol table
-					printf("ID Declare check\n");
-					CheckAssignmentType($1,$6, currentScope);
-					// printf("RHS LHS Check\n");
-					// if (compareTypes($1,$3, currentScope) != 0) {
-					// 	exit(1);
-					// }
+					checkID($1, currentScope);
+
+					// Check to see if the LHS matches the RHS
+					CheckAssignmentType($1, $6, currentScope);
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
 					struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $3, $6, $3, $6); 
 
-					$$ = AST_DoublyChildNodes("=",$1,arrayElement, $1, arrayElement);
-					// Generate IRcode
-					// printf("Generate IR Code\n");
-					// emitConstantIntAssignment($1, $3);
-
-					// Generate MIPS code
-					// printf("Generate MIPS\n");
-					// emitMIPSConstantIntAssignment($1, $3);
+					$$ = AST_DoublyChildNodes("=", $1, arrayElement, $1, arrayElement);
 
 					}
 
 	| Expr PLUS Expr { printf("\n RECOGNIZED RULE: PLUS statement\n");
 					// Semantic checks
-					
-					// Check if both exprs exist
+
+					// Check to see if the LHS matches the RHS
+					CheckOperationType(getExprOp($1), getExprOp($3));
 					
 					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("+",$1,$3, $1, $3);
+					$$ = AST_DoublyChildNodes("+", $1, $3, $1, $3);
 					printf("EXPR PLUS EXPR: %s \n------------------------------------------------------------------\n", $3 ->nodeType);
 				}
 	| Expr MINUS Expr { printf("\n RECOGNIZED RULE: MINUS statement\n");
 					// Semantic checks
 					
-					// Check if both exprs exist
+					// Check to see if the LHS matches the RHS
+					CheckOperationType(getExprOp($1), getExprOp($3));
 					
 					// Generate AST Nodes (doubly linked)
 					$$ = AST_DoublyChildNodes("-",$1,$3, $1, $3);
@@ -384,7 +375,8 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 	| Expr MULTIPLY Expr { printf("\n RECOGNIZED RULE: MULTIPLY statement\n");
 					// Semantic checks
 					
-					// Check if both exprs exist
+					// Check to see if the LHS matches the RHS
+					CheckOperationType(getExprOp($1), getExprOp($3));
 					
 					// Generate AST Nodes (doubly linked)
 					$$ = AST_DoublyChildNodes("*", $1, $3, $1, $3);
@@ -392,7 +384,8 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 	| Expr DIVIDE Expr { printf("\n RECOGNIZED RULE: DIVIDE statement\n");
 					// Semantic checks
 					
-					// Check if both exprs exist
+					// Check to see if the LHS matches the RHS
+					CheckOperationType(getExprOp($1), getExprOp($3));
 					
 					// Generate AST Nodes (doubly linked)
 					$$ = AST_DoublyChildNodes("/", $1, $3, $1, $3);
@@ -429,10 +422,11 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 	| Expr EXPONENT Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
 				
-				// Check if both exprs exist
+				// Check to see if the LHS matches the RHS
+				CheckOperationType(getExprOp($1), getExprOp($3));
 				
 				// Generate AST Nodes (doubly linked)
-				$$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
+				$$ = AST_DoublyChildNodes("^", $1, $3, $1, $3);
 			}
 	| Expr COMMA Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
@@ -455,18 +449,33 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
 	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", $3, $3);
 	$$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
 
-	int funcParams = getNumFuncParams($1);
-	// printf("Num Func Params: %d\n", funcParams);
-	// printf("Call Params\n");
-	int callParams = getNumExprs(funcCallParamList);
-	// printf("End Call Params\n");
-	// printf("Num Call Params: %d\n", callParams);
+	// Check if the number of call parameters matches the number of function parameters
+	CheckParamLength($1, funcCallParamList);
 
-	if (funcParams != callParams) {
-		printf("\nSEMANTIC ERROR: The total number of call parameters for \"%s\" (%d) does not match function declaration (%d).\n", $1, callParams, funcParams);
-		exit(1);
-	}
+	// Check to see if the list of call parameters matches the function declaration
+	// compareFuncToExpr($1, funcCallParamList, currentScope);
+	
+	// Find the number of parameters
+    int numParams = getNumExprs(funcCallParamList);
 
+    // Compare parameters if there's at least one parameter
+    if (numParams != 0) {
+        // Iterate through for each parameter in the list
+        for (int i = 0; i < numParams; i++) {
+            // Get the function parameter type at this index
+            char * funcParamType = getFuncParamItemType($1, numParams, i);
+
+            // Get the expression parameter type at this index
+			char * callParamType = getCallListItemType(funcCallParamList, i, 0, currentScope);
+
+            // Check to see if the two types do not match
+            // If they don't, return a semantic error
+            if (strncmp(funcParamType, callParamType, strlen(callParamType)) != 0) {
+                printf("\nSEMANTIC ERROR: The call for parameter #%d (%s) does not match function declaration parameter for \"%s\".\n", i, callParamType, $1);
+                exit(1);
+            }
+        }
+    }
 }
 ;
 

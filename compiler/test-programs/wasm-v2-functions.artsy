@@ -13,13 +13,15 @@ float secondNumber;
 string someLetter;  /* unused variable */
 float justAverage;
 
+float test;
+
 function float average(float a, float b, float c){
 	float avg;
-	avg = (a + b + c)/2.3;
+	avg = (a + b + c)/-2.3;
 	return avg;
 }
 
-function int unreachableFunction(float x, int y){
+function int unreachableFunction(int x, float y){
    /* 
 	This function does nothing and should
 	Be removed from IR code in the optimization step
@@ -32,7 +34,7 @@ function int unreachableFunction(float x, int y){
 }
 
 function int displayMessage(){
-	return 2;
+	return -2 * 3;
 }
 
 function float ambitiousFunction (float a, float b, float c){
@@ -46,9 +48,9 @@ function float ambitiousFunction (float a, float b, float c){
    return result;
 }
 
-function float divide(float a, float b) {
+function float divideHalf(float a) {
    float result;
-   result = a / 1.0;
+   result = a / 2.0;
    return result;
 }
 
@@ -58,16 +60,23 @@ write justAverage;
 writeln;
 
 justAverage = justAverage * (justAverage + 2.0);
-justAverage = average(justAverage, 0.0, 0.0);
+justAverage = average(justAverage, 0.0, 1.1);
 aNumber = displayMessage();
+write justAverage;
 writeln;
 
 aNumber = displayMessage();
-aNumber = aNumber / (aNumber + 4 + aNumber * aNumber);
+write aNumber;
+writeln;
+aNumber = aNumber / (aNumber + aNumber * aNumber);
 write aNumber;
 writeln;
 
 justAverage = ambitiousFunction(1.25, 3.0, 5.537);
 aNumber = displayMessage();
 write justAverage;
+writeln;
+
+test = divideHalf(3.0);
+write test;
 writeln;
