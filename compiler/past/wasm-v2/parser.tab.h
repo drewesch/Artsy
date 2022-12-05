@@ -82,8 +82,8 @@ extern int yydebug;
     WHILE = 283,                   /* WHILE  */
     BREAK = 284,                   /* BREAK  */
     FOR = 285,                     /* FOR  */
-    TRUE = 286,                    /* TRUE  */
-    FALSE = 287,                   /* FALSE  */
+    TRUEZ = 286,                   /* TRUEZ  */
+    FALSEZ = 287,                  /* FALSEZ  */
     FUNCTION = 288,                /* FUNCTION  */
     PLUS = 289,                    /* PLUS  */
     MINUS = 290,                   /* MINUS  */

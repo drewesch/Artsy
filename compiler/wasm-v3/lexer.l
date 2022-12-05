@@ -27,36 +27,21 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 
 %%
 
-"true"		{
-	// Bracket recognition, will be used later as a token for scopes
-	chars++;
-	printf("%s : TRUEZ\n", yytext);
-	yylval.string = strdup(yytext); 
-	return TRUEZ;
-}
-
-"false"		{
-	// Bracket recognition, will be used later as a token for scopes
-	chars++;
-	printf("%s : FALSEZ\n", yytext);
-	yylval.string = strdup(yytext); 
-	return FALSEZ;
-}
 
 "TRUE"		{
 	// Bracket recognition, will be used later as a token for scopes
 	chars++;
-	printf("%s : TRUEZ\n", yytext);
+	printf("%s : TRUE\n", yytext);
 	yylval.string = strdup(yytext); 
-	return TRUEZ;
+	return TRUE;
 }
 
 "FALSE"		{
 	// Bracket recognition, will be used later as a token for scopes
 	chars++;
-	printf("%s : FALSEZ\n", yytext);
+	printf("%s : FALSE\n", yytext);
 	yylval.string = strdup(yytext); 
-	return FALSEZ;
+	return FALSE;
 }
 
 "#/"    				{
