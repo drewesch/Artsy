@@ -4,8 +4,8 @@ const path = require('path');
 const app = express();
 const port = process.env.PORT || 9010;
 
-// Run the app by serving the static files in the dist directory
-app.use(express.static(`${__dirname}/dist`));
+// Run the app by serving the static files in the public directory
+app.use(express.static(`${__dirname}/public`));
 
 // If an incoming request uses a protocol other than HTTPS,
 // redirect that request to the same url but with HTTPS
@@ -20,7 +20,7 @@ const forceSSL = function () {
 
 // For all GET requests, send back index.html so that PathLocationStrategy can be used
 app.get('/*', (req, res) => {
-  res.sendFile(path.join(`${__dirname}/dist/index.html`));
+  res.sendFile(path.join(`${__dirname}/public/index.html`));
 });
 
 // Instruct the app to use the forceSSL middleware

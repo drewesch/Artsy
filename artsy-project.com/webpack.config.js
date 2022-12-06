@@ -8,7 +8,7 @@ const glob = require('glob');
 const parts = require('./webpack.parts');
 const webpack = require('webpack');
 
-const outputDirectory = 'dist';
+const outputDirectory = 'public';
 
 const PATHS = {
   app: path.join(__dirname, 'src'),
