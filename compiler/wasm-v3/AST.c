@@ -110,6 +110,8 @@ char * getExprOp(struct AST * root) {
 		return getExprOp(root->left);
 	} else if (strncmp(root->RHS, "", 1) != 0) {
 		return getExprOp(root->right);
+	} else {
+		return "none";
 	}
 }
 

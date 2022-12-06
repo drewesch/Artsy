@@ -346,6 +346,11 @@ void generateText() {
                     scopeType = "local";
                 }
 
+                // If a current operation has not been assigned, get the current operation from the assignment statement
+                if (strncmp(currOp, "", 1) == 0) {
+                    currOp = getPrimaryType(var2);
+                }
+
                 // Determine the operation type
                 opType = getWATType(currOp);
 
@@ -381,6 +386,8 @@ void generateText() {
                         fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", opType, var2);
                     }
                 }
+
+                printf("It worked!\n");
 
                 // End assignment statement
                 if (isGlobal) { // If it's a temp variable in global, print to MAINcode

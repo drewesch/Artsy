@@ -1,0 +1,10 @@
+int x;
+int y;
+
+function int test(int z) {
+    return z;
+}
+
+y = 5;
+x = test(y);
+write x;
