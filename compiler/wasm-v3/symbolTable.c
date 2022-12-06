@@ -28,6 +28,13 @@ void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLen
 struct Entry* getParamList(char * id, struct AST* paramlist) {
 	struct Entry * list = malloc(sizeof(struct Entry));	
 	if(strcmp(paramlist->nodeType, "variable parm") == 0) {
+		// Semantic check
+		// If the parameter variable name has already been declared before this, throw a semantic error
+		if (found(paramlist->RHS, "global") == 1) {
+			printf("SEMANTIC ERROR: Parameter %s already declared as a variable.\n", paramlist->RHS);
+			exit(1);
+		}
+
 		list->itemID = symTabIndex;
 		strcpy(list->itemName, paramlist->RHS);
 		strcpy(list->itemKind, "Var");
@@ -53,6 +60,13 @@ void addFunction(char *type, char *id, struct AST* paramlist){
 	}
 	else if (strcmp(paramlist->nodeType, "variable parm") == 0) {
 		struct Entry* list = malloc(sizeof(struct Entry));
+
+		// Semantic check
+		// If the parameter variable name has already been declared before this, throw a semantic error
+		if (found(paramlist->RHS, "global") == 1) {
+			printf("SEMANTIC ERROR: Parameter %s already declared as a variable.\n", paramlist->RHS);
+			exit(1);
+		}
 		
 		list->itemID = symTabIndex;
 		strcpy(list->itemName, paramlist->RHS);
@@ -160,7 +174,7 @@ int getItemID(char itemName[50], char scope[50]) {
 		}
 	}
 	// Else, return false
-	printf("SEMANTIC ERROR: Var %s is not in the symbol table", itemName);
+	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
 	exit(1);
 }
 
@@ -194,7 +208,7 @@ char* getItemType(char itemName[50], char scope[50]) {
 		}
 	}
 	// Else, return false
-	printf("SEMANTIC ERROR: Var %s is not in the symbol table", itemName);
+	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
 	exit(1);
 }
 

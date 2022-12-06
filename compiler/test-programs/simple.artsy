@@ -1,10 +1,12 @@
 int x;
 int y;
+int z;
 
-function int test(int z) {
-    return z;
+function int test(int a, int x) {
+    return a;
 }
 
+z = 2;
 y = 5;
-x = test(y);
+x = test(y, z);
 write x;

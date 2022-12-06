@@ -10,8 +10,8 @@
 
 	;; Artsy Program in WAT
 	(global $x (mut i32) (i32.const 0))
-	(func $test (param $z i32) (result i32)
-		(return (local.get $z))		
+	(func $test (param $a i32) (param $x i32) (result i32)
+		(return (local.get $a))		
 	)
 	(export "test" (func $test))
 	;; Start Main Function
@@ -21,6 +21,7 @@
 		(local.set $T0
 			(call $test
 				(global.get $y)
+				(global.get $z)
 			)
 		)
 		(global.set $x

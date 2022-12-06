@@ -15,7 +15,7 @@ int found(char itemName[50], char scope[50]);
 void CheckGlobal(char* variableName, char* currentScope) {
     int nonGlobal = strcmp(currentScope, "global");
     if (nonGlobal != 0 && found(variableName, "global") == 1) {
-        printf("SEMANTIC ERROR: Var %s is already declared globally\n", variableName);
+        printf("SEMANTIC ERROR: Variable %s has already been declared globally.\n", variableName);
         exit(1);
     }
 }
@@ -41,7 +41,7 @@ char* CheckPrimaryType(char * variableName, char * currentScope){
 
 void checkID(char* identifier, char * currentScope) {
     if (found(identifier, currentScope) == 0) {
-        printf("SEMANTIC ERROR: Variable %s is not in the symbol table", identifier);
+        printf("SEMANTIC ERROR: Variable %s does not exist.\n", identifier);
         exit(1);
     }
 }

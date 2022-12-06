@@ -122,7 +122,7 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 									if (inSymTab == 0) 
 										addItem($2, "Var", $1,0, currentScope);
 									else {
-										printf("SEMANTIC ERROR: Var %s is already in the symbol table", $2);
+										printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 										exit(1);
 									}
 									// If the variable has not been declared 
@@ -144,7 +144,7 @@ VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s
 									if (inSymTab == 0) 
 										addItem($2, "Array", $1,atoi($4), currentScope);
 									else {
-										printf("SEMANTIC ERROR: Var %s is already in the symbol table", $2);
+										printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 										exit(1);
 									}
 									// If the variable has not been declared 
@@ -175,9 +175,10 @@ FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		addFunction($2, $3, $5); //id
 	}
 	else {
-		printf("SEMANTIC ERROR: Function %s is already in the symbol table", $3);
+		printf("SEMANTIC ERROR: Function %s has already been declared.\n", $3);
 		exit(1);
 	}
+
 
 	// If the variable has not been declared 
 	showSymTable();
