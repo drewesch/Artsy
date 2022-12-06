@@ -1,5 +1,10 @@
 #### Optimized IR Code ####
-type int z
-type int z
-z = 9
-output z
+type int x
+entry int test
+param int z
+return z
+exit
+subop int
+T0 = call test args y
+x = T0
+output x

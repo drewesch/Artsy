@@ -272,10 +272,6 @@ Primary :	 INTEGER	{$$ = AST_SingleChildNode("int", $1, $1); }
 	}
 ;
 
-
-BinOp:	PLUS {}
-;
-
 ExprListTail: {$$ = AST_SingleChildNode("exprlist end", "\n", 0);}	
 	| Primary	{ 
 			$$ = AST_SingleChildNode("exprlist end", $1, $1); 
