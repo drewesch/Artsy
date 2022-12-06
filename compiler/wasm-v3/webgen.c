@@ -203,6 +203,8 @@ void generateText() {
                 fprintf(WATcode, "(result %s)\n", returnType);
             }
 
+            
+
             char *variable = code + 7; 
             variable[strlen(variable) - 1] = 0;
 
