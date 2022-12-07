@@ -89,15 +89,6 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 		}
 
 
-"string"	{
-			// Recognize strings as a TYPE, return as a token
-			words++; chars += strlen(yytext);
-			printf("%s : STRING\n", yytext);
-			yylval.string = strdup(yytext); 
-			return TYPE;
-		}
-
-
 "float"	{
 			// Recognize strings as a TYPE, return as a token
 			words++; chars += strlen(yytext);

@@ -32,7 +32,7 @@
 		(local.set $T2
 			(f32.div
 				(local.get $T1)
-				(f32.const -2.3)
+				(f32.const -3.3)
 			)
 		)
 		(local.set $avg
@@ -206,8 +206,8 @@
 		(call $newline)
 		(local.set $T18
 			(call $ambitiousFunction
-				(f32.const 1.25)
-				(f32.const 3.0)
+				(f32.const 1.343)
+				(f32.const 20.3)
 				(f32.const 5.537)
 			)
 		)

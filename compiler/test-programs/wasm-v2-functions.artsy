@@ -43,7 +43,7 @@ float test;
 
 function float average(float a, float b, float c){
 	float avg;
-	avg = (a + b + c)/-2.3;
+	avg = (a + b + c)/-3.3;
 	return avg;
 }
 
@@ -98,7 +98,7 @@ aNumber = aNumber / (aNumber + aNumber * aNumber);
 write aNumber;
 writeln;
 
-justAverage = ambitiousFunction(1.25, 3.0, 5.537);
+justAverage = ambitiousFunction(1.343, 20.3, 5.537);
 aNumber = displayMessage();
 write justAverage;
 writeln;
