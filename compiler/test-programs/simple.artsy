@@ -1,12 +1,13 @@
-int x;
-int y;
-int z;
+/* ir code optimized error */ 
+/* needs to add x = 5 */
 
-function int test(int a, int x) {
-    return a;
+int x;
+
+function int add(int z){
+	z = z + 2;
+	return z;
 }
 
-z = 2;
-y = 5;
-x = test(y, z);
-write x;
+x = 10; 
+
+add(x);

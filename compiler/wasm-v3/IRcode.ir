@@ -1,15 +1,12 @@
 #### IR Code ####
 type int x
-type int y
-type int z
-entry int test
-param int a
-param int x
-return a
-exit
-z = 2
-y = 5
+entry int add
+param int z
 subop int
-T0 = call test args y z
-x = T0
-output x
+T0 = z + 2
+z = T0
+return z
+exit
+x = 10
+subop int
+T1 = call add args x

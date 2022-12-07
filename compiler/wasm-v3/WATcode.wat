@@ -9,26 +9,27 @@
 	(export "pagememory" (memory $0))
 
 	;; Artsy Program in WAT
-	(global $x (mut i32) (i32.const 0))
-	(func $test (param $a i32) (param $x i32) (result i32)
-		(return (local.get $a))		
-	)
-	(export "test" (func $test))
-	;; Start Main Function
-	(func $main
-		(local $T0 i32)
-
+	(func $add (param $z i32) (result i32)
 		(local.set $T0
-			(call $test
-				(global.get $y)
-				(global.get $z)
+			(i32.add
+				(local.get $z)
+				(i32.const 2)
 			)
 		)
-		(global.set $x
+		(local.set $z
 			(local.get $T0)
 		)
-		(call $writeconsoleInt
-			(global.get $x)
+		(return (local.get $z))		
+	)
+	(export "add" (func $add))
+	;; Start Main Function
+	(func $main
+		(local $T1 i32)
+
+		(local.set $T1
+			(call $add
+				(global.get $x)
+			)
 		)
 	)
 	(start $main)

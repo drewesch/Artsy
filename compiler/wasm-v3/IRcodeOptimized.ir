@@ -1,11 +1,10 @@
 #### Optimized IR Code ####
-type int x
-entry int test
-param int a
-param int x
-return a
+entry int add
+param int z
+subop int
+T0 = z + 2
+z = T0
+return z
 exit
 subop int
-T0 = call test args y z
-x = T0
-output x
+T1 = call add args x
