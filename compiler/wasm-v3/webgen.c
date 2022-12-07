@@ -283,6 +283,12 @@ void generateText() {
         }
         // Case for handling suboperation states
         else if (strncmp(code, "subop ", 6) == 0) {
+            // Set function return type first if this is the first call in a function
+            if (inParams) {
+                inParams = 0;
+                fprintf(WATcode, "(result %s)\n", returnType);
+            }
+
             // Get variable name
             char * variable = code + 6;
             variable[strlen(variable) - 1] = 0;
@@ -305,6 +311,10 @@ void generateText() {
             char delimiter[] = " ";
             char * token = strtok(code, delimiter);
 
+            // Free specific string index for loop reuse
+            strArr[3] = "\0";
+            strArr[7] = "\0";
+
             // Add all tokens to a string array
             int lenIndex = 0;
             while(token != NULL) {
@@ -325,7 +335,7 @@ void generateText() {
             // - STR1 = Var, STR2 = "=", STR3 = primary/variable
 
             // Assignment Operation
-            if (strArr[3] == NULL) {
+            if (strArr[3] == NULL || strncmp(strArr[3], "", 1) == 0) {
                 // Set function return type first if this is the first call in a function
                 if (inParams) {
                     inParams = 0;
@@ -387,8 +397,6 @@ void generateText() {
                     }
                 }
 
-                printf("It worked!\n");
-
                 // End assignment statement
                 if (isGlobal) { // If it's a temp variable in global, print to MAINcode
                     fprintf(MAINcode, "\t\t)\n");
@@ -397,6 +405,9 @@ void generateText() {
                 else {
                     fprintf(LOCALcode, "\t\t)\n");
                 }
+                
+                // Reset currOp variable
+                currOp = "";
             }
 
             // b. Function Calls
@@ -464,6 +475,11 @@ void generateText() {
                     // Determine if each one is a variable or not, and assign accordingly
                     int index = 5;
                     while (strArr[index] != NULL) {
+                        // Double check and break if it's the end of sequence
+                        if (strncmp(strArr[index], "", 1) == 0) {
+                            break;
+                        }
+
                         char * callVar = strArr[index];
                         
                         // If var references an actual variable, add a dollar sign in front and build the line accordingly
@@ -508,6 +524,8 @@ void generateText() {
                     fprintf(LOCALcode, "\t\t)\n");
                 }
                 
+                // Reset currOp variable
+                // currOp = "";
             }
 
             // c. Basic Operations
@@ -633,9 +651,6 @@ void generateText() {
                     fprintf(LOCALcode, "\t\t)\n");
                 }
             }
-
-            // Free specific string index for loop reuse
-            strArr[3] = "\0";
             
         }
     }

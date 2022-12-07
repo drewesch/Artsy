@@ -187,11 +187,11 @@ char* getItemType(char itemName[50], char scope[50]) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope,scope);
+				int str2 = strcmp(tempList -> scope, scope);
 
 				// If these strings are the same, return true
 				if( str1 == 0 && str2 == 0){
-					return symTabItems[i].itemType;
+					return tempList->itemType;
 				}
 				tempList = tempList -> paramlist;
 			}
@@ -268,7 +268,7 @@ char * getParamType(int itemID, int numParams, int searchIndex) {
 	for (int i = 0; i < numParams; i++) {
 		if (i == searchIndex) {
 			char * paramType = malloc(100*sizeof(char));
-			strcpy(paramType, symTabItems[itemID].itemType);
+			strcpy(paramType, tempList->itemType);
 			return paramType;
 		}
 		tempList = tempList -> paramlist;

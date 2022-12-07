@@ -80,16 +80,24 @@ char tempScopeStore[50];
 
 %%
 
+// Main program parser rule, generates the whole AST for the program
 Program: DeclList FunDeclList StmtList {
-	// Main program parser rule, generates the whole AST for the program
-	struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
-	$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
+		printf("\nProgram Version: DeclList FunDeclList StmtList\n");
+		struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
+		$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
 
-	printf("\n\n\n\n\n--------------------Parser End------------------------\n\n\n");
+		printf("\n--------------------Parser End------------------------\n");
 
-	ast = $$;
+		ast = $$;
+	} 
+	| DeclList StmtList {
+		printf("\nProgram Version: DeclList StmtList\n");
+		$$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
 
-}
+		printf("\n--------------------Parser End------------------------\n");
+
+		ast = $$;
+	}
 ;
 
 // Comment: DIVIDE MULTIPLY CommentBlock MULTIPLY DIVDE
@@ -226,13 +234,20 @@ Stmt:	SEMICOLON	{}
 	| WRITE Primary SEMICOLON	{ printf("\n RECOGNIZED RULE: WRITE statement\n");
 					// Generate write declarations as a statement in the parser
 					$$ = AST_SingleChildNode("write", $2, $2);
-					printf("Write AST generated!\n");
+
+					// If the primary type is a variable, check if the variable is in the symbol table
+					if (strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, currentScope)) {
+						printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
+						exit(1);
+					}
+
 				}
 	| WRITELN SEMICOLON {
 		printf("\n RECOGNIZED RULE: WRITEIN statement\n");
 		$$ = AST_SingleChildNode("writeln", "\n", 0);
 	}
-	| RETURN Expr SEMICOLON { 
+	| RETURN Expr SEMICOLON {
+		printf("\n RECOGNIZED RULE: RETURN statement\n");
 		$$ = AST_SingleChildNode("return", $2,$2); 
 
 		// Check if the return type matches the function type
@@ -389,30 +404,29 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 					// If the RHS is an int, check for integer division error
 					if (strncmp($3, "int", 3) == 0) {
-						int numerator = 1;
-						int denominator = 1;
+						int numeratorInt = 1;
+						int denominatorInt = 1;
 
 						// Assign expression values if it's not just a sequence of vars
 						if (containsNonVars($1)) {
-							numerator = evaluateIntExpr($1);
+							numeratorInt = evaluateIntExpr($1);
 						}
 						if (containsNonVars($3)) {
-							denominator = evaluateIntExpr($3);
+							denominatorInt = evaluateIntExpr($3);
 						}
-						checkIntDivisionError(numerator, denominator);
+						checkIntDivisionError(numeratorInt, denominatorInt);
 					} else if (strncmp($3, "float", 5) == 0) {
-						// float numerator = evaluateFloatExpr($1);
-						float numerator = 1.0;
-						float denominator = 1.0;
+						float numeratorFloat = 1.0;
+						float denominatorFloat = 1.0;
 
 						// Assign expression values if it's not just a sequence of vars
 						if (containsNonVars($1)) {
-							numerator = evaluateFloatExpr($1);
+							numeratorFloat = evaluateFloatExpr($1);
 						}
 						if (containsNonVars($3)) {
-							denominator = evaluateFloatExpr($3);
+							denominatorFloat = evaluateFloatExpr($3);
 						}
-						checkFloatDivisionError(numerator, denominator);
+						checkFloatDivisionError(numeratorFloat, denominatorFloat);
 					}
 
 				}
@@ -468,7 +482,7 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
             // Check to see if the two types do not match
             // If they don't, return a semantic error
             if (strncmp(funcParamType, callParamType, strlen(callParamType)) != 0) {
-                printf("\nSEMANTIC ERROR: The call for parameter #%d (%s) does not match function declaration parameter for \"%s\".\n", i, callParamType, $1);
+                printf("\nSEMANTIC ERROR: The call for parameter #%d (%s) does not match the type for parameter #%d (%s) in the function declaration for \"%s\".\n", i, callParamType, i, funcParamType, $1);
                 exit(1);
             }
         }

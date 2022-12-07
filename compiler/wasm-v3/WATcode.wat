@@ -9,28 +9,233 @@
 	(export "pagememory" (memory $0))
 
 	;; Artsy Program in WAT
-	(func $add (param $z i32) (result i32)
+	(global $aNumber (mut i32) (i32.const 0))
+	(global $justAverage (mut f32) (f32.const 0.0))
+	(global $test (mut f32) (f32.const 0.0))
+	(func $average (param $a f32) (param $b f32) (param $c f32) (result f32)
+		(local $avg f32)
+		(local $T0 f32)
+		(local $T1 f32)
+		(local $T2 f32)
 		(local.set $T0
-			(i32.add
-				(local.get $z)
-				(i32.const 2)
+			(f32.add
+				(local.get $a)
+				(local.get $b)
 			)
 		)
-		(local.set $z
-			(local.get $T0)
+		(local.set $T1
+			(f32.add
+				(local.get $T0)
+				(local.get $c)
+			)
 		)
-		(return (local.get $z))		
+		(local.set $T2
+			(f32.div
+				(local.get $T1)
+				(f32.const -3.3)
+			)
+		)
+		(local.set $avg
+			(local.get $T2)
+		)
+		(return (local.get $avg))		
 	)
-	(export "add" (func $add))
+	(export "average" (func $average))
+	(func $displayMessage (result i32)
+		(return (i32.const -6))		
+	)
+	(export "displayMessage" (func $displayMessage))
+	(func $ambitiousFunction (param $a f32) (param $b f32) (param $c f32) (result f32)
+		(local $result f32)
+		(local $T3 f32)
+		(local $T4 f32)
+		(local $T5 f32)
+		(local $T6 f32)
+		(local.set $T3
+			(call $average
+				(local.get $a)
+				(local.get $b)
+				(local.get $c)
+			)
+		)
+		(local.set $T4
+			(call $average
+				(local.get $a)
+				(local.get $b)
+				(local.get $c)
+			)
+		)
+		(local.set $T5
+			(f32.add
+				(local.get $T3)
+				(local.get $T4)
+			)
+		)
+		(local.set $T6
+			(f32.div
+				(local.get $T5)
+				(f32.const 2.0)
+			)
+		)
+		(local.set $result
+			(local.get $T6)
+		)
+		(return (local.get $result))		
+	)
+	(export "ambitiousFunction" (func $ambitiousFunction))
+	(func $divideHalf (param $a f32) (result f32)
+		(local $result f32)
+		(local $T7 f32)
+		(local.set $T7
+			(f32.div
+				(local.get $a)
+				(f32.const 2.0)
+			)
+		)
+		(local.set $result
+			(local.get $T7)
+		)
+		(return (local.get $result))		
+	)
+	(export "divideHalf" (func $divideHalf))
 	;; Start Main Function
 	(func $main
-		(local $T1 i32)
+		(local $T8 f32)
+		(local $T9 i32)
+		(local $T10 f32)
+		(local $T11 f32)
+		(local $T12 f32)
+		(local $T13 i32)
+		(local $T14 i32)
+		(local $T15 i32)
+		(local $T16 i32)
+		(local $T17 i32)
+		(local $T18 f32)
+		(local $T19 i32)
+		(local $T20 f32)
 
-		(local.set $T1
-			(call $add
-				(global.get $x)
+		(local.set $T8
+			(call $average
+				(f32.const 12.5)
+				(f32.const -331.7)
+				(f32.const 25.8)
 			)
 		)
+		(global.set $justAverage
+			(local.get $T8)
+		)
+		(local.set $T9
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T9)
+		)
+		(call $writeconsoleFloat
+			(global.get $justAverage)
+		)
+		(call $newline)
+		(local.set $T10
+			(f32.add
+				(global.get $justAverage)
+				(f32.const 2.0)
+			)
+		)
+		(local.set $T11
+			(f32.mul
+				(global.get $justAverage)
+				(local.get $T10)
+			)
+		)
+		(global.set $justAverage
+			(local.get $T11)
+		)
+		(local.set $T12
+			(call $average
+				(global.get $justAverage)
+				(f32.const 0.0)
+				(f32.const 1.1)
+			)
+		)
+		(global.set $justAverage
+			(local.get $T12)
+		)
+		(local.set $T13
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T13)
+		)
+		(call $writeconsoleFloat
+			(global.get $justAverage)
+		)
+		(call $newline)
+		(local.set $T14
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T14)
+		)
+		(call $writeconsoleInt
+			(global.get $aNumber)
+		)
+		(call $newline)
+		(local.set $T15
+			(i32.mul
+				(global.get $aNumber)
+				(global.get $aNumber)
+			)
+		)
+		(local.set $T16
+			(i32.add
+				(global.get $aNumber)
+				(local.get $T15)
+			)
+		)
+		(local.set $T17
+			(i32.div_s
+				(global.get $aNumber)
+				(local.get $T16)
+			)
+		)
+		(global.set $aNumber
+			(local.get $T17)
+		)
+		(call $writeconsoleInt
+			(global.get $aNumber)
+		)
+		(call $newline)
+		(local.set $T18
+			(call $ambitiousFunction
+				(f32.const 1.343)
+				(f32.const 20.3)
+				(f32.const 5.537)
+			)
+		)
+		(global.set $justAverage
+			(local.get $T18)
+		)
+		(local.set $T19
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T19)
+		)
+		(call $writeconsoleFloat
+			(global.get $justAverage)
+		)
+		(call $newline)
+		(local.set $T20
+			(call $divideHalf
+				(f32.const 3.0)
+			)
+		)
+		(global.set $test
+			(local.get $T20)
+		)
+		(call $writeconsoleFloat
+			(global.get $test)
+		)
+		(call $newline)
 	)
 	(start $main)
 )
