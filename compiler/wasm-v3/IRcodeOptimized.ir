@@ -47,7 +47,7 @@ aNumber = T9
 output justAverage
 nextline
 subop float
-T10 = justAverage + 2.0
+T10 = justAverage + 3.0
 T11 = justAverage * T10
 justAverage = T11
 subop float
@@ -71,7 +71,7 @@ aNumber = T17
 output aNumber
 nextline
 subop float
-T18 = call ambitiousFunction args 1.343 20.3 5.537
+T18 = call ambitiousFunction args 13.43 20.3 5.537
 justAverage = T18
 subop int
 T19 = call displayMessage args

@@ -137,7 +137,7 @@
 		(local.set $T10
 			(f32.add
 				(global.get $justAverage)
-				(f32.const 2.0)
+				(f32.const 3.0)
 			)
 		)
 		(local.set $T11
@@ -206,7 +206,7 @@
 		(call $newline)
 		(local.set $T18
 			(call $ambitiousFunction
-				(f32.const 1.343)
+				(f32.const 13.43)
 				(f32.const 20.3)
 				(f32.const 5.537)
 			)

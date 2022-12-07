@@ -3,7 +3,7 @@
 Artsy Compiler Features:
 1. Accept single line comments and multi-line comments
    - Single line comments use the "//" expression
-   - Multi line comments are shown in this example.
+   - Multi line comments are shown with this example.
 2. Supported types: 
    - int
    - float
@@ -24,10 +24,8 @@ Artsy Compiler Features:
       - x = getNumber(1, 2, r, m);
       - y = x / getNumber(3, 4, 5, r);
 8. Write statements
-   - Format: write {number or variable}
-   - Examples:
-      - write x;
-      - write 10;
+   - Format: write {variable}
+   - Example: write x;
 9. Line break creation using the "writeln" command
 10. Intuitive semantic checks for program debugging
 
@@ -85,7 +83,7 @@ aNumber = displayMessage();
 write justAverage;
 writeln;
 
-justAverage = justAverage * (justAverage + 2.0);
+justAverage = justAverage * (justAverage + 3.0);
 justAverage = average(justAverage, 0.0, 1.1);
 aNumber = displayMessage();
 write justAverage;
@@ -98,7 +96,7 @@ aNumber = aNumber / (aNumber + aNumber * aNumber);
 write aNumber;
 writeln;
 
-justAverage = ambitiousFunction(1.343, 20.3, 5.537);
+justAverage = ambitiousFunction(13.43, 20.3, 5.537);
 aNumber = displayMessage();
 write justAverage;
 writeln;
