@@ -1,10 +1,10 @@
-integer x;
-int y;
+declare x as int;
+declare y as int;
 
 action int test(int a, int b) {
     report a div b;
 }
 
-y equals (42 - 10 * 3) times 3;
-x equals test(y, 3);
-write y;
+let y equal (42 minus 10 times 3) times 3;
+let x equal test(y, 3);
+print y;

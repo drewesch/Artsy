@@ -1,21 +1,24 @@
-int x;
-int y;
-int z;
-int k;
-int newVar;
+// Variable declarations
+declare x as int;
+declare y as int;
+declare z as int;
+declare k as int;
+declare newVar as int;
 
-x = 10;
-y = 21;
-k = 20;
-newVar = 23;
-z = x + y + newVar + 3 + 4 + x;
-x = z + y + newVar;
+// Operations
+let x equal 10;
+let y equal 21;
+let k equal 20;
+let newVar equal 23;
+let z equal x plus y plus newVar plus 3 plus 4 plus x;
+let x equal z plus y plus newVar;
 
-write x;
-writeln;
-write z;
-writeln;
-write k;
-writeln;
-write newVar;
-writeln;
+// Output lines
+print x;
+addline;
+print z;
+addline;
+print k;
+addline;
+print newVar;
+addline;

@@ -1,32 +1,38 @@
 
 /* 
-Artsy Compiler Features:
+printsy Compiler Features:
 1. Accept single line comments and multi-line comments
    - Single line comments use the "//" expression
    - Multi line comments are shown with this example.
 2. Supported types: 
    - int
    - float
+3. Word Format support
+4. Variable type declaration
+   - Examples:
+      - declare exampleVar as int;
+      - declare complexNum as float;
 3. Support for addition, subtraction, multiplication, and division operations
-   - Operators: +, -, *, /
-4. Order of operations
-5. Negative numbers
-6. Function operations
-   - Format: function {type} {name} ({type name}, {type name}, ...){ {code here} return x;}
+   - Operators (Formula Format): +, -, *, /
+   - Operators (Word Format): plus, minus, times, div
+4. Order of operations (PEMDAS)
+5. Negative numbers (10 or -10 are valid number formats)
+6. Action operations (functions)
+   - Format: action {type} {name} ({type name}, {type name}, ...){ {code here} report x;}
    - Example:
-      function int getNumber(int a, float b, int c, int d) {
-         a = c + d;
-         return a + c;
+      action int getNumber(int a, float b, int c, int d) {
+         let a equal c plus d;
+         report a plus c;
       }
 7. Function calls within operations
-   - Format: {variable} = {function_name}(param1, param2, ...);
+   - Format: let {variable} equal {function_name}(param1, param2, ...);
    - Examples: 
-      - x = getNumber(1, 2, r, m);
-      - y = x / getNumber(3, 4, 5, r);
-8. Write statements
-   - Format: write {variable}
-   - Example: write x;
-9. Line break creation using the "writeln" command
+      - let x equal getNumber(1, 2, r, m);
+      - let y equal x div getNumber(3, 4, 5, r);
+8. Print statements
+   - Format: print {variable}
+   - Example: print x;
+9. Line break creation using the "addline" command
 10. Intuitive semantic checks for program debugging
 
 */ 
@@ -34,73 +40,73 @@ Artsy Compiler Features:
 
 int aNumber;
 float secondNumber;
-string someLetter;  /* unused variable */
+string someLetter; // unsupported type
 float justAverage;
 
 float test;
 
-function float average(float a, float b, float c){
+action float average(float a, float b, float c){
 	float avg;
-	avg = (a + b + c)/-3.3;
-	return avg;
+	let avg equal (a plus b plus c) div -3.3;
+	report avg;
 }
 
-function int unreachableFunction(int x, int y){
-   /* 
-	This function does nothing and should
+action int unreachable(int x, int y){
+   /*
+	This action (or function) does nothing and should
 	Be removed from IR code in the optimization step
    */
 
    int result;
-   result = x*y + x*y;
+   let result equal x times y plus x times y;
 
-   return result;
+   report result;
 }
 
-function int displayMessage(){
-	return -2 * 3;
+action int displayMessage(){
+	report -2 times 3;
 }
 
-function float ambitiousFunction (float a, float b, float c){
+action float ambitiousFunction (float a, float b, float c){
 
    /* great optimization opportunity */
 
    float result;
  
-   result = (average(a, b, c) + average(a, b, c))/2.0;
+   result equal (average(a, b, c) plus average(a, b, c)) div 2.0;
 
-   return result;
+   report result;
 }
 
-function float divideHalf(float a) {
+action float divideHalf(float a) {
    float result;
-   result = a / 2.0;
-   return result;
+   let result equal a div 2.0;
+   report result;
 }
 
-justAverage = average(12.5, -331.7, 25.8);
-aNumber = displayMessage();
-write justAverage;
-writeln;
+let justAverage equal average(12.5, -331.7, 25.8);
+let aNumber equal displayMessage();
+print justAverage;
+addline;
 
-justAverage = justAverage * (justAverage + 3.0);
-justAverage = average(justAverage, 0.0, 1.1);
-aNumber = displayMessage();
-write justAverage;
-writeln;
+let justAverage equal justAverage times (justAverage plus 3.0);
+let justAverage equal average(justAverage, 0.0, 1.1);
+let aNumber equal displayMessage();
+print justAverage;
+addline;
 
-aNumber = displayMessage();
-write aNumber;
-writeln;
-aNumber = aNumber / (aNumber + aNumber * aNumber);
-write aNumber;
-writeln;
+aNumber equal displayMessage();
+print aNumber;
+addline;
+aNumber equal aNumber div (aNumber plus aNumber times aNumber);
+print aNumber;
+addline;
 
-justAverage = ambitiousFunction(13.43, 20.3, 5.537);
-aNumber = displayMessage();
-write justAverage;
-writeln;
+justAverage equal ambitiousFunction(13.43, 20.3, 5.537);
+aNumber equal displayMessage();
+print justAverage;
+addline;
 
-test = divideHalf(3.0);
-write test;
-writeln;
+test equal divideHalf(3.0);
+print test;
+addline;

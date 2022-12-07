@@ -1,85 +1,20 @@
 #### Optimized IR Code ####
-type int aNumber
-type float justAverage
-type float test
-entry float average
-param float a
-param float b
-param float c
-type float avg
-subop float
-T0 = a + b
-T1 = T0 + c
-T2 = T1 / -3.3
-avg = T2
-return avg
-exit
-entry int displayMessage
-return -6
-exit
-entry float ambitiousFunction
-param float a
-param float b
-param float c
-type float result
-subop float
-T3 = call average args a b c
-T4 = call average args a b c
-T5 = T3 + T4
-T6 = T5 / 2.0
-result = T6
-return result
-exit
-entry float divideHalf
-param float a
-type float result
-subop float
-T7 = a / 2.0
-result = T7
-return result
-exit
-subop float
-T8 = call average args 12.5 -331.7 25.8
-justAverage = T8
-subop int
-T9 = call displayMessage args
-aNumber = T9
-output justAverage
+type int x
+type int y
+type int z
+type int k
+type int newVar
+x = 10
+y = 21
+k = 20
+newVar = 23
+z = 71
+x = 115
+output x
 nextline
-subop float
-T10 = justAverage + 3.0
-T11 = justAverage * T10
-justAverage = T11
-subop float
-T12 = call average args justAverage 0.0 1.1
-justAverage = T12
-subop int
-T13 = call displayMessage args
-aNumber = T13
-output justAverage
+output z
 nextline
-subop int
-T14 = call displayMessage args
-aNumber = T14
-output aNumber
+output k
 nextline
-subop int
-T15 = aNumber * aNumber
-T16 = aNumber + T15
-T17 = aNumber / T16
-aNumber = T17
-output aNumber
-nextline
-subop float
-T18 = call ambitiousFunction args 13.43 20.3 5.537
-justAverage = T18
-subop int
-T19 = call displayMessage args
-aNumber = T19
-output justAverage
-nextline
-subop float
-T20 = call divideHalf args 3.0
-test = T20
-output test
+output newVar
 nextline
