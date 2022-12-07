@@ -86,7 +86,7 @@ char * getExprOp(struct AST * root) {
 		// Assign number/variable type to operation type variable
 		op = malloc(strlen(root->nodeType)*sizeof(char));
 		strcpy(op, root->nodeType);
-		printf("%s\n", op);
+		// printf("%s\n", op);
 		fflush(stdout);
 
 		// Return operation type
@@ -120,7 +120,6 @@ int evaluateIntExpr(struct AST * root) {
         return 0;
 	int val = 0;
 	if (isInt(root->nodeType)) {
-		printf("\nDetected Int Val");
 		val = atoi(root->nodeType);
 	}
 

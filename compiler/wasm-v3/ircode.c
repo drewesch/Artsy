@@ -7,6 +7,10 @@
 #include "symbolTable.h"
 #include "AST.h"
 
+// FEATURES TO ADD
+// 1. Assignment Declaration Semantic Check
+//      - By default, all integers and floats in WebAssembly are set to "0" and "0.0" respectively if it's not assigned
+//      - For this language, we could force users to assign a value first before using it an any operation
 
 // Open two files for unoptimized and optimized IRcode
 FILE * IRcode;
@@ -614,6 +618,11 @@ char * emitFunctionCall(char *id) {
     fprintf(IRcode, "%s = call %s args", outputId, id);
 
     for(int i = 0; i < cindex; i ++) {
+        // Update variable if unused
+        if (strncmp(getPrimaryType(c[i]), "var", 3) == 0) {
+            updateUnusedVar(c[i]);
+        }
+
         fprintf(IRcode, " %s", c[i]);
     }
     fprintf(IRcode, "\n");

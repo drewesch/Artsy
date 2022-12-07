@@ -12,6 +12,10 @@ z = x + y + newVar + 3 + 4 + x;
 x = z + y + newVar;
 
 write x;
+writeln;
 write z;
+writeln;
 write k;
+writeln;
 write newVar;
+writeln;
