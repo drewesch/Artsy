@@ -47,6 +47,9 @@ char tempScopeStore[50];
 %token <char> LEFTSQUARE
 %token <char> RIGHTSQUARE
 %token <number> NUMBER
+%token LET
+%token DECLARE
+%token AS
 %token WRITE
 %token WRITELN
 %token READ
@@ -118,50 +121,100 @@ Decl: { $$ = AST_SingleChildNode("empty", "empty", "empty");}
 ;
 
 
-VarDecl:	TYPE ID SEMICOLON	{ printf("\n RECOGNIZED RULE: Variable declaration %s\n", $2);
-									// Variable declaration rule
-									// Symbol Table
-									symTabAccess();
-									int inSymTab = found($2, currentScope);
-									//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
-									
-									// Check if the variable has been declared
-									// If it has, throw an error
-									if (inSymTab == 0) 
-										addItem($2, "Var", $1,0, currentScope);
-									else {
-										printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
-										exit(1);
-									}
-									// If the variable has not been declared 
-									showSymTable();
-									
+VarDecl:	
+	TYPE ID SEMICOLON	{
+		printf("\n RECOGNIZED RULE: Variable declaration %s\n", $2);
+		// Variable declaration rule
+		// Symbol Table
+		symTabAccess();
+		int inSymTab = found($2, currentScope);
+		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
+		
+		// Check if the variable has been declared
+		// If it has, throw an error
+		if (inSymTab == 0) 
+			addItem($2, "Var", $1, 0, currentScope);
+		else {
+			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
+			exit(1);
+		}
+		// If the variable has not been declared 
+		showSymTable();
+		
 
-								  // Generate AST node as a doubly node
-								  $$ = AST_DoublyChildNodes("type",$1,$2,$1, $2);
+		// Generate AST node as a doubly node
+		$$ = AST_DoublyChildNodes("type",$1, $2, $1, $2);
 
-								}
+	}
 
-								| TYPE ID LEFTSQUARE INTEGER RIGHTSQUARE SEMICOLON {printf("Found Array declaration"); 
-									symTabAccess(); 
-									int inSymTab = found($2, currentScope);
-									//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
-														
-									// Check if the variable has been declared
-									// If it has, throw an error
-									if (inSymTab == 0) 
-										addItem($2, "Array", $1,atoi($4), currentScope);
-									else {
-										printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
-										exit(1);
-									}
-									// If the variable has not been declared 
-									showSymTable();
+	| DECLARE ID AS TYPE SEMICOLON	{
+		printf("\n RECOGNIZED RULE: Variable declaration %s\n", $2);
+		// Variable declaration rule
+		// Symbol Table
+		symTabAccess();
+		int inSymTab = found($2, currentScope);
+		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
+		
+		// Check if the variable has been declared
+		// If it has, throw an error
+		if (inSymTab == 0) 
+			addItem($2, "Var", $4, 0, currentScope);
+		else {
+			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
+			exit(1);
+		}
+		// If the variable has not been declared 
+		showSymTable();
+		
 
-									struct AST* arraySize = AST_SingleChildNode("size", $4, $4); 
-									struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
-									$$ = AST_DoublyChildNodes("type",$1, array, $1, array);
-								}
+		// Generate AST node as a doubly node
+		$$ = AST_DoublyChildNodes("type", $4, $2, $4, $2);
+
+	}
+
+	| TYPE ID LEFTSQUARE INTEGER RIGHTSQUARE SEMICOLON {
+		printf("RECOGNIZED RULE: Array declaration"); 
+		symTabAccess(); 
+		int inSymTab = found($2, currentScope);
+		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
+							
+		// Check if the variable has been declared
+		// If it has, throw an error
+		if (inSymTab == 0) 
+			addItem($2, "Array", $1, atoi($4), currentScope);
+		else {
+			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
+			exit(1);
+		}
+		// If the variable has not been declared 
+		showSymTable();
+
+		struct AST* arraySize = AST_SingleChildNode("size", $4, $4); 
+		struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
+		$$ = AST_DoublyChildNodes("type", $1, array, $1, array);
+	}
+
+	| DECLARE ID AS TYPE LEFTSQUARE INTEGER RIGHTSQUARE SEMICOLON {
+		printf("RECOGNIZED RULE: Array declaration"); 
+		symTabAccess(); 
+		int inSymTab = found($2, currentScope);
+		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
+							
+		// Check if the variable has been declared
+		// If it has, throw an error
+		if (inSymTab == 0) 
+			addItem($2, "Array", $4, atoi($6), currentScope);
+		else {
+			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
+			exit(1);
+		}
+		// If the variable has not been declared 
+		showSymTable();
+
+		struct AST* arraySize = AST_SingleChildNode("size", $6, $6); 
+		struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
+		$$ = AST_DoublyChildNodes("type", $4, array, $4, array);
+	}
 ;
 
 FunDeclList: {}
@@ -362,6 +415,57 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $3, $6, $3, $6); 
 
 					$$ = AST_DoublyChildNodes("=", $1, arrayElement, $1, arrayElement);
+
+					}
+
+	| LET ID EQ Expr 	{ printf("\n RECOGNIZED RULE: Let Assignment statement \n");
+					// --- SEMANTIC CHECKS --- //
+					/*
+						int semanticCorrectness = FALSE;
+						1. Has ID been declared? If yes, semanticCorrectness = 1
+
+						2. Does RHS.type = LHS.type? if yes, semanticCorrectness = 1
+
+						If all tests == 1, then
+							perform SEMANTIC ACTIONS
+						
+					*/
+					
+					// Check to see if the ID exists in the symbol table
+					checkID($2, currentScope);
+
+					// Check to see if the LHS matches the RHS
+					CheckAssignmentType($2, getExprOp($4), currentScope);
+
+					// Generate AST tree nodes
+					printf("DEBUG -- GENERATE AST\n");
+					$$ = AST_DoublyChildNodes("=",$2, $4, $2, $4);
+
+					}
+	| LET ID LEFTSQUARE NUMBER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Let Assignment element statement\n");
+					// --- SEMANTIC CHECKS --- //
+					/*
+						int semanticCorrectness = FALSE;
+						1. Has ID been declared? If yes, semanticCorrectness = 1
+
+						2. Does RHS.type = LHS.type? if yes, semanticCorrectness = 1
+
+						If all tests == 1, then
+							perform SEMANTIC ACTIONS
+						
+					*/
+					
+					// Check to see if the ID exists in the symbol table
+					checkID($2, currentScope);
+
+					// Check to see if the LHS matches the RHS
+					CheckAssignmentType($2, $7, currentScope);
+
+					// Generate AST tree nodes
+					printf("DEBUG -- GENERATE AST\n");
+					struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $4, $7, $4, $7); 
+
+					$$ = AST_DoublyChildNodes("=", $2, arrayElement, $2, arrayElement);
 
 					}
 

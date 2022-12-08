@@ -1,26 +1,10 @@
+declare x as int;
+declare y as int;
 
-/* ir code optimized error */ 
-/* needs to add x = 5 */
-
-int x;
-
-function int add(int z){
-	z = z + 2;
-	return z;
+action int test(int a, int b) {
+    report a div b;
 }
 
-x = 10; 
-
-add(x);
-
-int x;
-int y;
-
-function int test(int a, int b) {
-    return a / b;
-}
-
-y = 5;
-x = test(y, 3);
-write x;
-
+let y equal (42 minus 10 times 3) times 3;
+let x equal test(y, 3);
+print y;

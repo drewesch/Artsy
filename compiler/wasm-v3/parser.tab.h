@@ -72,25 +72,28 @@ extern int yydebug;
     LEFTSQUARE = 273,              /* LEFTSQUARE  */
     RIGHTSQUARE = 274,             /* RIGHTSQUARE  */
     NUMBER = 275,                  /* NUMBER  */
-    WRITE = 276,                   /* WRITE  */
-    WRITELN = 277,                 /* WRITELN  */
-    READ = 278,                    /* READ  */
-    RETURN = 279,                  /* RETURN  */
-    IF = 280,                      /* IF  */
-    ELIF = 281,                    /* ELIF  */
-    ELSE = 282,                    /* ELSE  */
-    WHILE = 283,                   /* WHILE  */
-    BREAK = 284,                   /* BREAK  */
-    FOR = 285,                     /* FOR  */
-    TRUE = 286,                    /* TRUE  */
-    FALSE = 287,                   /* FALSE  */
-    FUNCTION = 288,                /* FUNCTION  */
-    PLUS = 289,                    /* PLUS  */
-    MINUS = 290,                   /* MINUS  */
-    MULTIPLY = 291,                /* MULTIPLY  */
-    DIVIDE = 292,                  /* DIVIDE  */
-    MODULO = 293,                  /* MODULO  */
-    EXPONENT = 294                 /* EXPONENT  */
+    LET = 276,                     /* LET  */
+    DECLARE = 277,                 /* DECLARE  */
+    AS = 278,                      /* AS  */
+    WRITE = 279,                   /* WRITE  */
+    WRITELN = 280,                 /* WRITELN  */
+    READ = 281,                    /* READ  */
+    RETURN = 282,                  /* RETURN  */
+    IF = 283,                      /* IF  */
+    ELIF = 284,                    /* ELIF  */
+    ELSE = 285,                    /* ELSE  */
+    WHILE = 286,                   /* WHILE  */
+    BREAK = 287,                   /* BREAK  */
+    FOR = 288,                     /* FOR  */
+    TRUE = 289,                    /* TRUE  */
+    FALSE = 290,                   /* FALSE  */
+    FUNCTION = 291,                /* FUNCTION  */
+    PLUS = 292,                    /* PLUS  */
+    MINUS = 293,                   /* MINUS  */
+    MULTIPLY = 294,                /* MULTIPLY  */
+    DIVIDE = 295,                  /* DIVIDE  */
+    MODULO = 296,                  /* MODULO  */
+    EXPONENT = 297                 /* EXPONENT  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -107,7 +110,7 @@ union YYSTYPE
 	char* string;
 	struct AST* ast;
 
-#line 111 "parser.tab.h"
+#line 114 "parser.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

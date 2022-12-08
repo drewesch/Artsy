@@ -138,6 +138,30 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 			return TYPE;
 		}
 
+"let"	{
+			// Recognize strings as a TYPE, return as a token
+			words++; chars += strlen(yytext);
+			printf("%s : LET\n", yytext);
+			yylval.string = strdup(yytext); 
+			return LET;
+		}
+
+"declare"	{
+			// Recognize strings as a TYPE, return as a token
+			words++; chars += strlen(yytext);
+			printf("%s : DECLARE\n", yytext);
+			yylval.string = strdup(yytext); 
+			return DECLARE;
+		}
+
+"as"	{
+			// Recognize strings as a TYPE, return as a token
+			words++; chars += strlen(yytext);
+			printf("%s : AS\n", yytext);
+			yylval.string = strdup(yytext); 
+			return AS;
+		}
+
 "write"	{
 			// The write operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
@@ -154,12 +178,20 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 			return WRITELN;
 		}
 
-"art"	{
+"print"	{
 			// The write operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
 			printf("%s : KEYWORD\n", yytext);
 			yylval.string = strdup(yytext); 
 			return WRITE;
+		}
+
+"addline"	{
+			// The write operation is special, return as a KEYWORD token
+			words++; chars += strlen(yytext);
+			printf("%s : KEYWORD\n", yytext);
+			yylval.string = strdup(yytext); 
+			return WRITELN;
 		}
 
 "read"	{
@@ -170,6 +202,14 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 			return READ;
 		}
 
+"report"	{
+			// The report operation is special, return as a KEYWORD token
+			words++; chars += strlen(yytext);
+			printf("%s : KEYWORD\n", yytext);
+			yylval.string = strdup(yytext); 
+			return RETURN;
+		}
+
 "return" {
 			// The return operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
@@ -178,24 +218,15 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 			return RETURN;
 		}
 
-
-"report"	{
-			// The report operation is special, return as a KEYWORD token
-			words++; chars += strlen(yytext);
-			printf("%s : KEYWORD\n", yytext);
-			yylval.string = strdup(yytext); 
-			return RETURN;
-		}
-		
-"function"	{
+"action"	{
 			// The function operation is special, return as a FUNCTION token
 			words++; chars += strlen(yytext);
 			printf("%s : FUNCTION\n", yytext);
 			yylval.string = strdup(yytext); 
 			return FUNCTION;
 		}
-
-"action"	{
+		
+"function"	{
 			// The function operation is special, return as a FUNCTION token
 			words++; chars += strlen(yytext);
 			printf("%s : FUNCTION\n", yytext);
@@ -284,7 +315,7 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 		  return EQ;
 		}
 
-"equals"		{
+"equal"		{
 		  // Assignment recognition token
 		  chars++;
 		  printf("%s : EQ\n", yytext);

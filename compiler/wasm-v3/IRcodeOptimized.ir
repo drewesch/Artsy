@@ -1,4 +1,46 @@
 #### Optimized IR Code ####
-type int z
-z = 9
-output z
+type int x
+entry int test
+param int a
+param int x
+return a
+exit
+subop float
+T8 = call average args 12.5 -331.7 25.8
+justAverage = T8
+subop int
+T9 = call displayMessage args
+aNumber = T9
+output justAverage
+nextline
+subop float
+T10 = justAverage + 2.0
+T11 = justAverage * T10
+justAverage = T11
+subop float
+T12 = call average args justAverage 0.0 1.1
+justAverage = T12
+subop int
+T13 = call displayMessage args
+aNumber = T13
+output justAverage
+nextline
+subop int
+T14 = call displayMessage args
+aNumber = T14
+output aNumber
+nextline
+subop int
+T15 = aNumber * aNumber
+T16 = aNumber + T15
+T17 = aNumber / T16
+aNumber = T17
+output aNumber
+nextline
+subop float
+T18 = call ambitiousFunction args 1.343 20.3 5.537
+justAverage = T18
+subop int
+T0 = call test args y z
+x = T0
+output x
