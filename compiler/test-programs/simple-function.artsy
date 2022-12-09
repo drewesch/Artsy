@@ -1,0 +1,14 @@
+// Simple function program
+declare x as int;
+declare y as int;
+
+action int test(int a, int b) {
+    report a div b;
+}
+
+let y equal (52 minus 10 times 3) times 3;
+
+let x equal test (y, 3);
+x = test(y, 3);
+
+print y;
