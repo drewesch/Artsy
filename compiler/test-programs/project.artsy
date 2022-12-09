@@ -34,17 +34,24 @@ else{
 write n;
 
 }
-
 */ 
+
+
+
+
+
+
+
+
+
+
+
 
 
 
 int x;
 string y;
 int resulta;
-
-
-
 
 
 function int addValue(int num1, int num2){
@@ -64,7 +71,7 @@ while (x > 0){
 
 resulta = addValue(x, -5);
 
-write 
+write y;
 write resulta;
 
 writeln;
