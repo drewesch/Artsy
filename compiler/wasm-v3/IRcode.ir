@@ -1,0 +1,15 @@
+#### IR Code ####
+type int x
+type string y
+type int resulta
+entry int addValue
+param int num1
+param int num2
+type int result
+subop int
+T0 = num1 + num2
+result = T0
+return 0
+exit
+x = 20
+y = "result:"
