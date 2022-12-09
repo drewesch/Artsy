@@ -1,0 +1,77 @@
+
+
+/*  2
+int x;
+string y;
+string n;
+int resulta;
+
+
+
+function int addValue(int num1, int num2){
+	int result;
+	result = num1 + num2;
+	return result;
+}
+
+x = 20;
+y =  "result:";
+n = "no change";
+
+
+
+if (x > 0){
+
+resulta = addValue(x, -5);
+
+write y;
+write resulta;
+
+}
+
+else{
+
+write n;
+
+}
+
+*/ 
+
+
+
+int x;
+string y;
+int resulta;
+
+
+
+
+
+function int addValue(int num1, int num2){
+    int result;
+    result = num1 + num2;
+    return 0;
+}
+
+
+
+x = 20;
+y = "result:"
+
+
+
+while (x > 0){
+
+resulta = addValue(x, -5);
+
+write 
+write resulta;
+
+writeln;
+
+x = x - 5;
+
+}
+
+}
+

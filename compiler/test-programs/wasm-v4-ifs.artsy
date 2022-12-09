@@ -78,7 +78,6 @@ while (x < 4){ 							/*5. Make x a string to test*/
 
 z = 9;
 write z; 
-
 /*project 4 */ 
 
 
