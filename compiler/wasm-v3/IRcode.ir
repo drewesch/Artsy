@@ -1,15 +1,23 @@
 #### IR Code ####
+type boolean t
+type boolean f
+type boolean n
+type boolean k
+type int a
+type int b
 type int x
-type string y
-type int resulta
-entry int addValue
-param int num1
-param int num2
-type int result
-subop int
-T0 = num1 + num2
-result = T0
-return 0
-exit
-x = 20
-y = "result:"
+type int y
+type int z
+type string c
+type string d
+x = 0
+a = 5
+b = 3
+t = 
+f = 
+n = 
+k = 
+c = "c c c"
+d = "d d d"
+z = 9
+output z
