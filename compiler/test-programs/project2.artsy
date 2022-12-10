@@ -1,0 +1,134 @@
+
+
+/*1. allow array to accept word */
+/*2. semantic check if not correct number */
+/*3. Allow declarations, functions, and statements to be executed in any order  */
+
+
+string message[50];
+
+function int displayMessage(){
+	message[0] = "I"; 																		/*1. allow array to accept word */
+	message[1] = " ";
+	message[2] = "c";
+	message[3] = "a";
+	message[4] = "n";
+	message[5] = " ";
+	message[6] = "p";
+	message[7] = "r";
+	message[8] = "i";
+	message[9] = "n";
+	message[10] = "t";
+	message[11] = ":";
+	message[100] = "Error"; 															/*2. semantic check if not correct number */
+	
+	return 0;
+}
+
+
+
+int anywhere; 										/*3. Allow declarations, functions, and statements to be executed in any order  */
+anywhere = 5;										/*3. Allow declarations, functions, and statements to be executed in any order  */
+write anywhere; 									/*3. Allow declarations, functions, and statements to be executed in any order  */
+
+
+
+
+
+
+
+
+
+
+
+
+/*4. t = TRUE;  */
+/*5. f = FALSE; */
+/*6. n = (a > b); /*This should be TRUE */
+/*7. k = (a < b);  /* This should be FALSE */
+/*8. Make x a string to test */
+/*9. Test Sematic*/ 
+/*10. Test Sematic*/ 
+/*11. Test Sematic*/ 
+/*12. Test Sematic*/ 
+/*13. Add symbol table support for if statements and loops (adding scopes to declarations in ifs) */ 
+/*14. Add AST nodes in the parser for if statements and loops */
+
+
+
+boolean t;
+boolean f;
+boolean n;
+boolean k;
+ 
+
+int a;
+int b;
+int x;
+int y;
+int z;
+string c;
+string d;
+string majortest;
+majortest = "hello";
+
+
+
+
+x = 0;
+a = 5;
+b = 3;
+t = TRUE; 								 /*4. TRUE*/
+f = FALSE;								 /*5. FALSE*/
+n = (a > b);                             /*6. This should be TRUE*/
+k = (a < b); 							 /*7. This should be FALSE*/
+c = "c c c";
+d = "d d d";
+
+
+
+while (majortest < 4){ 							/*8. Make x a string to test*/
+	if (x < 1){
+		z = 5;
+		write z;
+		x = x + 1;
+	}
+
+	elif (majortest == 1 || x < 0){        		/*9. Test Sematic*/ 
+		z = 6;
+		write z;
+		x = x + 1;
+	}
+
+	elif (x == majortest && x > 1){				/*10. Test Sematic*/ 
+		z = 7;
+		write z;
+		x = x + 1;
+	}
+	else{
+		z = 8;
+		write z;
+		x = x + 1;
+		if (n == TRUE ){				/*11. Test Sematic*/ 
+			write c; 
+			if (k == FALSE){			/*12. Test Sematic*/ 
+				write d; 
+			}
+		}
+	}
+}
+
+
+z = 9;
+write z; 
+/*project 4 */ 
+
+/*13. Add symbol table support for if statements and loops (adding scopes to declarations in ifs and loops) */ 
+/*14. Add AST nodes in the parser for if statements and loops */
+/*15. write string*/
+/*16. write int*/
+
+
+
+write "done";																						/*15. write string*/
+write 5;																							/*16. write int*/

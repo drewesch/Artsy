@@ -1,4 +1,0 @@
-#### Optimized IR Code ####
-type int z
-z = 9
-output z

@@ -1,0 +1,38 @@
+
+
+
+
+int x;
+
+char y;
+int resulta;
+
+
+
+
+function int addValue(int num1, int num2){
+
+int result;
+
+result = num1 + num2;
+
+return result;
+
+}
+
+
+x = 20;
+
+
+while (x > 0){
+
+resulta = addValue(x, -5);
+
+write resulta;
+
+writeln;
+
+x = x - 5;
+
+}
+
