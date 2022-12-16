@@ -84,18 +84,18 @@ char tempScopeStore[50];
 %%
 
 // Main program parser rule, generates the whole AST for the program
-Program: DeclList FunDeclList StmtList {
-		printf("\nProgram Version: DeclList FunDeclList StmtList\n");
-		struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
-		$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
+Program: DeclList StmtList {
+		printf("\nProgram Version: DeclList StmtList\n");
+		$$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
 
 		printf("\n--------------------Parser End------------------------\n");
 
 		ast = $$;
-	} 
-	| DeclList StmtList {
-		printf("\nProgram Version: DeclList StmtList\n");
-		$$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
+	} |
+	DeclList StmtList Program{
+		printf("\nProgram Version: DeclList StmtList Program\n");
+		struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
+		$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
 
 		printf("\n--------------------Parser End------------------------\n");
 
@@ -110,14 +110,19 @@ Program: DeclList FunDeclList StmtList {
 DeclList: // Grammar rule to generate the whole list of variable and regular declarations
 	VarDecl DeclList	{ $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
 							}
+	| FunDeclList { $$ = $1; }
 	| Decl	{ $$ = $1; }
 ;
 
-Decl: { $$ = AST_SingleChildNode("empty", "empty", "empty");}
+Decl: {
+	printf("\ncheck5\n");
+	fflush(stdout);
+	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	| VarDecl {
 	// Basic Var Declaration Rule, generates AST for all variable declarations
 	$$ = $1;
 	}
+	
 ;
 
 
@@ -227,6 +232,8 @@ FunDeclListTail: FunDecl {$$ = $1;}
 ;
 
 FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
+	printf("\ncheck2\n");
+	fflush(stdout);
 	symTabAccess();
 	int inSymTab = found($3, currentScope);
 
@@ -253,6 +260,7 @@ FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 FunDecl: FuncHeader Block {
 	// Generate AST node as a doubly node
 	$$ = AST_DoublyChildNodes("function",$1,$2,$1, $2);
+	fflush(stdout);
 	strcpy(currentScope, tempScopeStore);
 }
 ;
@@ -277,6 +285,9 @@ StmtList: Stmt {
 		// Generate a list of all statement declarations below vardecl
 		$$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);
 		}
+	| FunDeclList {
+		$$ = $1;
+	}
 ;
 
 Stmt:	SEMICOLON	{}
@@ -288,8 +299,10 @@ Stmt:	SEMICOLON	{}
 					// Generate write declarations as a statement in the parser
 					$$ = AST_SingleChildNode("write", $2, $2);
 
+					printf("write: %s", $2 -> nodeType);
+
 					// If the primary type is a variable, check if the variable is in the symbol table
-					if (strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, currentScope)) {
+					if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, currentScope)) {
 						printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
 						exit(1);
 					}
@@ -391,7 +404,8 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					$$ = AST_DoublyChildNodes("=",$1, $3, $1, $3);
 
 					}
-	| ID LEFTSQUARE NUMBER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment element statement\n");
+	| ID LEFTSQUARE INTEGER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment element statement\n");
+	
 					// --- SEMANTIC CHECKS --- //
 					/*
 						int semanticCorrectness = FALSE;
@@ -409,6 +423,8 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 					// Check to see if the LHS matches the RHS
 					CheckAssignmentType($1, $6, currentScope);
+
+					CheckIndexOutOfBound($1, $3, currentScope);
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
@@ -442,7 +458,7 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					$$ = AST_DoublyChildNodes("=",$2, $4, $2, $4);
 
 					}
-	| LET ID LEFTSQUARE NUMBER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Let Assignment element statement\n");
+	| LET ID LEFTSQUARE INTEGER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Let Assignment element statement\n");
 					// --- SEMANTIC CHECKS --- //
 					/*
 						int semanticCorrectness = FALSE;

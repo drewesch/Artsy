@@ -144,6 +144,38 @@ int found(char itemName[50], char scope[50]){
 	return 0;
 }
 
+struct Entry* getItem(char itemName[50], char scope[50]) {
+	// Lookup an identifier in the symbol table
+	// return TRUE or FALSE
+	// Later on, this may return additional information for an item being found
+	for(int i=0; i<symTabIndex; i++){
+		if(symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				int str1 = strcmp(tempList -> itemName, itemName);
+				int str2 = strcmp(tempList -> scope,scope);
+				// If these strings are the same, return true
+				if( str1 == 0 && str2 == 0){
+					//printf("Found: %s\n-----------------------", itemName);
+					return 1; // found the ID in the table
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+		int str2 = strcmp(symTabItems[i].scope,scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
+		// If these strings are the same, return true
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
+			//printf("Found: %s\n-----------------------", itemName);
+			return &symTabItems[i]; // found the ID in the table
+		}
+	}
+	// Else, return false
+	return NULL;
+}
+
 int getItemID(char itemName[50], char scope[50]) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE

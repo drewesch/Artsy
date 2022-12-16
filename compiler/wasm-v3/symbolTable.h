@@ -36,6 +36,8 @@ void addFunction(char *type, char *id, struct AST* paramlist);
 
 int found(char itemName[50], char scope[50]);
 
+struct Entry* getItem(char itemName[50], char scope[50]);
+
 int getItemID(char itemName[50], char scope[50]);
 
 char* getItemType(char itemName[50], char scope[50]);

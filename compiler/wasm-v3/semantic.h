@@ -8,6 +8,7 @@ char* CheckPrimaryType(char*arg1, char*scope);
 void CheckID(char * identifier, char * currentScope);
 void CheckAssignmentType(char * identifier, char * exprType, char * currentScope);
 void CheckOperationType(char * leftExpr, char * rightExpr);
+void CheckIndexOutOfBound(char * identifier, char * integer, char * currentScope);
 int isAlpha(char * phrase);
 int isInt(char * phrase);
 int isFloat(char * phrase);
