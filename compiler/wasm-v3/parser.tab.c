@@ -1670,108 +1670,108 @@ yyreduce:
 #line 1671 "parser.tab.c"
     break;
 
-  case 41: /* If: IF LEFTPAREN Expr RIGHTPAREN Block  */
-#line 324 "parser.y"
+  case 43: /* If: IF LEFTPAREN Expr RIGHTPAREN Block  */
+#line 337 "parser.y"
                                        {}
 #line 1677 "parser.tab.c"
     break;
 
-  case 42: /* Elif: ELIF LEFTPAREN Expr RIGHTPAREN Block  */
-#line 327 "parser.y"
+  case 44: /* Elif: ELIF LEFTPAREN Expr RIGHTPAREN Block  */
+#line 340 "parser.y"
                                             {}
 #line 1683 "parser.tab.c"
     break;
 
-  case 43: /* Else: ELSE Block  */
-#line 330 "parser.y"
+  case 45: /* Else: ELSE Block  */
+#line 343 "parser.y"
                   {}
 #line 1689 "parser.tab.c"
     break;
 
-  case 44: /* Primary: INTEGER  */
-#line 334 "parser.y"
+  case 46: /* Primary: INTEGER  */
+#line 347 "parser.y"
                                 {(yyval.ast) = AST_SingleChildNode("int", (yyvsp[0].string), (yyvsp[0].string)); }
 #line 1695 "parser.tab.c"
     break;
 
-  case 45: /* Primary: NUMBER  */
-#line 335 "parser.y"
+  case 47: /* Primary: NUMBER  */
+#line 348 "parser.y"
                         {(yyval.ast) = AST_SingleChildNode("float", (yyvsp[0].number), (yyvsp[0].number)); }
 #line 1701 "parser.tab.c"
     break;
 
-  case 46: /* Primary: ID  */
-#line 336 "parser.y"
+  case 48: /* Primary: ID  */
+#line 349 "parser.y"
               {(yyval.ast) = AST_SingleChildNode((yyvsp[0].string), (yyvsp[0].string), (yyvsp[0].string));}
 #line 1707 "parser.tab.c"
     break;
 
-  case 47: /* Primary: STRING  */
-#line 337 "parser.y"
+  case 49: /* Primary: STRING  */
+#line 350 "parser.y"
                   {(yyval.ast) = AST_SingleChildNode( "string", (yyvsp[0].string), (yyvsp[0].string));}
 #line 1713 "parser.tab.c"
     break;
 
-  case 48: /* Primary: FLOAT  */
-#line 338 "parser.y"
+  case 50: /* Primary: FLOAT  */
+#line 351 "parser.y"
                 {(yyval.ast) = AST_SingleChildNode( "float", (yyvsp[0].string), (yyvsp[0].string));}
 #line 1719 "parser.tab.c"
     break;
 
-  case 49: /* Primary: ID LEFTSQUARE NUMBER RIGHTSQUARE  */
-#line 339 "parser.y"
+  case 51: /* Primary: ID LEFTSQUARE NUMBER RIGHTSQUARE  */
+#line 352 "parser.y"
                                            {
 		(yyval.ast) = AST_DoublyChildNodes((yyvsp[-3].string), "array", (yyvsp[-1].number), "array", (yyvsp[-1].number));
 	}
 #line 1727 "parser.tab.c"
     break;
 
-  case 50: /* ExprListTail: %empty  */
-#line 344 "parser.y"
+  case 52: /* ExprListTail: %empty  */
+#line 357 "parser.y"
               {(yyval.ast) = AST_SingleChildNode("exprlist end", "\n", 0);}
 #line 1733 "parser.tab.c"
     break;
 
-  case 51: /* ExprListTail: Primary  */
-#line 345 "parser.y"
+  case 53: /* ExprListTail: Primary  */
+#line 358 "parser.y"
                         { 
 			(yyval.ast) = AST_SingleChildNode("exprlist end", (yyvsp[0].ast), (yyvsp[0].ast)); 
 		}
 #line 1741 "parser.tab.c"
     break;
 
-  case 52: /* ExprListTail: Primary COMMA ExprListTail  */
-#line 348 "parser.y"
+  case 54: /* ExprListTail: Primary COMMA ExprListTail  */
+#line 361 "parser.y"
                                         {
 			(yyval.ast) = AST_DoublyChildNodes("exprlist exprtail", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
 		}
 #line 1749 "parser.tab.c"
     break;
 
-  case 53: /* ExprList: %empty  */
-#line 353 "parser.y"
+  case 55: /* ExprList: %empty  */
+#line 366 "parser.y"
           {}
 #line 1755 "parser.tab.c"
     break;
 
-  case 54: /* ExprList: ExprListTail  */
-#line 354 "parser.y"
+  case 56: /* ExprList: ExprListTail  */
+#line 367 "parser.y"
                        {
 		(yyval.ast) = (yyvsp[0].ast);
 	}
 #line 1763 "parser.tab.c"
     break;
 
-  case 55: /* Block: LEFTBRACKET DeclList StmtList RIGHTBRACKET  */
-#line 361 "parser.y"
+  case 57: /* Block: LEFTBRACKET DeclList StmtList RIGHTBRACKET  */
+#line 374 "parser.y"
                                                    { printf("\n RECOGNIZED RULE: Block statement\n");
 		(yyval.ast) = AST_DoublyChildNodes("block",(yyvsp[-2].ast), (yyvsp[-1].ast), (yyvsp[-2].ast), (yyvsp[-1].ast));
 		}
 #line 1771 "parser.tab.c"
     break;
 
-  case 56: /* Expr: Primary  */
-#line 366 "parser.y"
+  case 58: /* Expr: Primary  */
+#line 379 "parser.y"
                 { printf("\n RECOGNIZED RULE: Simplest expression\n");
 				(yyval.ast) = (yyvsp[0].ast);
 				strcpy((yyval.ast)->nodeType, CheckPrimaryType((yyvsp[0].ast), currentScope));
@@ -1779,8 +1779,8 @@ yyreduce:
 #line 1780 "parser.tab.c"
     break;
 
-  case 57: /* Expr: ID EQ Expr  */
-#line 370 "parser.y"
+  case 59: /* Expr: ID EQ Expr  */
+#line 383 "parser.y"
                         { printf("\n RECOGNIZED RULE: Assignment statement\n");
 					// --- SEMANTIC CHECKS --- //
 					/*
@@ -1808,8 +1808,8 @@ yyreduce:
 #line 1809 "parser.tab.c"
     break;
 
-  case 58: /* Expr: ID LEFTSQUARE NUMBER RIGHTSQUARE EQ Expr  */
-#line 394 "parser.y"
+  case 60: /* Expr: ID LEFTSQUARE INTEGER RIGHTSQUARE EQ Expr  */
+#line 407 "parser.y"
                                                         { printf("\n RECOGNIZED RULE: Assignment element statement\n");
 	
 					// --- SEMANTIC CHECKS --- //
@@ -1842,8 +1842,8 @@ yyreduce:
 #line 1843 "parser.tab.c"
     break;
 
-  case 59: /* Expr: LET ID EQ Expr  */
-#line 421 "parser.y"
+  case 61: /* Expr: LET ID EQ Expr  */
+#line 437 "parser.y"
                                 { printf("\n RECOGNIZED RULE: Let Assignment statement \n");
 					// --- SEMANTIC CHECKS --- //
 					/*
@@ -1871,9 +1871,9 @@ yyreduce:
 #line 1872 "parser.tab.c"
     break;
 
-  case 60: /* Expr: LET ID LEFTSQUARE NUMBER RIGHTSQUARE EQ Expr  */
-#line 445 "parser.y"
-                                                        { printf("\n RECOGNIZED RULE: Let Assignment element statement\n");
+  case 62: /* Expr: LET ID LEFTSQUARE INTEGER RIGHTSQUARE EQ Expr  */
+#line 461 "parser.y"
+                                                                { printf("\n RECOGNIZED RULE: Let Assignment element statement\n");
 					// --- SEMANTIC CHECKS --- //
 					/*
 						int semanticCorrectness = FALSE;
@@ -1902,8 +1902,8 @@ yyreduce:
 #line 1903 "parser.tab.c"
     break;
 
-  case 61: /* Expr: Expr PLUS Expr  */
-#line 472 "parser.y"
+  case 63: /* Expr: Expr PLUS Expr  */
+#line 488 "parser.y"
                          { printf("\n RECOGNIZED RULE: PLUS statement\n");
 					// Semantic checks
 
@@ -1917,8 +1917,8 @@ yyreduce:
 #line 1918 "parser.tab.c"
     break;
 
-  case 62: /* Expr: Expr MINUS Expr  */
-#line 482 "parser.y"
+  case 64: /* Expr: Expr MINUS Expr  */
+#line 498 "parser.y"
                           { printf("\n RECOGNIZED RULE: MINUS statement\n");
 					// Semantic checks
 					
@@ -1931,8 +1931,8 @@ yyreduce:
 #line 1932 "parser.tab.c"
     break;
 
-  case 63: /* Expr: Expr MULTIPLY Expr  */
-#line 491 "parser.y"
+  case 65: /* Expr: Expr MULTIPLY Expr  */
+#line 507 "parser.y"
                              { printf("\n RECOGNIZED RULE: MULTIPLY statement\n");
 					// Semantic checks
 					
@@ -1945,8 +1945,8 @@ yyreduce:
 #line 1946 "parser.tab.c"
     break;
 
-  case 64: /* Expr: Expr DIVIDE Expr  */
-#line 500 "parser.y"
+  case 66: /* Expr: Expr DIVIDE Expr  */
+#line 516 "parser.y"
                            { printf("\n RECOGNIZED RULE: DIVIDE statement\n");
 					// Semantic checks
 					
@@ -1987,8 +1987,8 @@ yyreduce:
 #line 1988 "parser.tab.c"
     break;
 
-  case 65: /* Expr: Expr EXPONENT Expr  */
-#line 537 "parser.y"
+  case 67: /* Expr: Expr EXPONENT Expr  */
+#line 553 "parser.y"
                              { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
 				
@@ -2001,8 +2001,8 @@ yyreduce:
 #line 2002 "parser.tab.c"
     break;
 
-  case 66: /* Expr: Expr COMMA Expr  */
-#line 546 "parser.y"
+  case 68: /* Expr: Expr COMMA Expr  */
+#line 562 "parser.y"
                           { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
 				
@@ -2014,44 +2014,44 @@ yyreduce:
 #line 2015 "parser.tab.c"
     break;
 
-  case 67: /* Expr: Expr COMPARSIONOPERATOR Expr  */
-#line 554 "parser.y"
+  case 69: /* Expr: Expr COMPARSIONOPERATOR Expr  */
+#line 570 "parser.y"
                                        {(yyval.ast) = AST_DoublyChildNodes("Comparsion", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));}
 #line 2021 "parser.tab.c"
     break;
 
-  case 68: /* Expr: Expr LOGICALOPERATOR Expr  */
-#line 555 "parser.y"
+  case 70: /* Expr: Expr LOGICALOPERATOR Expr  */
+#line 571 "parser.y"
                                     {(yyval.ast) = AST_DoublyChildNodes("Logical", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));}
 #line 2027 "parser.tab.c"
     break;
 
-  case 69: /* Expr: LEFTPAREN Expr RIGHTPAREN  */
-#line 556 "parser.y"
+  case 71: /* Expr: LEFTPAREN Expr RIGHTPAREN  */
+#line 572 "parser.y"
                                     {(yyval.ast) = (yyvsp[-1].ast);}
 #line 2033 "parser.tab.c"
     break;
 
-  case 70: /* Expr: FunctionCall  */
-#line 557 "parser.y"
+  case 72: /* Expr: FunctionCall  */
+#line 573 "parser.y"
                        {(yyval.ast) = (yyvsp[0].ast);}
 #line 2039 "parser.tab.c"
     break;
 
-  case 71: /* Expr: TRUE  */
-#line 558 "parser.y"
+  case 73: /* Expr: TRUE  */
+#line 574 "parser.y"
                {(yyval.ast) = AST_SingleChildNode("boolean", (yyvsp[0].string), (yyvsp[0].string));}
 #line 2045 "parser.tab.c"
     break;
 
-  case 72: /* Expr: FALSE  */
-#line 559 "parser.y"
+  case 74: /* Expr: FALSE  */
+#line 575 "parser.y"
                 {(yyval.ast) = AST_SingleChildNode("boolean",(yyvsp[0].string), (yyvsp[0].string));}
 #line 2051 "parser.tab.c"
     break;
 
-  case 73: /* FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN  */
-#line 563 "parser.y"
+  case 75: /* FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN  */
+#line 579 "parser.y"
                                                {
 	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", (yyvsp[-1].ast), (yyvsp[-1].ast));
 	(yyval.ast) = AST_DoublyChildNodes("function call", (yyvsp[-3].string), funcCallParamList, (yyvsp[-3].string), funcCallParamList);
@@ -2281,7 +2281,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 597 "parser.y"
+#line 613 "parser.y"
 
 
 

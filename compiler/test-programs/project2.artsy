@@ -39,14 +39,14 @@ write anywhere; 									/*3. Allow declarations, functions, and statements to b
 
 
 
+/* ast and symbol tabel */ 
 
 
 
-
-/*4. t = TRUE;  */
-/*5. f = FALSE; */
-/*6. n = (a > b); /*This should be TRUE */
-/*7. k = (a < b);  /* This should be FALSE */
+/*4. t = TRUE;  */  /*ast and symbol table*/ 
+/*5. f = FALSE; */ 
+/*6. n = (a > b); /*This should be TRUE */ /*ir code*/ 
+/*7. k = (a < b);  /* This should be FALSE */ /*ir code*/ 
 /*8. Make x a string to test */
 /*9. Test Sematic*/ 
 /*10. Test Sematic*/ 
