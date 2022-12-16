@@ -74,6 +74,18 @@ void CheckParamLength(char funcName[50], struct AST * funcCallParamList) {
     }
 }
 
+void CheckIndexOutOfBound(char * identifier, char * integer, char * currentScope) {
+    struct Entry * itemObj = getItem(identifier, currentScope);
+    if(itemObj == NULL) {
+        printf("\nSEMANTIC ERROR: The total number of call parameters for \"%s\" (%s) does not match function declaration (%d).\n", identifier, integer, currentScope);
+        exit(1);
+    }
+    if(itemObj -> arrayLength < atoi(integer) || atoi(integer) < 0) {
+        printf("\nSEMANTIC ERROR: Index out of bound\n");
+        exit(1);
+    }
+}
+ 
 void compareFuncToExpr(char funcName[50], struct AST * funcCallParamList, char * currentScope) {
 
 }

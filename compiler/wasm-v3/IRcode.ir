@@ -1,4 +1,0 @@
-#### IR Code ####
-type float x
-x = 10.0
-output x

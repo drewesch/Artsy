@@ -333,6 +333,22 @@ void emitAssignmentOptimized(char * id1, char * id2){
     // lastIndex = 0;
 }
 
+void emitWriteNum(char * value) {
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+    fprintf(IRcode, "output %s\n", value);
+}
+
+void emitWriteString(char * value) {
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+    fprintf(IRcode, "output \"%s\"\n", value);
+}
+
 // Unoptimized IRcode operation for the write keyword
 void emitWriteId(char * id){
     // Open IRfile if it is not open
@@ -707,7 +723,14 @@ char* ASTTraversal(struct AST* root) {
             ASTTraversal(root -> right);
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            emitWriteId(root -> RHS);
+            if(strcmp(root-> right, "int")
+            || strcmp(root-> right, "float")) {
+                emitWriteNum(root -> right -> RHS);
+            } else if(strcmp(root-> right, "string")) {
+                emitWriteString(root -> right -> RHS);
+            }else {
+                emitWriteId(root -> RHS);
+            }
         }
         if(strcmp(root->nodeType, "writeln") ==0) {
             emitWriteLn();
@@ -829,8 +852,15 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitTypeArrayDeclarationOptimized(root -> LHS, root ->RHS, "-1");
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if(isUsedVar(root -> RHS)) {
-                emitWriteIdOptimized(root -> RHS);
+            if(strcmp(root-> right, "int")
+            || strcmp(root-> right, "float")) {
+                emitWriteNum(root -> right -> RHS);
+            } else if(strcmp(root-> right, "string")) {
+                emitWriteString(root -> right -> RHS);
+            }else {
+                if(isUsedVar(root -> RHS)) {
+                    emitWriteIdOptimized(root -> RHS);
+                }
             }
         }
         if(strcmp(root->nodeType, "writeln") ==0) {
