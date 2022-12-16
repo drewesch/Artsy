@@ -2,14 +2,22 @@
 #include <stdio.h>
 #include <stdlib.h> 
 #include <string.h>
+#include <time.h>
 #include "ircode.h"
 #include "parser.h"
 #include "webgen.h"
 
 // Starts the whole program
-int main(int argc, char**argv){
+int main(int argc, char**argv) {
+  // Track the total compilation time
+  double total_time;
+  clock_t start, end;
+
+  // Start the clock
+	start = clock();
+
   // If the program initialization is valid, allow the program to run
-  if (argc > 1){
+  if (argc > 1) {
     FILE*fd=fopen(argv[1],"r");
 
     // Run the parser
@@ -32,6 +40,13 @@ int main(int argc, char**argv){
     // After the .wasm file is generated, the changes will be immediately live
     // on testProg.html using the LiveServer extension or on artsy-project.com
     generateWATcode();
+
+    // Stop the time clock 
+    end = clock();
+
+    // Calculate and print out the total time
+    total_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+	  printf("\nArtsy Compilation Time: %f seonds\n", total_time);
 
     // End the program
     return 0;
