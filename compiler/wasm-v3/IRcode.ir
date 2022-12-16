@@ -1,0 +1,25 @@
+#### IR Code ####
+type int x
+type int y
+entry int test
+param int a
+param int b
+x = 2
+subop int
+T0 = a + x
+a = T0
+subop int
+T1 = a / b
+return T1
+exit
+T2 = 10 * 3
+T3 = 52 - T2
+T4 = T3 * 3
+y = T4
+subop int
+T5 = call test args y 3
+x = T5
+subop int
+T6 = call test args y 3
+x = T6
+output y

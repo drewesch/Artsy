@@ -162,22 +162,6 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 			return AS;
 		}
 
-"write"	{
-			// The write operation is special, return as a KEYWORD token
-			words++; chars += strlen(yytext);
-			printf("%s : KEYWORD\n", yytext);
-			yylval.string = strdup(yytext); 
-			return WRITE;
-		}
-
-"writeln"	{
-			// The write operation is special, return as a KEYWORD token
-			words++; chars += strlen(yytext);
-			printf("%s : KEYWORD\n", yytext);
-			yylval.string = strdup(yytext); 
-			return WRITELN;
-		}
-
 "print"	{
 			// The write operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
@@ -187,6 +171,22 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 		}
 
 "addline"	{
+			// The write operation is special, return as a KEYWORD token
+			words++; chars += strlen(yytext);
+			printf("%s : KEYWORD\n", yytext);
+			yylval.string = strdup(yytext); 
+			return WRITELN;
+		}
+
+"write"	{
+			// The write operation is special, return as a KEYWORD token
+			words++; chars += strlen(yytext);
+			printf("%s : KEYWORD\n", yytext);
+			yylval.string = strdup(yytext); 
+			return WRITE;
+		}
+
+"writeln"	{
 			// The write operation is special, return as a KEYWORD token
 			words++; chars += strlen(yytext);
 			printf("%s : KEYWORD\n", yytext);
