@@ -1,16 +1,16 @@
 
 
 /*1. allow array to accept word */
-//*1.5 semantic check (array) string not int */ 
-/*2. semantic check if not correct number */
-/*3. Allow declarations, functions, and statements to be executed in any order  */
+/*2 semantic check (array) string not int */ 
+/*3. semantic check if not correct number */
+/*4. Allow declarations, functions, and statements to be executed in any order  */
 
 
 string message[50];
 
 function int displayMessage(){
 	message[0] = "I"; 																		/*1. allow array to accept word */
-	message[1] = " ";																/*1.5 semantic check (array) string not int */ 
+	message[1] = " ";																/*2 semantic check (array) string not int */ 
 	message[2] = "c";
 	message[3] = "a";
 	message[4] = "n";
@@ -21,16 +21,16 @@ function int displayMessage(){
 	message[9] = "n";
 	message[10] = "t";
 	message[11] = ":";
-	/*message[100] = "Error"; 	*/														/*2. semantic check if not correct number */
+	/* message[100] = "Error"; 	*/														/*3. semantic check if not correct number */
 	
 	return 0;
 }
 
 
 
-int anywhere; 										/*3. Allow declarations, functions, and statements to be executed in any order  */
-anywhere = 5;										/*3. Allow declarations, functions, and statements to be executed in any order  */
-write anywhere; 									/*3. Allow declarations, functions, and statements to be executed in any order  */
+int anywhere; 										/*4. Allow declarations, functions, and statements to be executed in any order  */
+anywhere = 5;										/*4. Allow declarations, functions, and statements to be executed in any order  */
+write anywhere; 									/*4. Allow declarations, functions, and statements to be executed in any order  */
 
 
 
@@ -39,14 +39,15 @@ write anywhere; 									/*3. Allow declarations, functions, and statements to b
 
 
 
-/* ast and symbol tabel */ 
 
 
 
-/*4. t = TRUE;  */  /*ast and symbol table*/ 
-/*5. f = FALSE; */ 
-/*6. n = (a > b); /*This should be TRUE */ /*ir code*/ 
-/*7. k = (a < b);  /* This should be FALSE */ /*ir code*/ 
+
+
+
+/*5. f = FALSE; */ /*ast and symbol table*/ 
+/*6. n = (a > b); /*ast and symbol table*/ 
+/*7. k = (a < b);  /*ast and symbol table*/ 
 /*8. Make x a string to test */
 /*9. Test Sematic*/ 
 /*10. Test Sematic*/ 
@@ -133,3 +134,6 @@ write z;
 
 write "done";																						/*15. write string*/
 write 5;																							/*16. write int*/
+
+
+/*17. ast and symbol tabel all complete*/ 
