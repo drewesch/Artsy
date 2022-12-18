@@ -144,6 +144,41 @@ int found(char itemName[50], char scope[50]){
 	return 0;
 }
 
+void updateItemArrayLength(char itemName[50], char scope[50], int newLen) {
+	// Lookup an identifier in the symbol table
+	// return TRUE or FALSE
+	// Later on, this may return additional information for an item being found
+	for(int i=0; i<symTabIndex; i++){
+		if(symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				int str1 = strcmp(tempList -> itemName, itemName);
+				int str2 = strcmp(tempList -> scope,scope);
+
+				// If these strings are the same, update length
+				if( str1 == 0 && str2 == 0){
+					symTabItems[i].arrayLength = newLen;
+					return;
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+		int str2 = strcmp(symTabItems[i].scope, scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
+
+		// If these strings are the same, update length
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
+			symTabItems[i].arrayLength = newLen;
+			return;
+		}
+	}
+	// Else, return false
+	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	exit(1);
+}
+
 struct Entry* getItem(char itemName[50], char scope[50]) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
@@ -210,6 +245,40 @@ int getItemID(char itemName[50], char scope[50]) {
 	exit(1);
 }
 
+char* getItemKind(char itemName[50], char scope[50]) {
+	// Lookup an identifier in the symbol table
+	// return TRUE or FALSE
+	// Later on, this may return additional information for an item being found
+	for(int i=0; i<symTabIndex; i++){
+		if(symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				int str1 = strcmp(tempList -> itemName, itemName);
+				int str2 = strcmp(tempList -> scope, scope);
+
+				// If these strings are the same, return true
+				if( str1 == 0 && str2 == 0){
+					return tempList->itemKind;
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+		int str2 = strcmp(symTabItems[i].scope, scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
+
+		// If these strings are the same, return true
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
+			//printf("Found: %s\n-----------------------", itemName);
+			return symTabItems[i].itemKind;
+		}
+	}
+	// Else, return false
+	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	exit(1);
+}
+
 char* getItemType(char itemName[50], char scope[50]) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
@@ -244,6 +313,40 @@ char* getItemType(char itemName[50], char scope[50]) {
 	exit(1);
 }
 
+int getArrayLength(char itemName[50], char scope[50]) {
+	// Lookup an identifier in the symbol table
+	// return TRUE or FALSE
+	// Later on, this may return additional information for an item being found
+	for(int i=0; i<symTabIndex; i++){
+		if(symTabItems[i].paramlist) {
+			struct Entry* tempList = symTabItems[i].paramlist;
+			while(tempList) {
+				int str1 = strcmp(tempList -> itemName, itemName);
+				int str2 = strcmp(tempList -> scope, scope);
+
+				// If these strings are the same, return true
+				if( str1 == 0 && str2 == 0){
+					return tempList->arrayLength;
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+		int str2 = strcmp(symTabItems[i].scope, scope);
+		int str3 = strcmp(symTabItems[i].scope, "global");
+
+		// If these strings are the same, return true
+		if( str1 == 0 && (str2 == 0 || str3 == 0)){
+			//printf("Found: %s\n-----------------------", itemName);
+			return symTabItems[i].arrayLength;
+		}
+	}
+	// Else, return false
+	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	exit(1);
+}
+
 int compareTypes(char item1[50], char item2[50], char scope[50]) {
 	// Compare two item types for any symbol table entry
 	const char* idType1 = item1;
@@ -259,18 +362,6 @@ int compareTypes(char item1[50], char item2[50], char scope[50]) {
 int countParams(int itemID) {
 	// Count variable
 	int totalParams = 0;
-
-	// Loop through all symbol table items
-	// for (int i = 0; i < symTabIndex; i++) {
-	// 	// If both of these conditions are true, then add one parameter to the count
-	// 	if (symTabItems[i].itemID == itemID && symTabItems[i].paramlist) {
-	// 		struct Entry* tempList = symTabItems[i].paramlist;
-	// 		while(tempList) {
-	// 			totalParams++;
-	// 			tempList = tempList -> paramlist;
-	// 		}
-	// 	}
-	// }
 
 	// Create the list of all parameters
 	struct Entry* tempList = symTabItems[itemID].paramlist;

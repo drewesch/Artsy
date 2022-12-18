@@ -27,7 +27,6 @@ function int displayMessage(){
 }
 
 
-
 int anywhere; 										/*3. Allow declarations, functions, and statements to be executed in any order  */
 anywhere = 5;										/*3. Allow declarations, functions, and statements to be executed in any order  */
 write anywhere; 									/*3. Allow declarations, functions, and statements to be executed in any order  */

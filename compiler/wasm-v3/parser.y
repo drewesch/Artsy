@@ -134,7 +134,7 @@ VarDecl:
 		symTabAccess();
 		int inSymTab = found($2, currentScope);
 		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
-		
+
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
@@ -232,29 +232,26 @@ FunDeclListTail: FunDecl {$$ = $1;}
 ;
 
 FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
-	printf("\ncheck2\n");
-	fflush(stdout);
-	symTabAccess();
-	int inSymTab = found($3, currentScope);
+		fflush(stdout);
+		symTabAccess();
+		int inSymTab = found($3, currentScope);
 
-	// Check if the function variable has already been declared
-	// If it has, throw an error
-	if (inSymTab == 0){
-		addFunction($2, $3, $5); //id
+		// Check if the function variable has already been declared
+		// If it has, throw an error
+		if (inSymTab == 0){
+			addFunction($2, $3, $5); //id
+		}
+		else {
+			printf("SEMANTIC ERROR: Function %s has already been declared.\n", $3);
+			exit(1);
+		}
+
+		showSymTable();
+		$$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
+
+		strcpy(tempScopeStore, currentScope);
+		strcpy(currentScope, $3);
 	}
-	else {
-		printf("SEMANTIC ERROR: Function %s has already been declared.\n", $3);
-		exit(1);
-	}
-
-
-	// If the variable has not been declared 
-	showSymTable();
-	$$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
-
-	strcpy(tempScopeStore, currentScope);
-	strcpy(currentScope, $3);
-}
 ;
 
 FunDecl: FuncHeader Block {
@@ -270,11 +267,15 @@ ParamDeclList: {}
 ;
 
 ParamDeclListTail: ParamDecl {$$ = $1;}
-	| ParamDecl COMMA ParamDeclListTail {$$ = AST_DoublyChildNodes("ParaDecl comma ParaDeclListTail",$1,$3,$1, $3);}
+	| ParamDecl COMMA ParamDeclListTail {$$ = AST_DoublyChildNodes("ParaDecl comma ParaDeclListTail", $1, $3, $1, $3);}
 ;
 
-ParamDecl: TYPE ID {$$ = AST_DoublyChildNodes("variable parm",$1,$2,$1, $2);}
-	| TYPE ID LEFTSQUARE RIGHTSQUARE {$$ = AST_DoublyChildNodes("array parm",$1,$2,$1, $2);}
+ParamDecl: TYPE ID { printf("RECOGNIZED RULE: Variable Parameter\n");
+		$$ = AST_DoublyChildNodes("variable parm", $1, $2, $1, $2);
+	}
+	| TYPE ID LEFTSQUARE RIGHTSQUARE { printf("RECOGNIZED RULE: Array Parameter\n");
+		$$ = AST_DoublyChildNodes("array parm", $1, $2, $1, $2);
+	}
 ;
 
 StmtList: Stmt {
@@ -347,10 +348,14 @@ Else:  ELSE Block {}
 Primary :	 INTEGER	{$$ = AST_SingleChildNode("int", $1, $1); }
 	|	NUMBER	{$$ = AST_SingleChildNode("float", $1, $1); }
 	|  ID {$$ = AST_SingleChildNode($1, $1, $1);}
-	|  STRING {$$ = AST_SingleChildNode( "string", $1, $1);}
-	| FLOAT {$$ = AST_SingleChildNode( "float", $1, $1);}
-	| ID LEFTSQUARE NUMBER RIGHTSQUARE {
-		$$ = AST_DoublyChildNodes($1, "array", $3, "array", $3);
+	|  STRING {$$ = AST_SingleChildNode("string", $1, $1);}
+	| FLOAT {$$ = AST_SingleChildNode("float", $1, $1);}
+	| ID LEFTSQUARE INTEGER RIGHTSQUARE {
+		char * arrayPrefix = malloc(100*sizeof(char));
+		strcat(arrayPrefix, "inarray_");
+		strcat(arrayPrefix, getItemType($1, currentScope));
+		printf("Prefix: %s\n", arrayPrefix);
+		$$ = AST_DoublyChildNodes(arrayPrefix, $1, $3, $1, $3);
 	}
 ;
 
@@ -377,9 +382,9 @@ Block:  LEFTBRACKET DeclList StmtList RIGHTBRACKET { printf("\n RECOGNIZED RULE:
 ;
 
 Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
-				$$ = $1;
-				strcpy($$->nodeType, CheckPrimaryType($1, currentScope));
-				}		
+		$$ = $1;
+		strcpy($$->nodeType, CheckPrimaryType($1, currentScope));
+	}		
 	| ID EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment statement\n");
 					// --- SEMANTIC CHECKS --- //
 					/*
@@ -401,7 +406,7 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
-					$$ = AST_DoublyChildNodes("=",$1, $3, $1, $3);
+					$$ = AST_DoublyChildNodes("=", $1, $3, $1, $3);
 
 					}
 	| ID LEFTSQUARE INTEGER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment element statement\n");
@@ -422,8 +427,8 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					checkID($1, currentScope);
 
 					// Check to see if the LHS matches the RHS
-					CheckAssignmentType($1, $6, currentScope);
-
+					char * LHS = getExprOp($6);
+					CheckAssignmentType($1, LHS, currentScope);
 					CheckIndexOutOfBound($1, $3, currentScope);
 
 					// Generate AST tree nodes

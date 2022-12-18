@@ -15,8 +15,6 @@ void emitConstantIntAssignment(char id1[50], char id2[50]);
 
 void emitWriteId(char * id);
 
-void emitAddOperation(char * id1, char * id2);
-
 void generateIRCode(); 
 
 void generateIRCodeOptimized();

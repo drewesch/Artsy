@@ -23,16 +23,17 @@ void CheckGlobal(char* variableName, char* currentScope) {
 // Find an item's primary type using getItemType
 // Returns the actual primary token
 char* CheckPrimaryType(char * variableName, char * currentScope){
-    // By default, return int
-    if (strcmp(variableName, "int")==0){
-        return "int";
-    }
-    if (strcmp(variableName, "string")==0){
-        return "string";
+    // By default, return primary types
+    if (strncmp(variableName, "int", 3) == 0 || strncmp(variableName, "string", 6) == 0 || strncmp(variableName, "float", 5) == 0) {
+        return variableName;
     }
 
-    if (strcmp(variableName, "float")==0){
-        return "float";
+    if (strncmp(variableName, "inarray_", 8) == 0) {
+        // Find the first occurrence of '_' in str
+        // Return everything after that point
+        char *substr;
+        substr = strchr(variableName, '_');
+        return substr + 1;
     }
 
     // If this item is not in the symbol table, return a semantic error. Else, return the primary type

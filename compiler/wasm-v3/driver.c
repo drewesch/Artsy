@@ -46,7 +46,7 @@ int main(int argc, char**argv) {
 
     // Calculate and print out the total time
     total_time = ((double) (end - start)) / CLOCKS_PER_SEC;
-	  printf("\nArtsy Compilation Time: %f seonds\n", total_time);
+	  printf("\nArtsy Compilation Time: %f seonds\n\n", total_time);
 
     // End the program
     return 0;

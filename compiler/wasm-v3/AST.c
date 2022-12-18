@@ -28,11 +28,14 @@ struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50],
 	// Declare the node type, RHS, and LHS data
 	strcpy(astDoubleChildNode->nodeType, nodeType);
 	strcpy(astDoubleChildNode->LHS, LHS);
-	strcpy(astDoubleChildNode->RHS, RHS);
+	astDoubleChildNode->left = leftChildNode;
 
-	// Set a pointer to the RHS and LHS
-	astDoubleChildNode -> left = leftChildNode;
-	astDoubleChildNode -> right = rightChildNode;
+	// Only utilize RHS if it isn't NULL
+	if (RHS != NULL) {
+		strcpy(astDoubleChildNode->RHS, RHS);
+		astDoubleChildNode -> right = rightChildNode;
+	}
+
 
 // AST Tree Model
 /*
@@ -76,7 +79,6 @@ char * getExprOp(struct AST * root) {
 	if (root == NULL) {
 		return "none";
 	}
-	// printf("Node: %s, LHS: %s, RHS: %s\n", root->nodeType, root->LHS, root->RHS);
 	if (strncmp(root->nodeType, "int", 3) == 0
 		|| strncmp(root->nodeType, "float", 5) == 0
 		|| strncmp(root->nodeType, "string", 6) == 0

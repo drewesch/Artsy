@@ -36,11 +36,17 @@ void addFunction(char *type, char *id, struct AST* paramlist);
 
 int found(char itemName[50], char scope[50]);
 
+void updateItemArrayLength(char itemName[50], char scope[50], int newLen);
+
 struct Entry* getItem(char itemName[50], char scope[50]);
 
 int getItemID(char itemName[50], char scope[50]);
 
+char* getItemKind(char itemName[50], char scope[50]);
+
 char* getItemType(char itemName[50], char scope[50]);
+
+int getArrayLength(char itemName[50], char scope[50]);
 
 int compareTypes(char item1[50], char item2[50], char scope[50]);
 

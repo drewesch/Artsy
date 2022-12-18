@@ -72,14 +72,17 @@ void initIRcodeFileOptimized() {
     fprintf(IRcodeOptimized, "#### Optimized IR Code ####\n");
 }
 
+char * updateArrayId(char id[50]) {
+    // Split apart the phrase into a set of tokens by the "[" keyword
+    char delimiter[] = "[], ";
+    return strtok(id, delimiter);
+}
+
 // Use the cvTable to find the temporary variable for a given variable declaration
 char* getVarConstant(char var[50]){
 	for(int i=0; i<cvIndex; i++){
-		int str1 = strcmp(cvTable[i].var, var);
-        if( str1 == 0){
+        if (strcmp(cvTable[i].var, var) == 0){
             memset(buffer, 0, 50);
-            printf("cvTable[%d].var: %s\n", i, cvTable[i].var);
-            printf("cvTable[%d].val: %d\n", i, cvTable[i].val);
 			sprintf(buffer, "%d", cvTable[i].val);
             return buffer;
 		}
@@ -89,11 +92,8 @@ char* getVarConstant(char var[50]){
 
 // Function to update variable declarations if the variable is unused - part of the optimization process
 void updateUnusedVar(char var[50]) {
-
-    // printf("updateUnused: %s\n", var);
 	for(int i=0; i<uvIndex; i++){
-		int str1 = strcmp(uvTable[i].var, var);
-        if( str1 == 0){
+        if (strcmp(uvTable[i].var, var) == 0){
             uvTable[i].boolVal = 1;
             return;
 		}
@@ -104,8 +104,7 @@ void updateUnusedVar(char var[50]) {
 // Returns true or false depending if the variable is used or not (for code optimization)
 int isUsedVar(char var[50]) {
     for(int i=0; i<uvIndex; i++){
-		int str1 = strcmp(uvTable[i].var, var);
-        if( str1 == 0){
+        if (strcmp(uvTable[i].var, var) == 0){
             return uvTable[i].boolVal;
 		}
 	}
@@ -121,6 +120,12 @@ char* emitBinaryOperation(char op[1], const char* id1, const char* id2){
         startIR = 1;
     }
 
+    // Assign temporary variables for tracking base array variables
+    char * token1 = malloc(strlen(id1)*sizeof(char));
+    char * token2 = malloc(strlen(id2)*sizeof(char));
+    strcpy(token1, id1);
+    strcpy(token2, id2);
+
     // Create a temporary variable assignment using "T"
     memset(outputId, 0, 50);
     char currLabelIndexBuffer[50];
@@ -129,21 +134,21 @@ char* emitBinaryOperation(char op[1], const char* id1, const char* id2){
     strcat(outputId, currLabelIndexBuffer);
 
     // Updates the declaration if the variable is unused
-    if (strncmp(getPrimaryType(id1), "var", 3) == 0) {
-        updateUnusedVar(id1);
+    if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
+        updateUnusedVar(updateArrayId(token1));
     }
-    if (strncmp(getPrimaryType(id2), "var", 3) == 0) {
-        updateUnusedVar(id2);
+    if (strncmp(getPrimaryType(token2), "var", 3) == 0) {
+        updateUnusedVar(updateArrayId(token2));
     }
 
     // Output suboperation type (for webgen parsing)
     if (!startSubOp) {
         char * opType;
         
-        if (strncmp(getPrimaryType(id1), "var", 3) == 0) {
-            opType = getItemType(id1, currIRScope);
+        if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
+            opType = getItemType(token1, currIRScope);
         } else {
-            opType = getPrimaryType(id1);
+            opType = getPrimaryType(token1);
         }
 
         fprintf(IRcode, "subop %s\n", opType);
@@ -179,7 +184,14 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
 
     memset(outputId, 0, 50);
 
-    char * opType = getPrimaryType(id1);
+    // Assign temporary variables for tracking base array variables
+    char * token1 = malloc(strlen(id1)*sizeof(char));
+    char * token2 = malloc(strlen(id2)*sizeof(char));
+    strcpy(token1, id1);
+    strcpy(token2, id2);
+
+    // If it's an array, get the optype based on the token
+    char * opType = getPrimaryType(updateArrayId(token1));
 
     if (strncmp(opType, "int", 3) == 0) {
         int num1 = (int) strtol(id1, (char **)NULL, 10);
@@ -228,10 +240,10 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
     if (!startSubOpOptimized) {
         char * opType;
 
-        if (strncmp(getPrimaryType(id1), "var", 3) == 0) {
-            opType = getItemType(id1, currIRScope);
+        if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
+            opType = getItemType(token1, currIRScope);
         } else {
-            opType = getPrimaryType(id1);
+            opType = getPrimaryType(token1);
         }
 
         fprintf(IRcodeOptimized, "subop %s\n", opType);
@@ -254,8 +266,18 @@ void emitAssignment(char * id1, char * id2){
     }
 
     // Print the assignment statement using the two basic IDs
-    fprintf(IRcode, "%s = %s\n", id1, id2);
-    // lastIndex = 0;
+    // If the statement is a combined string, separate it as a set of array index assignments
+    if (strncmp(getPrimaryType(id2), "string", 6) == 0) {
+        // Update the symbol table with the array length
+        updateItemArrayLength(id1, currIRScope, strlen(id2)-2);
+
+        // Print each index assignment statement
+        for (int i = 1; i < strlen(id2)-1; i++) {
+            fprintf(IRcode, "%s[%d] = \"%c\"\n", id1, i-1, id2[i]);
+        }
+    } else {
+        fprintf(IRcode, "%s = %s\n", id1, id2);
+    }
 
     // Indicate subop stop
     startSubOp = 0;
@@ -271,32 +293,20 @@ void emitAssignmentForElement(char *id1, char * elementNum, char * id2) {
 
     // Print the assignment statement using the two basic IDs with an element number
     fprintf(IRcode, "%s[%s] = %s\n", id1, elementNum, id2);
-    // lastIndex = 0;
 }
 
 void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2) {
+    int flag = 1;
+    
     // Open IRfile if it is not open
     if (startIROptimized == 0) {
         initIRcodeFileOptimized();
         startIROptimized = 1;
     }
 
-    // Print the assignment statement using the two basic IDs with an element number
-    fprintf(IRcodeOptimized, "%s[%s] = %s\n", id1, elementNum, id2);
-    // lastIndex = 0;
-}
-
-// Optimized assignment operation function for IRcodeOptimized.ir
-void emitAssignmentOptimized(char * id1, char * id2){
-    int flag = 1;
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
     if(isnumeric(id2)) {
         for(int i=0; i<cvIndex; i++){
-            int str1 = strcmp(cvTable[i].var, id1);
-            if( str1 == 0){
+            if (strcmp(cvTable[i].var, id1) == 0){
                 cvTable[i].val = (int) strtol(id2, (char **)NULL, 10);
                 flag = 0;
                 break;
@@ -309,28 +319,45 @@ void emitAssignmentOptimized(char * id1, char * id2){
         }
     }
 
-        // else {
-    //     if(isUninitializedNodeVar(id2)) {
-    //         strcpy(nodeTable[nodeIndex].var, id2);
-    //         strcpy(nodeTable[nodeIndex].rootVar, id2);
-    //         nodeIndex ++;
-    //     }
+    // Print the assignment statement using the two basic IDs with an element number
+    fprintf(IRcodeOptimized, "%s[%s] = %s\n", id1, elementNum, id2);
+}
 
-    //     if(isUninitializedNodeVar(id1)) {
-    //         strcpy(nodeTable[nodeIndex].var, id1);
-    //         strcpy(nodeTable[nodeIndex].rootVar, nodeTable[getNodeVarIndex(id2)].rootVar);
-    //         nodeIndex ++;
-    //     } else {
-    //         strcpy(nodeTable[getNodeVarIndex(id1)].rootVar, nodeTable[getNodeVarIndex(id2)].rootVar);
-    //     }
-    // }
+// Optimized assignment operation function for IRcodeOptimized.ir
+void emitAssignmentOptimized(char * id1, char * id2){
+    int flag = 1;
+    if (startIROptimized == 0) {
+        initIRcodeFileOptimized();
+        startIROptimized = 1;
+    }
+    if(isnumeric(id2)) {
+        for(int i=0; i<cvIndex; i++){
+            if (strcmp(cvTable[i].var, id1) == 0){
+                cvTable[i].val = (int) strtol(id2, (char **)NULL, 10);
+                flag = 0;
+                break;
+            }
+	    }
+        if(flag) {
+            strcpy(cvTable[cvIndex].var, id1);
+            cvTable[cvIndex].val = (int) strtol(id2, (char **)NULL, 10);
+            cvIndex ++;
+        }
+    }
 
-    fprintf(IRcodeOptimized, "%s = %s\n", id1, id2);
+    // If the statement is a combined string,
+    // separate it out into a set of array index assignments
+    if (strncmp(getPrimaryType(id2), "string", 6) == 0) {
+        for (int i = 1; i < strlen(id2)-1; i++) {
+            fprintf(IRcodeOptimized, "%s[%d] = \"%c\"\n", id1, i-1, id2[i]);
+        }
+    } else {
+        fprintf(IRcodeOptimized, "%s = %s\n", id1, id2);
+    }
     
     // Indicate subop stop
     startSubOpOptimized = 0;
 
-    // lastIndex = 0;
 }
 
 void emitWriteNum(char * value) {
@@ -358,9 +385,8 @@ void emitWriteId(char * id){
     }
 
     // Update the code if it is unused
-    if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-        updateUnusedVar(id);
-    }
+    updateUnusedVar(updateArrayId(id));
+
     fprintf(IRcode, "output %s\n", id);
 }
 
@@ -371,7 +397,7 @@ void emitWriteLn(){
         startIR = 1;
     }
 
-    fprintf(IRcode, "nextline\n");
+    fprintf(IRcode, "addline\n");
 }
 
 void emitWriteLnOptimized(){
@@ -381,7 +407,7 @@ void emitWriteLnOptimized(){
         startIROptimized = 1;
     }
 
-    fprintf(IRcode, "nextline\n");
+    fprintf(IRcode, "addline\n");
 }
 
 // Optimized IRCode operation for writing 
@@ -414,8 +440,7 @@ void emitTypeDeclaration(char * type, char * id){
     // Check the whole UV table
     // If the type is unused, do not generate IRcode
     for(int i=0; i<uvIndex; i++){
-        int str1 = strcmp(uvTable[i].var, id);
-        if( str1 == 0){ flag = 0; break; }
+        if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
     }
     // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
     if(flag) {
@@ -429,7 +454,14 @@ void emitTypeDeclaration(char * type, char * id){
     }
 
     // Print variable declaration IRcode to file
-    fprintf(IRcode, "%s %s %s\n", varType, type, id);
+    // If the type is a string, print a statement with a default size limit
+    if (strncmp(type, "string", 6) == 0) {
+        char * size = "100";
+        fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
+    } else {
+        // Else, print a standard type declaration statement
+        fprintf(IRcode, "%s %s %s\n", varType, type, id);
+    }
 }
 
 // Outputs the variable and type for variable declaration (unoptimized) (for array)
@@ -439,6 +471,10 @@ void emitTypeArrayDeclaration(char * type, char * id, char * size){
 
     // Char variable to determine if the variable is a type or a parameter
     char * varType = "type";
+
+    if(isParam) {
+        varType = "param";
+    }
     
     // Opens the IRcode file if it is not open already
     if (startIR == 0) {
@@ -449,26 +485,23 @@ void emitTypeArrayDeclaration(char * type, char * id, char * size){
     // Check the whole UV table
     // If the type is unused, do not generate IRcode
     for(int i=0; i<uvIndex; i++){
-        int str1 = strcmp(uvTable[i].var, id);
-        if( str1 == 0){ flag = 0; break; }
+        if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
     }
+
     // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
     if(flag) {
         strcpy(uvTable[uvIndex].var, id);
         uvTable[uvIndex].boolVal = 0;
-        uvIndex ++;
-    }
-
-    if(isParam) {
-        varType = "param";
-    }
-
-    if(atoi(size) >= 0) {
-        // Print variable declaration IRcode to file
+        uvIndex++;
         fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
-    } else {
-        fprintf(IRcode, "%s %s %s array\n", varType, type, id);
     }
+
+    // if(atoi(size) >= 0) {
+    //     // Print variable declaration IRcode to file
+    //     fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
+    // } else {
+    //     fprintf(IRcode, "%s %s %s array\n", varType, type, id);
+    // }
 }
 
 // Emit the type declaration for optimized IRcode file
@@ -488,7 +521,18 @@ void emitTypeDeclarationOptimized(char * type, char * id){
 
     // Already includes optimizations prior to this step, so doing optimization beforehand is redundant
     // Print variable declaration IRcode to file
-    fprintf(IRcodeOptimized, "%s %s %s\n", varType, type, id);
+        // Print variable declaration IRcode to file
+    // If the type is a string, print a statement with a default size limit
+    if (strncmp(type, "string", 6) == 0) {
+        char * size = "100";
+        fprintf(IRcodeOptimized, "%s %s %s array %s\n", varType, type, id, size);
+    } else {
+        // Else, print a standard type declaration statement
+        fprintf(IRcodeOptimized, "%s %s %s\n", varType, type, id);
+    }
+
+
+    // fprintf(IRcodeOptimized, "%s %s %s\n", varType, type, id);
 }
 
 // Outputs the variable and type for variable declaration (unoptimized) (for array)
@@ -526,8 +570,7 @@ void emitEntry(char * id) {
     // Check the whole UV table
     // If the type is unused, do not generate IRcode
     for(int i=0; i<uvIndex; i++){
-        int str1 = strcmp(uvTable[i].var, id);
-        if( str1 == 0){ flag = 0; break; }
+        if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
     }
     // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
     if(flag) {
@@ -561,10 +604,13 @@ void emitReturn(char * id) {
         initIRcodeFile();
         startIR = 1;
     }
+    // Create a temporary variable for array return support
+    char * token;
+    strcpy(token, id);
 
     // Updates the variable if it is unused
-    if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-        updateUnusedVar(id);
+    if (strncmp(getPrimaryType(token), "var", 3) == 0) {
+        updateUnusedVar(updateArrayId(token));
     }
 
     fprintf(IRcode, "return %s\n", id);
@@ -723,16 +769,16 @@ char* ASTTraversal(struct AST* root) {
             ASTTraversal(root -> right);
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if(strcmp(root-> right, "int")
-            || strcmp(root-> right, "float")) {
+            if(strcmp(root-> right, "int") == 0
+            || strcmp(root-> right, "float") == 0) {
                 emitWriteNum(root -> right -> RHS);
-            } else if(strcmp(root-> right, "string")) {
+            } else if(strcmp(root-> right, "string") == 0) {
                 emitWriteString(root -> right -> RHS);
-            }else {
+            } else {
                 emitWriteId(root -> RHS);
             }
         }
-        if(strcmp(root->nodeType, "writeln") ==0) {
+        if(strcmp(root->nodeType, "writeln") == 0) {
             emitWriteLn();
         }
         if(strcmp(root->nodeType, "function context") == 0) {
@@ -768,13 +814,48 @@ char* ASTTraversal(struct AST* root) {
             return buffer;
         }
         if(strcmp(root -> nodeType, "return") == 0) {
-            strcpy(rightVar, ASTTraversal(root-> right));
+            // Check if the return type is an array index
+            // If so, update the rightVar accordingly
+            if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+                sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+            } else {
+                strcpy(rightVar, ASTTraversal(root->right));
+            }
             emitReturn(rightVar);
         }
         if(strcmp(root->nodeType, "=") == 0) {
             strcpy(rightVar, ASTTraversal(root-> right));
             if(strcmp(root -> right -> nodeType, "element assignment") == 0) {
-                emitAssignmentForElement(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
+                if(strcmp(root->right->RHS, "+") == 0
+                    || strcmp(root->right->RHS, "-") == 0
+                    || strcmp(root->right->RHS, "*") == 0
+                    || strcmp(root->right->RHS, "/") == 0) {
+                        // Check to see if the operation includes any array indexes
+                        // If so, include the array callout in the binary operation
+                        // Form leftVar variable
+                        if (strncmp(getPrimaryType(root->right->right->left->LHS), "var", 3) == 0) {
+                            sprintf(leftVar, "%s[%s]", root->right->right->left->LHS, root->right->right->left->RHS);
+                        } else {
+                            strcpy(leftVar, root->right->right->left->RHS);
+                        }
+
+                        // Form rightVar variable
+                        if (strncmp(getPrimaryType(root->right->right->right->LHS), "var", 3) == 0) {
+                            sprintf(rightVar, "%s[%s]", root->right->right->right->LHS, root->right->right->right->RHS);
+                        } else {
+                            strcpy(rightVar, root->right->right->right->RHS);
+                        }
+
+                        return emitBinaryOperation(root->right->RHS, leftVar, rightVar);
+                        // emitAssignmentForElement(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
+                    } else {
+                        if (strncmp(getPrimaryType(root->right->right->LHS), "var", 3) == 0) {
+                            sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
+                        } else {
+                            strcpy(rightVar, root->right->right->RHS);
+                        }
+                        emitAssignmentForElement(root->LHS, root->right->LHS, rightVar);
+                    }
             } else {
                 emitAssignment(root -> LHS, rightVar);
             }
@@ -783,9 +864,23 @@ char* ASTTraversal(struct AST* root) {
             || strcmp(root -> nodeType, "-") == 0
             || strcmp(root -> nodeType, "*") == 0
             || strcmp(root -> nodeType, "/") == 0) {
-            strcpy(leftVar, ASTTraversal(root-> left));
-            strcpy(rightVar, ASTTraversal(root-> right));
-            return emitBinaryOperation(root -> nodeType, leftVar, rightVar);
+                // Check to see if the operation includes any array indexes
+                // If so, include the array callout in the binary operation
+                // Form leftVar variable
+                if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {
+                    sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+                } else {
+                    strcpy(leftVar, ASTTraversal(root-> left));
+                }
+
+                // Form rightVar variable
+                if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+                    sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+                } else {
+                    strcpy(rightVar, ASTTraversal(root->right));
+                }
+                // printf("Unoptimized BinOp: %s, %s\n", leftVar, rightVar);
+                return emitBinaryOperation(root->nodeType, leftVar, rightVar);
         }
         if(strcmp(root -> LHS, "array") == 0) {
             memcpy(arrElVar, 0, 50);
@@ -852,18 +947,18 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitTypeArrayDeclarationOptimized(root -> LHS, root ->RHS, "-1");
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if(strcmp(root-> right, "int")
-            || strcmp(root-> right, "float")) {
+            if(strcmp(root-> right, "int") == 0
+            || strcmp(root-> right, "float") == 0) {
                 emitWriteNum(root -> right -> RHS);
-            } else if(strcmp(root-> right, "string")) {
+            } else if(strcmp(root-> right, "string") == 0) {
                 emitWriteString(root -> right -> RHS);
-            }else {
-                if(isUsedVar(root -> RHS)) {
+            } else {
+                if (isUsedVar(root -> RHS)) {
                     emitWriteIdOptimized(root -> RHS);
                 }
             }
         }
-        if(strcmp(root->nodeType, "writeln") ==0) {
+        if(strcmp(root->nodeType, "writeln") == 0) {
             emitWriteLnOptimized();
         }
         if(strcmp(root->nodeType, "function context") == 0) {
@@ -886,8 +981,8 @@ char* ASTTraversalOptimized(struct AST* root) {
         if(strcmp(root->nodeType, "exprlist exprtail") == 0) {
             strcpy(c[cindex], root -> left -> RHS);
             cindex += 1;
-            if(isUsedVar(root -> RHS)) {
-                if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
+            if (isUsedVar(root -> RHS)) {
+                if (root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
                     emitTypeArrayDeclarationOptimized(root -> LHS, root -> right -> right -> RHS, root -> RHS);
                 } else {
                     emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
@@ -915,14 +1010,49 @@ char* ASTTraversalOptimized(struct AST* root) {
             return buffer;
         }
         if(strcmp(root -> nodeType, "return") == 0) {
-            strcpy(rightVar, ASTTraversalOptimized(root-> right));
+            // Check if the return type is an array index
+            // If so, update the rightVar accordingly
+            if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+                sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+            } else {
+                strcpy(rightVar, ASTTraversalOptimized(root-> right));
+            }
             emitReturnOptimized(rightVar);
         }
         if(strcmp(root->nodeType, "=") == 0) {
-            if(isUsedVar(root -> LHS)) {
+            if (isUsedVar(root -> LHS)) {
                 strcpy(rightVar, ASTTraversalOptimized(root-> right));
-                if(strcmp(root -> right -> nodeType, "element assignment") == 0) {
-                    emitAssignmentForElementOptimized(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
+                if (strcmp(root -> right -> nodeType, "element assignment") == 0) {
+                    if(strcmp(root->right->RHS, "+") == 0
+                        || strcmp(root->right->RHS, "-") == 0
+                        || strcmp(root->right->RHS, "*") == 0
+                        || strcmp(root->right->RHS, "/") == 0) {
+                            // Check to see if the operation includes any array indexes
+                            // If so, include the array callout in the binary operation
+                            // Form leftVar variable
+                            if (strncmp(getPrimaryType(root->right->right->left->LHS), "var", 3) == 0) {
+                                sprintf(leftVar, "%s[%s]", root->right->right->left->LHS, root->right->right->left->RHS);
+                            } else {
+                                strcpy(leftVar, root->right->right->left->RHS);
+                            }
+
+                            // Form rightVar variable
+                            if (strncmp(getPrimaryType(root->right->right->right->LHS), "var", 3) == 0) {
+                                sprintf(rightVar, "%s[%s]", root->right->right->right->LHS, root->right->right->right->RHS);
+                            } else {
+                                strcpy(rightVar, root->right->right->right->RHS);
+                            }
+
+                            return emitBinaryOperationOptimized(root->right->RHS, leftVar, rightVar);
+                            // emitAssignmentForElement(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
+                        } else {
+                            if (strncmp(getPrimaryType(root->right->right->LHS), "var", 3) == 0) {
+                                sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
+                            } else {
+                                strcpy(rightVar, root->right->right->RHS);
+                            }
+                            emitAssignmentForElementOptimized(root->LHS, root->right->LHS, rightVar);
+                        }
                 } else {
                     char rightVarOptimized[50];
                     strcpy(rightVarOptimized, getVarConstant(rightVar));
@@ -934,13 +1064,25 @@ char* ASTTraversalOptimized(struct AST* root) {
             || strcmp(root -> nodeType, "-") == 0
             || strcmp(root -> nodeType, "*") == 0
             || strcmp(root -> nodeType, "/") == 0) {
-            strcpy(leftVar, ASTTraversalOptimized(root-> left));
-            strcpy(rightVar, ASTTraversalOptimized(root-> right));
-            char rightVarOptimized[50];
-            char leftVarOptimized[50];
-            strcpy(rightVarOptimized, getVarConstant(leftVar));
-            strcpy(leftVarOptimized, getVarConstant(rightVar));
-            return emitBinaryOperationOptimized(root -> nodeType, rightVarOptimized, leftVarOptimized);
+                // Check to see if the operation includes any array indexes
+                // If so, include the array callout in the binary operation
+                if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {
+                    sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+                } else {
+                    strcpy(leftVar, ASTTraversalOptimized(root->left));
+                }
+
+                if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+                    sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+                } else {
+                    strcpy(rightVar, ASTTraversalOptimized(root->right));
+                }
+                char rightVarOptimized[50];
+                char leftVarOptimized[50];
+                strcpy(rightVarOptimized, getVarConstant(leftVar));
+                strcpy(leftVarOptimized, getVarConstant(rightVar));
+                // printf("Optimized BinOp: %s, %s\n", leftVarOptimized, rightVarOptimized);
+                return emitBinaryOperationOptimized(root -> nodeType, rightVarOptimized, leftVarOptimized);
         }
         if(strcmp(root -> LHS, "array") == 0) {
             memcpy(arrElVar, 0, 50);
