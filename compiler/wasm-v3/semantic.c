@@ -7,14 +7,15 @@
 #include "AST.h"
 
 // References symbol table's function to find the time type for a scope
-char* getItemType(char itemName[50], char scope[50]);
-int found(char itemName[50], char scope[50]);
+char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+int found(char itemName[50], char scopeStack[50][50], int stackPointer);
 
 // NEW SEMANTIC CHANGE
 // Checks to see if a variable has been declared globally first
 void CheckGlobal(char* variableName, char* currentScope) {
     int nonGlobal = strcmp(currentScope, "global");
-    if (nonGlobal != 0 && found(variableName, "global") == 1) {
+    char ** scopeStack = { "global" };
+    if (nonGlobal != 0 && found(variableName, scopeStack, 0) == 1) {
         printf("SEMANTIC ERROR: Variable %s has already been declared globally.\n", variableName);
         exit(1);
     }
@@ -22,7 +23,7 @@ void CheckGlobal(char* variableName, char* currentScope) {
 
 // Find an item's primary type using getItemType
 // Returns the actual primary token
-char* CheckPrimaryType(char * variableName, char * currentScope){
+char* CheckPrimaryType(char * variableName, char scopeStack[50][50], int stackPointer){
     // By default, return primary types
     if (strncmp(variableName, "int", 3) == 0 || strncmp(variableName, "string", 6) == 0 || strncmp(variableName, "float", 5) == 0) {
         return variableName;
@@ -36,20 +37,46 @@ char* CheckPrimaryType(char * variableName, char * currentScope){
         return substr + 1;
     }
 
+    printf("variableName: %s\n", variableName);
+    fflush(stdout);
+
     // If this item is not in the symbol table, return a semantic error. Else, return the primary type
-    return getItemType(variableName, currentScope);
+    return getItemType(variableName, scopeStack, stackPointer);
 }
 
-void checkID(char* identifier, char * currentScope) {
-    if (found(identifier, currentScope) == 0) {
+void checkID(char* identifier, char* scopeStack[50], int stackPointer) {
+    if (found(identifier, scopeStack, stackPointer) == 0) {
         printf("SEMANTIC ERROR: Variable %s does not exist.\n", identifier);
         exit(1);
     }
 }
 
+void CheckComparisonType(struct AST * leftExprTreeNode, struct AST * rightExprTreeNode, char scopeStack[50][50], int stackPointer) {
+    char* leftType;
+    char* rightType;
+    if(found(leftExprTreeNode, scopeStack, stackPointer)) {
+        leftType = getItemType(leftExprTreeNode, scopeStack, stackPointer);
+    } else {
+        leftType = leftExprTreeNode -> nodeType;
+    }
+
+    if(found(rightExprTreeNode, scopeStack, stackPointer)) {
+        rightType = getItemType(rightExprTreeNode, scopeStack, stackPointer);
+    } else {
+        rightType = rightExprTreeNode -> nodeType;
+    }
+
+    if(strcmp(leftType, rightType) != 0) {
+        printf("SEMANTIC ERROR: the type of leftExprTreeNode: %s does not match the type of the rightExprTreeNode: %s. \n", leftExprTreeNode, rightExprTreeNode);
+        printf("\nleftType: %s\n", leftType);
+        printf("\nrightType: %s\n", rightType);
+        exit(1);
+    }
+}
+
 // Checks to see if the LHS matches the RHS for a given assignment expression
-void CheckAssignmentType(char * identifier, char * exprType, char * currentScope) {
-    char * idType = getItemType(identifier, currentScope);
+void CheckAssignmentType(char * identifier, char * exprType, char scopeStack[50][50], int stackPointer) {
+    char * idType = getItemType(identifier, scopeStack, stackPointer);
     
     if (strncmp(idType, exprType, strlen(exprType)) != 0) {
         printf("SEMANTIC ERROR: The type of \"%s\" does not match the type of \"%s\".\n", identifier, exprType);
@@ -75,10 +102,10 @@ void CheckParamLength(char funcName[50], struct AST * funcCallParamList) {
     }
 }
 
-void CheckIndexOutOfBound(char * identifier, char * integer, char * currentScope) {
-    struct Entry * itemObj = getItem(identifier, currentScope);
+void CheckIndexOutOfBound(char * identifier, char * integer, char scopeStack[50][50], int stackPointer) {
+    struct Entry * itemObj = getItem(identifier, scopeStack, stackPointer);
     if(itemObj == NULL) {
-        printf("\nSEMANTIC ERROR: The total number of call parameters for \"%s\" (%s) does not match function declaration (%d).\n", identifier, integer, currentScope);
+        printf("\nSEMANTIC ERROR: The total number of call parameters for \"%s\" (%s) does not match function declaration (%d).\n", identifier, integer, scopeStack[stackPointer]);
         exit(1);
     }
     if(itemObj -> arrayLength < atoi(integer) || atoi(integer) < 0) {

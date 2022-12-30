@@ -113,7 +113,7 @@ int isUsedVar(char var[50]) {
 
 // For unoptimized IRcode
 // Generates the IRcode for assignments
-char* emitBinaryOperation(char op[1], const char* id1, const char* id2){
+char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
     // Opens IRcode file if it is not open already
     if (startIR == 0) {
         initIRcodeFile();
@@ -146,7 +146,8 @@ char* emitBinaryOperation(char op[1], const char* id1, const char* id2){
         char * opType;
         
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            opType = getItemType(token1, currIRScope);
+            char ** scopeStack = { "global", currIRScope };
+            opType = getItemType(token1, scopeStack, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -241,7 +242,8 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
         char * opType;
 
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            opType = getItemType(token1, currIRScope);
+            char ** scopeStack = { "global", currIRScope };
+            opType = getItemType(token1, scopeStack, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -269,7 +271,8 @@ void emitAssignment(char * id1, char * id2){
     // If the statement is a combined string, separate it as a set of array index assignments
     if (strncmp(getPrimaryType(id2), "string", 6) == 0) {
         // Update the symbol table with the array length
-        updateItemArrayLength(id1, currIRScope, strlen(id2)-2);
+        char ** scopeStack = { "global" };
+        updateItemArrayLength(id1, scopeStack, 0, strlen(id2)-2);
 
         // Print each index assignment statement
         for (int i = 1; i < strlen(id2)-1; i++) {
@@ -580,7 +583,8 @@ void emitEntry(char * id) {
     }
 
     // Get type and update current scope
-    char * type = getItemType(id, currIRScope);
+    char ** scopeStack = { "global", currIRScope };
+    char * type = getItemType(id, scopeStack, 1);
     currIRScope = id;
 
     fprintf(IRcode, "entry %s %s\n", type, id);
@@ -593,7 +597,8 @@ void emitEntryOptimized(char * id) {
         startIROptimized = 1;
     }
 
-    char * type = getItemType(id, currIRScope);
+    char ** scopeStack = { "global", currIRScope };
+    char * type = getItemType(id, scopeStack, 1);
     currIRScope = id;
 
     fprintf(IRcodeOptimized, "entry %s %s\n", type, id);
@@ -605,7 +610,7 @@ void emitReturn(char * id) {
         startIR = 1;
     }
     // Create a temporary variable for array return support
-    char * token;
+    char token[50];
     strcpy(token, id);
 
     // Updates the variable if it is unused
@@ -668,7 +673,8 @@ char * emitFunctionCall(char *id) {
         char * opType;
         
         if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-            opType = getItemType(id, currIRScope);
+            char ** scopeStack = { "global", currIRScope };
+            opType = getItemType(id, scopeStack, 1);
         } else {
             opType = getPrimaryType(id);
         }
@@ -711,7 +717,8 @@ char * emitFunctionCallOptimized(char *id) {
         char * opType;
         
         if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-            opType = getItemType(id, currIRScope);
+            char ** scopeStack = { "global", currIRScope };
+            opType = getItemType(id, scopeStack, 1);
         } else {
             opType = getPrimaryType(id);
         }
@@ -736,12 +743,17 @@ char * emitFunctionCallOptimized(char *id) {
 char* ASTTraversal(struct AST* root) {
     if(root != NULL) {
         printf("root -> nodeType: %s\n", root -> nodeType);
+        if(root -> LHS != NULL)
+        printf("root -> LHS: %s\n", root -> LHS);
+        if(root -> RHS != NULL)
+        printf("root -> RHS: %s\n", root -> RHS);
         fflush(stdout);
         char rightVar[50];
         char leftVar[50];
         if(strcmp(root -> nodeType, "int") == 0
             || strcmp(root -> nodeType, "float") == 0
-            || strcmp(root -> nodeType, "string") == 0) {
+            || strcmp(root -> nodeType, "string") == 0
+            || strcmp(root -> nodeType, "boolean") == 0) {
             return root -> RHS;
         }
         if(strcmp(root->nodeType, "type") == 0) {
@@ -762,8 +774,7 @@ char* ASTTraversal(struct AST* root) {
         if(strcmp(root->nodeType, "program") == 0 
             || strcmp(root->nodeType, "vardec") == 0
             || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
-            || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
-            || strcmp(root->nodeType, "block") == 0
+            || strcmp(root->nodeType, "ParaDecmma ParaDeclListTail") == 0
             || strcmp(root->nodeType, "statements") == 0) { 
             ASTTraversal(root -> left);
             ASTTraversal(root -> right);
@@ -820,6 +831,7 @@ char* ASTTraversal(struct AST* root) {
                 sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
             } else {
                 strcpy(rightVar, ASTTraversal(root->right));
+                printf("check3: %s\n", rightVar);
             }
             emitReturn(rightVar);
         }
@@ -860,10 +872,20 @@ char* ASTTraversal(struct AST* root) {
                 emitAssignment(root -> LHS, rightVar);
             }
         }
+        if(strcmp(root->nodeType, "block") == 0 ||
+        strcmp(root->nodeType, "Comparsion") == 0) {
+            return ASTTraversal(root -> right);
+        }
         if(strcmp(root -> nodeType, "+") == 0
             || strcmp(root -> nodeType, "-") == 0
             || strcmp(root -> nodeType, "*") == 0
-            || strcmp(root -> nodeType, "/") == 0) {
+            || strcmp(root -> nodeType, "/") == 0
+            || strcmp(root -> nodeType, ">") == 0
+            || strcmp(root -> nodeType, ">=") == 0
+            || strcmp(root -> nodeType, "<") == 0
+            || strcmp(root -> nodeType, "<=") == 0
+            || strcmp(root -> nodeType, "==") == 0
+            || strcmp(root -> nodeType, "!=") == 0) {
                 // Check to see if the operation includes any array indexes
                 // If so, include the array callout in the binary operation
                 // Form leftVar variable
@@ -915,9 +937,11 @@ char* ASTTraversalOptimized(struct AST* root) {
     if(root != NULL) {
         char rightVar[50];
         char leftVar[50];
+        
         if(strcmp(root -> nodeType, "int") == 0
             || strcmp(root -> nodeType, "float") == 0
-            || strcmp(root -> nodeType, "string") == 0) {
+            || strcmp(root -> nodeType, "string") == 0
+            || strcmp(root -> nodeType, "boolean") == 0) {
             return root -> RHS;
         }
         if(strcmp(root->nodeType, "type") == 0) {
@@ -933,7 +957,6 @@ char* ASTTraversalOptimized(struct AST* root) {
             || strcmp(root->nodeType, "vardec") == 0
             || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
             || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
-            || strcmp(root->nodeType, "block") == 0
             || strcmp(root->nodeType, "statements") == 0) { 
             ASTTraversalOptimized(root -> left);
             ASTTraversalOptimized(root -> right);
@@ -1019,6 +1042,10 @@ char* ASTTraversalOptimized(struct AST* root) {
             }
             emitReturnOptimized(rightVar);
         }
+        if(strcmp(root->nodeType, "block") == 0 ||
+        strcmp(root->nodeType, "Comparsion") == 0) {
+            return ASTTraversalOptimized(root -> right);
+        }
         if(strcmp(root->nodeType, "=") == 0) {
             if (isUsedVar(root -> LHS)) {
                 strcpy(rightVar, ASTTraversalOptimized(root-> right));
@@ -1063,7 +1090,13 @@ char* ASTTraversalOptimized(struct AST* root) {
         if(strcmp(root -> nodeType, "+") == 0
             || strcmp(root -> nodeType, "-") == 0
             || strcmp(root -> nodeType, "*") == 0
-            || strcmp(root -> nodeType, "/") == 0) {
+            || strcmp(root -> nodeType, "/") == 0
+            || strcmp(root -> nodeType, ">") == 0
+            || strcmp(root -> nodeType, ">=") == 0
+            || strcmp(root -> nodeType, "<") == 0
+            || strcmp(root -> nodeType, "<=") == 0
+            || strcmp(root -> nodeType, "==") == 0
+            || strcmp(root -> nodeType, "!=") == 0) {
                 // Check to see if the operation includes any array indexes
                 // If so, include the array callout in the binary operation
                 if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {

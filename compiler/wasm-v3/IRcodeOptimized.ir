@@ -1,45 +1,15 @@
 #### Optimized IR Code ####
-type string message array 50
-type string staticMessage array 100
-type int numArr array 5
-type int random
-numArr[0] = 1
-entry int displayMessage
-message[0] = "I"
-message[1] = " "
-message[2] = "c"
-message[3] = "a"
-message[4] = "n"
-message[5] = " "
-message[6] = "p"
-message[7] = "r"
-message[8] = "i"
-message[9] = "n"
-message[10] = "t"
-message[11] = ":"
-return numArr[0]
-exit
-subop int
-T0 = call displayMessage args
-random = T0
-staticMessage[0] = "s"
-staticMessage[1] = "t"
-staticMessage[2] = "a"
-staticMessage[3] = "t"
-staticMessage[4] = "i"
-staticMessage[5] = "c"
-numArr[0] = 1
-numArr[1] = numArr[0]
-numArr[2] = 3
-numArr[3] = 4
-numArr[4] = 5
-subop int
-T1 = numArr[0] + numArr[2]
-random = T1
-output numArr
-addline
-output message
-addline
-output staticMessage
-addline
-output random
+type int anywhere
+anywhere = 5
+output anywhere
+output ""done""
+output 5
+type int a
+type int b
+type int x
+type int z
+x = 0
+a = 5
+b = 3
+z = 9
+output z

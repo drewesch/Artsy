@@ -32,21 +32,21 @@ void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLen
 
 void showSymTable();
 
-void addFunction(char *type, char *id, struct AST* paramlist);
+void addFunction(char *type, char *id, struct AST* paramlist, char scopeStack[50][50], int stackPointer);
 
-int found(char itemName[50], char scope[50]);
+int found(char itemName[50], char scopeStack[50][50], int stackPointer);
 
-void updateItemArrayLength(char itemName[50], char scope[50], int newLen);
+void updateItemArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer, int newLen);
 
-struct Entry* getItem(char itemName[50], char scope[50]);
+struct Entry* getItem(char itemName[50], char scopeStack[50][50], int stackPointer);
 
-int getItemID(char itemName[50], char scope[50]);
+int getItemID(char itemName[50], char scopeStack[50][50], int stackPointer);
 
-char* getItemKind(char itemName[50], char scope[50]);
+char* getItemKind(char itemName[50], char scopeStack[50][50], int stackPointer);
 
-char* getItemType(char itemName[50], char scope[50]);
+char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
 
-int getArrayLength(char itemName[50], char scope[50]);
+int getArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer);
 
 int compareTypes(char item1[50], char item2[50], char scope[50]);
 

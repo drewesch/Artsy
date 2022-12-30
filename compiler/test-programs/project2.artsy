@@ -1,17 +1,12 @@
 
 
-/*1. allow array to accept word */
-/*2 semantic check (array) string not int */ 
-/*3. semantic check if not correct number */
-/*4. Allow declarations, functions, and statements to be executed in any order  */
 
 
 string message[50];
 
 function int displayMessage(){
-	message[0] = "I"; 																		/*1. allow array to accept word */
-	message[1] = " ";																/*2 semantic check (array) string not int */ 
-	message[2] = "c";
+	message[0] = "I"; 																		
+	message[1] = " ";																
 	message[3] = "a";
 	message[4] = "n";
 	message[5] = " ";
@@ -21,16 +16,24 @@ function int displayMessage(){
 	message[9] = "n";
 	message[10] = "t";
 	message[11] = ":";
-	/* message[100] = "Error"; 	*/														/*3. semantic check if not correct number */
+	int a;
+	a = 1;
+	if(a == 1) {
+		int b;
+		b = 2;
+	}
+	/* message[100] = "Error"; 	*/														
 	
 	return 0;
 }
 
 
 
-int anywhere; 										/*4. Allow declarations, functions, and statements to be executed in any order  */
-anywhere = 5;										/*4. Allow declarations, functions, and statements to be executed in any order  */
-write anywhere; 									/*4. Allow declarations, functions, and statements to be executed in any order  */
+int anywhere; 										
+anywhere = 5;										
+write anywhere; 									
+write "done";																						
+write 5;
 
 
 
@@ -45,16 +48,29 @@ write anywhere; 									/*4. Allow declarations, functions, and statements to b
 
 
 
-/*5. f = FALSE; */ /*ast and symbol table*/ 
-/*6. n = (a > b); /*ast and symbol table*/ 
-/*7. k = (a < b);  /*ast and symbol table*/ 
-/*8. Make x a string to test */
-/*9. Test Sematic*/ 
-/*10. Test Sematic*/ 
-/*11. Test Sematic*/ 
-/*12. Test Sematic*/ 
-/*13. Add symbol table support for if statements and loops (adding scopes to declarations in ifs) */ 
-/*14. Add AST nodes in the parser for if statements and loops */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*1. semantic check for loop comparsion*/
+/*2. semantic check for if comparsion*/
+/*3. Add AST nodes in the parser for if statements and loops and Add symbol table support for if statements and loops (adding scopes declarations) */
+/*4. check that all ast and symbol are up to date*/ 
+/*5. make sure all        root -> nodeType: =           are filled */ 
 
 
 
@@ -71,8 +87,12 @@ int y;
 int z;
 string c;
 string d;
-string majortest;
-majortest = "hello";
+
+// string majortest;
+// majortest = "hello";
+
+int majortest;
+majortest = 1;
 
 
 
@@ -80,29 +100,33 @@ majortest = "hello";
 x = 0;
 a = 5;
 b = 3;
-t = TRUE; 								 /*4. TRUE*/
-f = FALSE;								 /*5. FALSE*/
-n = (a > b);                             /*6. This should be TRUE*/
-k = (a < b); 							 /*7. This should be FALSE*/
+y = x + a;
+t = TRUE; 								
+f = FALSE;								 
+n = (a > b);                             
+k = (a < b); 							 
 c = "c c c";
 d = "d d d";
 
 
 
-while (majortest < 4){ 							/*8. Make x a string to test*/
-	if (x < 1){
+while (majortest < 4){ 														/*1 should be error*/				
+	int abc;
+	if (majortest < 1){														/*2 should be error*/
+		int h;
 		z = 5;
 		write z;
 		x = x + 1;
+		/*int ifone;*/  													/*3*/
 	}
-
-	elif (majortest == 1 || x < 0){        		/*9. Test Sematic*/ 
+	elif (majortest == 1 || x < 0){        		
 		z = 6;
 		write z;
 		x = x + 1;
+		/*int iftwo; */														/*3*/
+		int abcde;
 	}
-
-	elif (x == majortest && x > 1){				/*10. Test Sematic*/ 
+	elif (x == majortest && x > 1){				 
 		z = 7;
 		write z;
 		x = x + 1;
@@ -111,10 +135,11 @@ while (majortest < 4){ 							/*8. Make x a string to test*/
 		z = 8;
 		write z;
 		x = x + 1;
-		if (n == TRUE ){				/*11. Test Sematic*/ 
+		if (n == TRUE){				
 			write c; 
-			if (k == FALSE){			/*12. Test Sematic*/ 
+			if (k == FALSE){			
 				write d; 
+				int abcdefg;
 			}
 		}
 	}
@@ -123,17 +148,8 @@ while (majortest < 4){ 							/*8. Make x a string to test*/
 
 z = 9;
 write z; 
-/*project 4 */ 
-
-/*13. Add symbol table support for if statements and loops (adding scopes to declarations in ifs and loops) */ 
-/*14. Add AST nodes in the parser for if statements and loops */
-/*15. write string*/
-/*16. write int*/
 
 
 
-write "done";																						/*15. write string*/
-write 5;																							/*16. write int*/
-
-
-/*17. ast and symbol tabel all complete*/ 
+/*4. check that all ast and symbol are up to date*/ 
+/*5. make sure all        root -> nodeType: =           are filled */ 

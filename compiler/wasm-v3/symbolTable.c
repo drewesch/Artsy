@@ -25,12 +25,12 @@ void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLen
 	
 }
 
-struct Entry* getParamList(char * id, struct AST* paramlist) {
+struct Entry* getParamList(char * id, struct AST* paramlist, char scopeStack[50][50], int stackPointer) {
 	struct Entry * list = malloc(sizeof(struct Entry));	
 	if(strcmp(paramlist->nodeType, "variable parm") == 0) {
 		// Semantic check
 		// If the parameter variable name has already been declared before this, throw a semantic error
-		if (found(paramlist->RHS, "global") == 1) {
+		if (found(paramlist->RHS, scopeStack, stackPointer) == 1) {
 			printf("SEMANTIC ERROR: Parameter %s already declared as a variable.\n", paramlist->RHS);
 			exit(1);
 		}
@@ -46,15 +46,16 @@ struct Entry* getParamList(char * id, struct AST* paramlist) {
 		return list;
 	}
 	else if(strcmp(paramlist->nodeType, "ParaDecl comma ParaDeclListTail") == 0) {
-		list = getParamList(id, paramlist -> left);
-		list->paramlist = getParamList(id, paramlist -> right);
+		list = getParamList(id, paramlist -> left, scopeStack, stackPointer);
+		list->paramlist = getParamList(id, paramlist -> right, scopeStack, stackPointer);
 	}
 
 	return list;
 
 }
 
-void addFunction(char *type, char *id, struct AST* paramlist){
+
+void addFunction(char *type, char *id, struct AST* paramlist, char scopeStack[50][50], int stackPointer){
 	if (paramlist == 0){
 		symTabItems[symTabIndex].paramlist = 0;
 	}
@@ -63,7 +64,7 @@ void addFunction(char *type, char *id, struct AST* paramlist){
 
 		// Semantic check
 		// If the parameter variable name has already been declared before this, throw a semantic error
-		if (found(paramlist->RHS, "global") == 1) {
+		if (found(paramlist->RHS, scopeStack, stackPointer) == 1) {
 			printf("SEMANTIC ERROR: Parameter %s already declared as a variable.\n", paramlist->RHS);
 			exit(1);
 		}
@@ -78,7 +79,7 @@ void addFunction(char *type, char *id, struct AST* paramlist){
 
 		symTabItems[symTabIndex].paramlist = list;
 	} else if(strcmp(paramlist->nodeType, "ParaDecl comma ParaDeclListTail") == 0) {		
-		symTabItems[symTabIndex].paramlist = getParamList(id, paramlist);
+		symTabItems[symTabIndex].paramlist = getParamList(id, paramlist, scopeStack, stackPointer);
 	}
 
 	// Set entry struct item data for each parameter in the function
@@ -112,39 +113,48 @@ void showSymTable(){
 	printf("-----------------------------------------------------------------------\n");
 }
 
-int found(char itemName[50], char scope[50]){
+int found(char itemName[50], char scopeStack[50][50], int stackPointer){
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
+
 	for(int i=0; i<symTabIndex; i++){
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope,scope);
 				// If these strings are the same, return true
-				if( str1 == 0 && str2 == 0){
-					//printf("Found: %s\n-----------------------", itemName);
-					return 1; // found the ID in the table
+				if( str1 == 0){
+					for(int j = stackPointer; j >= 0; j--) {
+						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						if(str2 == 0) {
+							//printf("Found: %s\n-----------------------", itemName);
+							return 1; // found the ID in the table
+						}
+					}
 				}
 				tempList = tempList -> paramlist;
 			}
 		}
 		
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope,scope);
-		int str3 = strcmp(symTabItems[i].scope, "global");
 		// If these strings are the same, return true
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			//printf("Found: %s\n-----------------------", itemName);
-			return 1; // found the ID in the table
+		if( str1 == 0){
+			for(int j = stackPointer; j >= 0; j--) {
+				int str2 = strcmp(symTabItems[i].scope, scopeStack[j]);
+				
+				if(str2 == 0) {
+				//printf("Found: %s\n-----------------------", itemName);
+				return 1; // found the ID in the table
+				}
+			}
 		}
 	}
 	// Else, return false
 	return 0;
 }
 
-void updateItemArrayLength(char itemName[50], char scope[50], int newLen) {
+void updateItemArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer, int newLen) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
@@ -153,33 +163,40 @@ void updateItemArrayLength(char itemName[50], char scope[50], int newLen) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope,scope);
 
 				// If these strings are the same, update length
-				if( str1 == 0 && str2 == 0){
+				if(str1 == 0){
+					for(int j = stackPointer; j >= 0; j--) {
+						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						if(str2 == 0) {
+							symTabItems[i].arrayLength = newLen;
+							return;
+						}
+					}
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+
+		// If these strings are the same, update length
+		if( str1 == 0){
+			for(int j = stackPointer; j >= 0; j--) {
+				int str2 = strcmp(symTabItems[i].scope, scopeStack[j]);
+				if(str2 == 0) {
 					symTabItems[i].arrayLength = newLen;
 					return;
 				}
-				tempList = tempList -> paramlist;
 			}
-		}
-		
-		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope, scope);
-		int str3 = strcmp(symTabItems[i].scope, "global");
-
-		// If these strings are the same, update length
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			symTabItems[i].arrayLength = newLen;
-			return;
 		}
 	}
 	// Else, return false
-	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	printf("SEMANTIC ERROR: Variable %s d1 does not exist.\n", itemName);
 	exit(1);
 }
 
-struct Entry* getItem(char itemName[50], char scope[50]) {
+struct Entry* getItem(char itemName[50], char scopeStack[50][50], int stackPointer) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
@@ -188,30 +205,37 @@ struct Entry* getItem(char itemName[50], char scope[50]) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope,scope);
 				// If these strings are the same, return true
-				if( str1 == 0 && str2 == 0){
-					//printf("Found: %s\n-----------------------", itemName);
-					return 1; // found the ID in the table
+				if( str1 == 0){
+					for(int j = stackPointer; j >= 0; j--) {
+						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						if(str2 == 0) {
+							//printf("Found: %s\n-----------------------", itemName);
+							return 1; // found the ID in the table
+						}
+					}
 				}
 				tempList = tempList -> paramlist;
 			}
 		}
 		
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope,scope);
-		int str3 = strcmp(symTabItems[i].scope, "global");
 		// If these strings are the same, return true
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			//printf("Found: %s\n-----------------------", itemName);
-			return &symTabItems[i]; // found the ID in the table
+		if( str1 == 0 ){
+			for(int j = stackPointer; j >= 0; j--) {
+				int str2 = strcmp(symTabItems[i].scope, scopeStack[j]);
+				if(str2 == 0) {
+					//printf("Found: %s\n-----------------------", itemName);
+					return &symTabItems[i]; // found the ID in the table
+				}
+			}
 		}
 	}
 	// Else, return false
 	return NULL;
 }
 
-int getItemID(char itemName[50], char scope[50]) {
+int getItemID(char itemName[50], char scopeStack[50][50], int stackPointer) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
@@ -220,32 +244,39 @@ int getItemID(char itemName[50], char scope[50]) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope,scope);
 
 				// If these strings are the same, return true
-				if( str1 == 0 && str2 == 0){
+				if( str1 == 0){
+					for(int j = stackPointer; j >= 0; j--) {
+						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						if (str2 == 0) {
+							return symTabItems[i].itemID;
+						}
+					}
+				}
+				tempList = tempList -> paramlist;
+			}
+		}
+		
+		int str1 = strcmp(symTabItems[i].itemName, itemName);
+
+		// If these strings are the same, return true
+		if( str1 == 0){
+			for(int j = stackPointer; j >= 0; j--) {
+				int str2 = strcmp(symTabItems[i].scope, scopeStack[j]);
+				if(str2 == 0) {
+					//printf("Found: %s\n-----------------------", itemName);
 					return symTabItems[i].itemID;
 				}
-				tempList = tempList -> paramlist;
 			}
-		}
-		
-		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope, scope);
-		int str3 = strcmp(symTabItems[i].scope, "global");
-
-		// If these strings are the same, return true
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			//printf("Found: %s\n-----------------------", itemName);
-			return symTabItems[i].itemID;
 		}
 	}
 	// Else, return false
-	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	printf("SEMANTIC ERROR: Variable %s d2 does not exist.\n", itemName);
 	exit(1);
 }
 
-char* getItemKind(char itemName[50], char scope[50]) {
+char* getItemKind(char itemName[50], char scopeStack[50][50], int stackPointer) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
@@ -254,32 +285,39 @@ char* getItemKind(char itemName[50], char scope[50]) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope, scope);
 
 				// If these strings are the same, return true
-				if( str1 == 0 && str2 == 0){
-					return tempList->itemKind;
+				if( str1 == 0){
+					for(int j = stackPointer; j >= 0; j--) {
+						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						if(str2 == 0) {
+							return tempList->itemKind;
+						}
+					}
 				}
 				tempList = tempList -> paramlist;
 			}
 		}
 		
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope, scope);
-		int str3 = strcmp(symTabItems[i].scope, "global");
 
 		// If these strings are the same, return true
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			//printf("Found: %s\n-----------------------", itemName);
-			return symTabItems[i].itemKind;
+		if( str1 == 0){
+			for(int j = stackPointer; j >= 0; j --) {
+				int str2 = strcmp(symTabItems[i].scope, scopeStack[j]);
+				if(str2 == 0) {
+					//printf("Found: %s\n-----------------------", itemName);
+					return symTabItems[i].itemKind;
+				}
+			}
 		}
 	}
 	// Else, return false
-	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	printf("SEMANTIC ERROR: Variable %s d3 does not exist.\n", itemName);
 	exit(1);
 }
 
-char* getItemType(char itemName[50], char scope[50]) {
+char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
@@ -288,32 +326,39 @@ char* getItemType(char itemName[50], char scope[50]) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope, scope);
 
 				// If these strings are the same, return true
-				if( str1 == 0 && str2 == 0){
-					return tempList->itemType;
+				if( str1 == 0){
+					for(int j = stackPointer; j >= 0; j--) {
+						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						if(str2 == 0) {
+							return tempList->itemType;
+						}
+					}
 				}
 				tempList = tempList -> paramlist;
 			}
 		}
 		
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope, scope);
-		int str3 = strcmp(symTabItems[i].scope, "global");
 
 		// If these strings are the same, return true
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			//printf("Found: %s\n-----------------------", itemName);
-			return symTabItems[i].itemType;
+		if( str1 == 0){
+			for(int j = stackPointer; j >= 0; j--) {
+				int str2 = strcmp(symTabItems[i].scope, scopeStack[j]);
+				if(str2 == 0) {
+					//printf("Found: %s\n-----------------------", itemName);
+					return symTabItems[i].itemType;
+				}
+			}
 		}
 	}
 	// Else, return false
-	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	printf("SEMANTIC ERROR: Variable %s d4 does not exist.\n", itemName);
 	exit(1);
 }
 
-int getArrayLength(char itemName[50], char scope[50]) {
+int getArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer) {
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
@@ -322,28 +367,35 @@ int getArrayLength(char itemName[50], char scope[50]) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
 				int str1 = strcmp(tempList -> itemName, itemName);
-				int str2 = strcmp(tempList -> scope, scope);
 
 				// If these strings are the same, return true
-				if( str1 == 0 && str2 == 0){
-					return tempList->arrayLength;
+				if( str1 == 0){
+					for(int j = stackPointer; j >= 0; j--) {
+						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						if(str2 == 0) {
+							return tempList->arrayLength;
+						}
+					}
 				}
 				tempList = tempList -> paramlist;
 			}
 		}
 		
 		int str1 = strcmp(symTabItems[i].itemName, itemName);
-		int str2 = strcmp(symTabItems[i].scope, scope);
-		int str3 = strcmp(symTabItems[i].scope, "global");
 
 		// If these strings are the same, return true
-		if( str1 == 0 && (str2 == 0 || str3 == 0)){
-			//printf("Found: %s\n-----------------------", itemName);
-			return symTabItems[i].arrayLength;
+		if( str1 == 0){
+			for(int j = stackPointer; j >= 0; j--) {
+				int str2 = strcmp(symTabItems[i].scope, scopeStack[j]);
+				if(str2 == 0) {
+					//printf("Found: %s\n-----------------------", itemName);
+					return symTabItems[i].arrayLength;
+				}
+			}
 		}
 	}
 	// Else, return false
-	printf("SEMANTIC ERROR: Variable %s does not exist.\n", itemName);
+	printf("SEMANTIC ERROR: Variable %s d5 does not exist.\n", itemName);
 	exit(1);
 }
 
@@ -377,7 +429,8 @@ int countParams(int itemID) {
 }
 
 int getNumFuncParams(char funcName[50]) {
-	return countParams(getItemID(funcName, "global"));
+	char ** scopeStack = { "global" };
+	return countParams(getItemID(funcName, scopeStack, 0));
 }
 
 char * getParamType(int itemID, int numParams, int searchIndex) {
@@ -401,5 +454,6 @@ char * getParamType(int itemID, int numParams, int searchIndex) {
 }
 
 char * getFuncParamItemType(char funcName[50], int numParams, int index) {
-	return getParamType(getItemID(funcName, "global"), numParams, index);
+	char ** scopeStack = { "global" };
+	return getParamType(getItemID(funcName, scopeStack, 0), numParams, index);
 }

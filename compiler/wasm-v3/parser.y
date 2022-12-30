@@ -15,8 +15,10 @@ extern int yyparse();
 extern FILE* yyin;
 
 void yyerror(const char* s);
-char currentScope[50]; // global or the name of the function
-char tempScopeStore[50];
+char scopeStack[50][50];
+char currentFunctionScope[50];
+int stackPointer;
+int blockNumber;
 %}
 
 %union {
@@ -77,29 +79,26 @@ char tempScopeStore[50];
 %left MULTIPLY DIVIDE
 %left MODULO
 %left EXPONENT
-%type <ast> Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail If Loop Elif Else ForL
+%type <ast> ProgramStart Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail IfStmt If IfStmtTail Loop Elif Else ForL WhileL ForHead WhileHead IfHead ElifHead ElseHead
 
-%start Program
+%start ProgramStart
 
 %%
 
 // Main program parser rule, generates the whole AST for the program
+ProgramStart: Program {
+	printf("\n--------------------Parser End------------------------\n");
+
+	ast = $$;
+}
+
 Program: DeclList StmtList {
-		printf("\nProgram Version: DeclList StmtList\n");
 		$$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
-
-		printf("\n--------------------Parser End------------------------\n");
-
-		ast = $$;
 	} |
 	DeclList StmtList Program{
 		printf("\nProgram Version: DeclList StmtList Program\n");
 		struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
 		$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
-
-		printf("\n--------------------Parser End------------------------\n");
-
-		ast = $$;
 	}
 ;
 
@@ -110,13 +109,10 @@ Program: DeclList StmtList {
 DeclList: // Grammar rule to generate the whole list of variable and regular declarations
 	VarDecl DeclList	{ $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
 							}
-	| FunDeclList { $$ = $1; }
 	| Decl	{ $$ = $1; }
 ;
 
 Decl: {
-	printf("\ncheck5\n");
-	fflush(stdout);
 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	| VarDecl {
 	// Basic Var Declaration Rule, generates AST for all variable declarations
@@ -132,13 +128,13 @@ VarDecl:
 		// Variable declaration rule
 		// Symbol Table
 		symTabAccess();
-		int inSymTab = found($2, currentScope);
+		int inSymTab = found($2, scopeStack, stackPointer);
 		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
 
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Var", $1, 0, currentScope);
+			addItem($2, "Var", $1, 0, scopeStack[stackPointer]);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -157,13 +153,13 @@ VarDecl:
 		// Variable declaration rule
 		// Symbol Table
 		symTabAccess();
-		int inSymTab = found($2, currentScope);
+		int inSymTab = found($2, scopeStack, stackPointer);
 		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
 		
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Var", $4, 0, currentScope);
+			addItem($2, "Var", $4, 0, scopeStack[stackPointer]);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -180,13 +176,13 @@ VarDecl:
 	| TYPE ID LEFTSQUARE INTEGER RIGHTSQUARE SEMICOLON {
 		printf("RECOGNIZED RULE: Array declaration"); 
 		symTabAccess(); 
-		int inSymTab = found($2, currentScope);
+		int inSymTab = found($2, scopeStack, stackPointer);
 		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
 							
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Array", $1, atoi($4), currentScope);
+			addItem($2, "Array", $1, atoi($4), scopeStack[stackPointer]);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -202,13 +198,13 @@ VarDecl:
 	| DECLARE ID AS TYPE LEFTSQUARE INTEGER RIGHTSQUARE SEMICOLON {
 		printf("RECOGNIZED RULE: Array declaration"); 
 		symTabAccess(); 
-		int inSymTab = found($2, currentScope);
+		int inSymTab = found($2, scopeStack, stackPointer);
 		//printf("looking for %s in symtab - found: %d \n", $2, inSymTab);
 							
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Array", $4, atoi($6), currentScope);
+			addItem($2, "Array", $4, atoi($6), scopeStack[stackPointer]);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -222,7 +218,7 @@ VarDecl:
 	}
 ;
 
-FunDeclList: {}
+FunDeclList: { 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	| FunDecl {$$ = $1;}
 	| FunDeclListTail {$$ = $1;}
 ;
@@ -232,14 +228,13 @@ FunDeclListTail: FunDecl {$$ = $1;}
 ;
 
 FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
-		fflush(stdout);
 		symTabAccess();
-		int inSymTab = found($3, currentScope);
+		int inSymTab = found($3, scopeStack, stackPointer);
 
 		// Check if the function variable has already been declared
 		// If it has, throw an error
 		if (inSymTab == 0){
-			addFunction($2, $3, $5); //id
+			addFunction($2, $3, $5, scopeStack, stackPointer); //id
 		}
 		else {
 			printf("SEMANTIC ERROR: Function %s has already been declared.\n", $3);
@@ -249,20 +244,26 @@ FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		showSymTable();
 		$$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
 
-		strcpy(tempScopeStore, currentScope);
-		strcpy(currentScope, $3);
+		stackPointer += 1;
+		memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+		strcpy(scopeStack[stackPointer], $3);
+		memset(currentFunctionScope, 0, 50 * sizeof(char));
+		strcpy(currentFunctionScope, $3);
 	}
 ;
 
 FunDecl: FuncHeader Block {
 	// Generate AST node as a doubly node
 	$$ = AST_DoublyChildNodes("function",$1,$2,$1, $2);
-	fflush(stdout);
-	strcpy(currentScope, tempScopeStore);
+	stackPointer -= 1;
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
 ;
 
-ParamDeclList: {}
+ParamDeclList: {
+		$$ = AST_SingleChildNode("empty", "empty", "empty");
+}
 	| ParamDeclListTail {$$ = $1;}
 ;
 
@@ -291,7 +292,7 @@ StmtList: Stmt {
 	}
 ;
 
-Stmt:	SEMICOLON	{}
+Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	| Expr SEMICOLON	{
 		// Simplest expr statement in grammar
 		$$ = $1;
@@ -303,7 +304,7 @@ Stmt:	SEMICOLON	{}
 					printf("write: %s", $2 -> nodeType);
 
 					// If the primary type is a variable, check if the variable is in the symbol table
-					if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, currentScope)) {
+					if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
 						printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
 						exit(1);
 					}
@@ -318,30 +319,137 @@ Stmt:	SEMICOLON	{}
 		$$ = AST_SingleChildNode("return", $2,$2); 
 
 		// Check if the return type matches the function type
-		CheckAssignmentType(currentScope, getExprOp($2), currentScope);
+		CheckAssignmentType(currentFunctionScope, getExprOp($2), scopeStack, stackPointer);
 	}
 	| READ ID SEMICOLON {$$ = AST_SingleChildNode("read", $2, 0);}
 	| Block {$$ = $1;} //To do for next iteration
 	| Loop {$$=$1;}
-	| If {$$=$1;} 
-	| Elif {$$=$1;} 
-	| Else {$$=$1;}
-	| ForL {$$=$1;}  
+	| IfStmt {$$=$1;} 
 ;
 
-ForL: FOR LEFTPAREN Expr RIGHTPAREN Block { }
+IfStmt: If IfStmtTail {
+	printf("\n RECOGNIZED RULE: if statement block\n");
+	$$ = AST_DoublyChildNodes("IfStmt", $1, $2, $1, $2);
+}
 ;
 
-Loop: WHILE LEFTPAREN Expr RIGHTPAREN Block { }
+IfStmtTail: { $$ = AST_SingleChildNode("IfStmtTail else end", "", "");}
+	| Else { $$ = AST_SingleChildNode("IfStmtTail else end", $1, $1);}
+	| Elif IfStmtTail { $$ = AST_DoublyChildNodes("IfStmtTail continue", $1, $2, $1, $2); }
+
+Loop: ForL {
+	$$ = $1;
+}
+	| WhileL {
+		$$ = $1;
+	}
 ;
 
-If: IF LEFTPAREN Expr RIGHTPAREN Block {}
+ForHead: FOR LEFTPAREN Expr RIGHTPAREN {
+	$$ = AST_SingleChildNode($3, $3, $3);
+	char tempScopeName[50];
+	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "for", blockNumber);
+	stackPointer += 1;
+	blockNumber += 1;
+	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+	strcpy(scopeStack[stackPointer], tempScopeName);
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, tempScopeName);
+}
 ;
 
-Elif:  ELIF LEFTPAREN Expr RIGHTPAREN Block {}
+ForL: ForHead Block {
+	$$ = AST_DoublyChildNodes("ForL", $1, $2, $1, $2);
+	stackPointer -= 1;
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, scopeStack[stackPointer]);
+}
 ;
 
-Else:  ELSE Block {}
+WhileHead: WHILE LEFTPAREN Expr RIGHTPAREN {
+	$$ = AST_SingleChildNode($3, $3, $3);
+	char tempScopeName[50];
+	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "while", blockNumber);
+	stackPointer += 1;
+	blockNumber += 1;
+	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+	strcpy(scopeStack[stackPointer], tempScopeName);
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, tempScopeName);
+};
+
+WhileL: WhileHead Block {
+	$$ = AST_DoublyChildNodes("WhileL", $1, $2, $1, $2);
+	stackPointer -= 1;
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, scopeStack[stackPointer]);
+}
+;
+
+IfHead: IF LEFTPAREN Expr RIGHTPAREN {
+	$$ = AST_SingleChildNode($3, $3, $3);
+	char tempScopeName[50];
+	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "if", blockNumber);
+	stackPointer += 1;
+	blockNumber += 1;
+	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+	strcpy(scopeStack[stackPointer], tempScopeName);
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, tempScopeName);
+}
+;
+
+If: IfHead Block {
+	printf("\n RECOGNIZED RULE: if statement\n");
+
+	$$ = AST_DoublyChildNodes("If", $1, $2, $1, $2);
+	stackPointer -= 1;
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, scopeStack[stackPointer]);
+}
+;
+
+ElifHead: ELIF LEFTPAREN Expr RIGHTPAREN {
+	$$ = AST_SingleChildNode($3, $3, $3);
+	char tempScopeName[50];
+	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "elif", blockNumber);
+	stackPointer += 1;
+	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+	strcpy(scopeStack[stackPointer], tempScopeName);
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, tempScopeName);
+}
+;
+
+Elif:  ElifHead Block {
+	printf("\n RECOGNIZED RULE: elif statement\n");
+
+	$$ = AST_DoublyChildNodes("Elif", $1, $2, $1, $2);
+	stackPointer -= 1;
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, scopeStack[stackPointer]);
+}
+;
+
+ElseHead: ELSE {
+	char tempScopeName[50];
+	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "else", blockNumber);
+	stackPointer += 1;
+	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+	strcpy(scopeStack[stackPointer], tempScopeName);
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, tempScopeName);
+}
+;
+
+Else:  ElseHead Block {
+	printf("\n RECOGNIZED RULE: else statement\n");
+
+	$$ = AST_SingleChildNode("Else", $2, $2);
+	stackPointer -= 1;
+	memset(currentFunctionScope, 0, 50 * sizeof(char));
+	strcpy(currentFunctionScope, scopeStack[stackPointer]);
+}
 ;
 
 
@@ -353,7 +461,7 @@ Primary :	 INTEGER	{$$ = AST_SingleChildNode("int", $1, $1); }
 	| ID LEFTSQUARE INTEGER RIGHTSQUARE {
 		char * arrayPrefix = malloc(100*sizeof(char));
 		strcat(arrayPrefix, "inarray_");
-		strcat(arrayPrefix, getItemType($1, currentScope));
+		strcat(arrayPrefix, getItemType($1, scopeStack, stackPointer));
 		printf("Prefix: %s\n", arrayPrefix);
 		$$ = AST_DoublyChildNodes(arrayPrefix, $1, $3, $1, $3);
 	}
@@ -374,16 +482,18 @@ ExprList: {}
 	}
 ;
 
-
-// Fix the AST tree for block
-Block:  LEFTBRACKET DeclList StmtList RIGHTBRACKET { printf("\n RECOGNIZED RULE: Block statement\n");
-		$$ = AST_DoublyChildNodes("block",$2, $3, $2, $3);
+Block:  LEFTBRACKET Program RIGHTBRACKET { printf("\n RECOGNIZED RULE: Block statement\n");
+		$$ = AST_SingleChildNode("block",$2, $2);
 		}
 ;
 
 Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 		$$ = $1;
-		strcpy($$->nodeType, CheckPrimaryType($1, currentScope));
+		
+		char tempNodeType[50];
+		strcpy(tempNodeType, CheckPrimaryType($1, scopeStack, stackPointer));
+		memset($$->nodeType, 0, 50*sizeof(char));
+		strcpy($$->nodeType, tempNodeType);
 	}		
 	| ID EQ Expr 	{ printf("\n RECOGNIZED RULE: Assignment statement\n");
 					// --- SEMANTIC CHECKS --- //
@@ -399,10 +509,10 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					*/
 					
 					// Check to see if the ID exists in the symbol table
-					checkID($1, currentScope);
+					checkID($1, scopeStack, stackPointer);
 
 					// Check to see if the LHS matches the RHS
-					CheckAssignmentType($1, getExprOp($3), currentScope);
+					CheckAssignmentType($1, getExprOp($3), scopeStack, stackPointer);
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
@@ -422,14 +532,15 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 							perform SEMANTIC ACTIONS
 						
 					*/
-					
+
 					// Check to see if the ID exists in the symbol table
-					checkID($1, currentScope);
+					checkID($1, scopeStack, stackPointer);
+					
 
 					// Check to see if the LHS matches the RHS
 					char * LHS = getExprOp($6);
-					CheckAssignmentType($1, LHS, currentScope);
-					CheckIndexOutOfBound($1, $3, currentScope);
+					CheckAssignmentType($1, LHS, scopeStack, stackPointer);
+					CheckIndexOutOfBound($1, $3, scopeStack, stackPointer);
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
@@ -453,10 +564,10 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					*/
 					
 					// Check to see if the ID exists in the symbol table
-					checkID($2, currentScope);
+					checkID($2, scopeStack, stackPointer);
 
 					// Check to see if the LHS matches the RHS
-					CheckAssignmentType($2, getExprOp($4), currentScope);
+					CheckAssignmentType($2, getExprOp($4), scopeStack, stackPointer);
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
@@ -477,10 +588,10 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					*/
 					
 					// Check to see if the ID exists in the symbol table
-					checkID($2, currentScope);
+					checkID($2, scopeStack, stackPointer);
 
 					// Check to see if the LHS matches the RHS
-					CheckAssignmentType($2, $7, currentScope);
+					CheckAssignmentType($2, $7, scopeStack, stackPointer);
 
 					// Generate AST tree nodes
 					printf("DEBUG -- GENERATE AST\n");
@@ -572,7 +683,12 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 				// Generate AST Nodes (doubly linked)
 				$$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
 			}
-	| Expr COMPARSIONOPERATOR Expr {$$ = AST_DoublyChildNodes("Comparsion", $1, $3, $1, $3);}
+	| Expr COMPARSIONOPERATOR Expr {
+		printf("\n RECOGNIZED RULE: Comparison statement\n");
+		CheckComparisonType($1, $3, scopeStack, stackPointer);
+		struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
+		$$ = AST_SingleChildNode("Comparsion", tempNode, tempNode);
+	}
 	| Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical", $1, $3, $1, $3);}			
 	| LEFTPAREN Expr RIGHTPAREN {$$ = $2;}
 	| FunctionCall {$$ = $1;}
@@ -589,7 +705,7 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
 	CheckParamLength($1, funcCallParamList);
 
 	// Check to see if the list of call parameters matches the function declaration
-	// compareFuncToExpr($1, funcCallParamList, currentScope);
+	// compareFuncToExpr($1, funcCallParamList, scopeStack[stackPointer]);
 	
 	// Find the number of parameters
     int numParams = getNumExprs(funcCallParamList);
@@ -602,7 +718,7 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
             char * funcParamType = getFuncParamItemType($1, numParams, i);
 
             // Get the expression parameter type at this index
-			char * callParamType = getCallListItemType(funcCallParamList, i, 0, currentScope);
+			char * callParamType = getCallListItemType(funcCallParamList, i, 0, scopeStack[stackPointer]);
 
             // Check to see if the two types do not match
             // If they don't, return a semantic error
@@ -655,9 +771,11 @@ int parser_main(FILE*inputfile)
 	// #ifdef YYDEBUG
 	// 	yydebug = 1;
 	// #endif
-
 	printf("\n \n \n \n \n \n--------------------Parser Start------------------------\n\n\n");
-	strcpy(currentScope, "global");
+	stackPointer = 0;
+	blockNumber = 0;
+	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+	strcpy(scopeStack[stackPointer], "global");
 	if (2 > 1){
 	  if(!(yyin = inputfile))
           {

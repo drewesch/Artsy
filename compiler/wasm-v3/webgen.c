@@ -187,7 +187,8 @@ void generateText() {
             // Determine if the variable is global or variable
             char * scopeType = "global";
 
-            if (!found(token, "global")) {
+            char ** scopeStack = { "global" };
+            if (!found(token, scopeStack, 0)) {
                 scopeType = "local";
             }
             // Print function ending code
@@ -260,7 +261,8 @@ void generateText() {
                 // Determine if the variable is global or variable
                 char * scopeType = "global";
 
-                if (!found(variable, "global")) {
+                char ** scopeStack = { "global", currScope };
+                if (!found(variable, scopeStack, 0)) {
                     scopeType = "local";
                 }
 
@@ -268,8 +270,9 @@ void generateText() {
                 char * token;
                 char delimiter[] = "[], ";
                 token = strtok(variable, delimiter);
-                char * primaryType = getItemType(token, currScope);
-                char * itemKind = getItemKind(token, currScope);
+
+                char * primaryType = getItemType(token, scopeStack, 1);
+                char * itemKind = getItemKind(token, scopeStack, 1);
 
                 // Declare a write string variable
                 char * writeStr = malloc(200*sizeof(char));
@@ -300,7 +303,7 @@ void generateText() {
                         fprintf(LOCALcode, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, variable, 0);
                         
                         // Print out all available indexes using a for-loop
-                        for (int arrIndex = 0; arrIndex < getArrayLength(variable, currScope); arrIndex++) {
+                        for (int arrIndex = 0; arrIndex < getArrayLength(variable, scopeStack, 1); arrIndex++) {
                             fprintf(LOCALcode, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, variable, arrIndex);
                         }
                     } else {
@@ -326,7 +329,7 @@ void generateText() {
                         fprintf(MAINcode, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, variable, 0);
                         
                         // Print out all available indexes using a for-loop
-                        for (int arrIndex = 1; arrIndex < getArrayLength(variable, currScope); arrIndex++) {
+                        for (int arrIndex = 1; arrIndex < getArrayLength(variable, currScope, 1); arrIndex++) {
                             fprintf(MAINcode, "%s (call $get_element (%s.get $%s) (i32.const %d)))\n", writeStr, scopeType, variable, arrIndex);
                         }
                     } else {
@@ -462,7 +465,8 @@ void generateText() {
                 // Determine if the variable is global or variable
                 char * scopeType = "global";
 
-                if (!found(strArr[0], "global")) {
+                char ** scopeStack = { "global" };
+                if (!found(strArr[0], scopeStack, 0)) {
                     scopeType = "local";
                 }
 
@@ -482,8 +486,9 @@ void generateText() {
                     // Declare a size variable
                     char * size = strtok(strArr[0], "[], ");
 
+                    char ** scopeStack = { "global" };
                     // Redetermine if the scope is global or local
-                    if (!found(size, "global")) {
+                    if (!found(size, scopeStack, 0)) {
                         scopeType = "local";
                     } else {
                         scopeType = "global";
@@ -502,8 +507,9 @@ void generateText() {
                     // Declare a size variable
                     char * size = strtok(strArr[0], "[], ");
 
+                    char ** scopeStack = { "global" };
                     // Redetermine if the scope is global or local
-                    if (!found(size, "global")) {
+                    if (!found(size, scopeStack, 0)) {
                         scopeType = "local";
                     } else {
                         scopeType = "global";
@@ -537,7 +543,8 @@ void generateText() {
                     // Determine if the variable is global or variable
                     char * varScopeType = "global";
 
-                    if (!found(tokenVar2, "global")) {
+                    char ** scopeStack = { "global" };
+                    if (!found(tokenVar2, scopeStack, 0)) {
                         varScopeType = "local";
                     }
 
@@ -621,7 +628,8 @@ void generateText() {
                 // Determine if the variable is global or variable
                 char * scopeType = "global";
 
-                if (!found(strArr[0], "global")) {
+                char ** scopeStack = { "global" };
+                if (!found(strArr[0], scopeStack, 0)) {
                     scopeType = "local";
                 }
 
@@ -683,7 +691,8 @@ void generateText() {
                             // Determine if the variable is global or variable
                             char * varScopeType = "global";
 
-                            if (!found(strArr[index], "global")) {
+                            char ** scopeStack = { "global" };
+                            if (!found(strArr[index], scopeStack, 0)) {
                                 varScopeType = "local";
                             }
 
@@ -741,7 +750,8 @@ void generateText() {
                 // Determine if the variable is global or variable
                 char * scopeType = "global";
 
-                if (!found(assignVar, "global")) {
+                char ** scopeStack = { "global" };
+                if (!found(assignVar, scopeStack, 0)) {
                     scopeType = "local";
                 }
                 // Determine the operation type
@@ -804,7 +814,8 @@ void generateText() {
                     // Determine if the variable is global or variable
                     char * varScopeType = "global";
 
-                    if (!found(tokenVar1, "global")) {
+                    char ** scopeStack = { "global" };
+                    if (!found(tokenVar1, scopeStack, 0)) {
                         varScopeType = "local";
                     }
 
@@ -863,7 +874,8 @@ void generateText() {
                     // Determine if the variable is global or variable
                     char * varScopeType = "global";
 
-                    if (!found(tokenVar2, "global")) {
+                    char ** scopeStack = { "global" };
+                    if (!found(tokenVar2, scopeStack, 0)) {
                         varScopeType = "local";
                     }
 

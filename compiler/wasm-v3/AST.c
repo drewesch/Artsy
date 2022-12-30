@@ -98,7 +98,9 @@ char * getExprOp(struct AST * root) {
 		char * op = "";
 
 		// Find the type of the function in the function table
-		char * funcType = getItemType(root->left->nodeType, "global");
+
+		char ** scopeStack = { "global" };
+		char * funcType = getItemType(root->left->nodeType, scopeStack, 0);
 
 		// Assign function type to operation type variable
 		op = malloc(strlen(funcType)*sizeof(char));
@@ -213,7 +215,8 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 				return op;
 			} else if (strncmp(nodeType, "function call", 14) == 0) {
 				// Find the type of the item using the symbol table
-				char * funcType = getItemType(root->left->left->nodeType, "global");
+				char ** scopeStack = { "global" };
+				char * funcType = getItemType(root->left->left->nodeType, scopeStack, 0);
 
 				// Assign function type to operation type variable
 				char * op = malloc(strlen(funcType)*sizeof(char));
@@ -223,7 +226,8 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 				return op;
 			} else {
 				// Find the type of the function in the function table
-				char * varType = getItemType(nodeType, currentScope);
+				char ** scopeStack = { "global", currentScope };
+				char * varType = getItemType(nodeType, scopeStack, 1);
 
 				// Assign variable type to operation type variable
 				char * op = malloc(strlen(varType)*sizeof(char) + 1);
@@ -252,7 +256,8 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 				return op;
 			} else if (strncmp(nodeType, "function call", 14) == 0) {
 				// Find the type of the item using the symbol table
-				char * funcType = getItemType(root->right->left->nodeType, "global");
+				char ** scopeStack = { "global" };
+				char * funcType = getItemType(root->right->left->nodeType, scopeStack, 0);
 
 				// Assign function type to operation type variable
 				char * op = malloc(strlen(funcType)*sizeof(char));
@@ -261,8 +266,10 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 				// Return operation type
 				return op;
 			} else {
+				char ** scopeStack = { "global", currentScope };
+
 				// Find the type of the function in the function table
-				char * varType = getItemType(nodeType, currentScope);
+				char * varType = getItemType(nodeType, scopeStack, 1);
 
 				// Assign variable type to operation type variable
 				char * op = malloc(strlen(varType)*sizeof(char) + 1);
