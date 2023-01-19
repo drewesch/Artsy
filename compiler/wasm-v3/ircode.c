@@ -120,6 +120,8 @@ char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
         startIR = 1;
     }
 
+    // printf("id1: %s\n", id1);
+
     // Assign temporary variables for tracking base array variables
     char * token1 = malloc(strlen(id1)*sizeof(char));
     char * token2 = malloc(strlen(id2)*sizeof(char));
@@ -146,8 +148,7 @@ char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
         char * opType;
         
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            char ** scopeStack = { "global", currIRScope };
-            opType = getItemType(token1, scopeStack, 1);
+            opType = getItemType(token1, currIRScope, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -176,12 +177,14 @@ int isnumeric(char var[50]) {
     return 1;
 }
 
-// Optimized versiion of binary operations for IRcodeOptimized.ir
+// Optimized version of binary operations for IRcodeOptimized.ir
 char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2){
     if (startIROptimized == 0) {
         initIRcodeFileOptimized();
         startIROptimized = 1;
     }
+
+    // printf("id1: %s\n", id1);
 
     memset(outputId, 0, 50);
 
@@ -242,8 +245,7 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
         char * opType;
 
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            char ** scopeStack = { "global", currIRScope };
-            opType = getItemType(token1, scopeStack, 1);
+            opType = getItemType(token1, currIRScope, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -743,8 +745,8 @@ char * emitFunctionCallOptimized(char *id) {
 char* ASTTraversal(struct AST* root) {
     if(root != NULL) {
         printf("root -> nodeType: %s\n", root -> nodeType);
-        if(root -> LHS != NULL)
-        printf("root -> LHS: %s\n", root -> LHS);
+        // if(root -> LHS != NULL)
+        // printf("root -> LHS: %s\n", root -> LHS);
         if(root -> RHS != NULL)
         printf("root -> RHS: %s\n", root -> RHS);
         fflush(stdout);
@@ -774,7 +776,7 @@ char* ASTTraversal(struct AST* root) {
         if(strcmp(root->nodeType, "program") == 0 
             || strcmp(root->nodeType, "vardec") == 0
             || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
-            || strcmp(root->nodeType, "ParaDecmma ParaDeclListTail") == 0
+            || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
             || strcmp(root->nodeType, "statements") == 0) { 
             ASTTraversal(root -> left);
             ASTTraversal(root -> right);
@@ -812,27 +814,19 @@ char* ASTTraversal(struct AST* root) {
             cindex += 1;
             ASTTraversal(root -> right);
         }
-        if(strcmp(root->nodeType, "function call param list") == 0) {
+        if(strncmp(root->nodeType, "function call param list", 24) == 0) {
             memset(c, 0, 50 * 50);
             ASTTraversal(root -> right);
         }
-        if(strcmp(root->nodeType, "function call") == 0) {
+        if(strncmp(root->nodeType, "function call", 14) == 0) {
             ASTTraversal(root -> right);
-
             memset(buffer, 0, 50);
             strcpy(buffer, emitFunctionCall(root -> LHS));
             cindex = 0;
             return buffer;
         }
         if(strcmp(root -> nodeType, "return") == 0) {
-            // Check if the return type is an array index
-            // If so, update the rightVar accordingly
-            if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
-                sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
-            } else {
-                strcpy(rightVar, ASTTraversal(root->right));
-                printf("check3: %s\n", rightVar);
-            }
+            strcpy(rightVar, ASTTraversal(root-> right));
             emitReturn(rightVar);
         }
         if(strcmp(root->nodeType, "=") == 0) {
@@ -859,7 +853,6 @@ char* ASTTraversal(struct AST* root) {
                         }
 
                         return emitBinaryOperation(root->right->RHS, leftVar, rightVar);
-                        // emitAssignmentForElement(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
                     } else {
                         if (strncmp(getPrimaryType(root->right->right->LHS), "var", 3) == 0) {
                             sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
@@ -890,18 +883,35 @@ char* ASTTraversal(struct AST* root) {
                 // If so, include the array callout in the binary operation
                 // Form leftVar variable
                 if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {
-                    sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+                    // New changes here
+                    if (strncmp(root->left->LHS, "function call", 14) == 0) {
+                        strcpy(leftVar, ASTTraversal(root->left));
+                    } else if (strncmp(root->left->LHS, "int", 3) == 0 || strncmp(root->left->LHS, "float", 5) == 0) {
+                        strcpy(leftVar, root->left->left->RHS);
+                    } else if (strncmp(root->left->RHS, "function call param list", 24) == 0) {
+                        strcpy(leftVar, ASTTraversal(root->right));
+                    } else {
+                        sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+                    }
                 } else {
-                    strcpy(leftVar, ASTTraversal(root-> left));
+                    strcpy(leftVar, ASTTraversal(root->left));
                 }
 
                 // Form rightVar variable
                 if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
-                    sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+                    // New changes here
+                    if (strncmp(root->right->LHS, "function call", 14) == 0) {
+                        strcpy(rightVar, ASTTraversal(root->right));
+                    } else if (strncmp(root->right->LHS, "int", 3) == 0 || strncmp(root->right->LHS, "float", 5) == 0) {
+                        strcpy(rightVar, root->right->left->RHS);
+                    } else if (strncmp(root->right->RHS, "function call param list", 24) == 0) {
+                        strcpy(rightVar, ASTTraversal(root->right));
+                    } else {
+                        sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+                    }
                 } else {
                     strcpy(rightVar, ASTTraversal(root->right));
                 }
-                // printf("Unoptimized BinOp: %s, %s\n", leftVar, rightVar);
                 return emitBinaryOperation(root->nodeType, leftVar, rightVar);
         }
         if(strcmp(root -> LHS, "array") == 0) {
@@ -917,6 +927,7 @@ char* ASTTraversal(struct AST* root) {
 // Main function for IRcode generation
 // After IRcode is generated, close the file
 void generateIRCode(){
+    printf("\n\n----Generate IRCode----\n\n");
     ASTTraversal(ast);
     fclose(IRcode);
 }
@@ -935,6 +946,13 @@ void generateIRCode(){
  */
 char* ASTTraversalOptimized(struct AST* root) {
     if(root != NULL) {
+        printf("root -> nodeType: %s\n", root -> nodeType);
+        // if(root -> LHS != NULL)
+        // printf("root -> LHS: %s\n", root -> LHS);
+        // if(root -> RHS != NULL)
+        // printf("root -> RHS: %s\n", root -> RHS);
+        fflush(stdout);
+
         char rightVar[50];
         char leftVar[50];
         
@@ -1013,7 +1031,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             }
             ASTTraversalOptimized(root -> right);
         }
-        if(strcmp(root->nodeType, "function call param list") == 0) {
+        if(strncmp(root->nodeType, "function call param list", 24) == 0) {
             memset(c, 0, 50 * 50);
             if(isUsedVar(root -> RHS)) {
                 if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
@@ -1024,7 +1042,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             }
             ASTTraversalOptimized(root -> right);
         }
-        if(strcmp(root->nodeType, "function call") == 0) {
+        if(strncmp(root->nodeType, "function call", 14) == 0) {
             ASTTraversalOptimized(root -> right);
 
             memset(buffer, 0, 50);
@@ -1033,13 +1051,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             return buffer;
         }
         if(strcmp(root -> nodeType, "return") == 0) {
-            // Check if the return type is an array index
-            // If so, update the rightVar accordingly
-            if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
-                sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
-            } else {
-                strcpy(rightVar, ASTTraversalOptimized(root-> right));
-            }
+            strcpy(rightVar, ASTTraversalOptimized(root-> right));
             emitReturnOptimized(rightVar);
         }
         if(strcmp(root->nodeType, "block") == 0 ||
@@ -1099,22 +1111,43 @@ char* ASTTraversalOptimized(struct AST* root) {
             || strcmp(root -> nodeType, "!=") == 0) {
                 // Check to see if the operation includes any array indexes
                 // If so, include the array callout in the binary operation
+                // Form leftVar variable
                 if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {
-                    sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+                    // New changes here
+                    if (strncmp(root->left->LHS, "function call", 14) == 0) {
+                        strcpy(leftVar, ASTTraversalOptimized(root->left));
+                    } else if (strncmp(root->left->LHS, "int", 3) == 0 || strncmp(root->left->LHS, "float", 5) == 0) {
+                        strcpy(leftVar, root->left->left->RHS);
+                    } else if (strncmp(root->left->RHS, "function call param list", 24) == 0) {
+                        strcpy(leftVar, ASTTraversalOptimized(root->right));
+                    } else {
+                        sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+                    }
                 } else {
                     strcpy(leftVar, ASTTraversalOptimized(root->left));
                 }
 
+                // Form rightVar variable
                 if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
-                    sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+                    // New changes here
+                    if (strncmp(root->right->LHS, "function call", 14) == 0) {
+                        strcpy(rightVar, ASTTraversalOptimized(root->right));
+                    } else if (strncmp(root->right->LHS, "int", 3) == 0 || strncmp(root->right->LHS, "float", 5) == 0) {
+                        strcpy(rightVar, root->right->left->RHS);
+                    } else if (strncmp(root->right->RHS, "function call param list", 24) == 0) {
+                        strcpy(rightVar, ASTTraversalOptimized(root->right));
+                    } else {
+                        sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+                    }
                 } else {
                     strcpy(rightVar, ASTTraversalOptimized(root->right));
                 }
+
                 char rightVarOptimized[50];
                 char leftVarOptimized[50];
                 strcpy(rightVarOptimized, getVarConstant(leftVar));
                 strcpy(leftVarOptimized, getVarConstant(rightVar));
-                // printf("Optimized BinOp: %s, %s\n", leftVarOptimized, rightVarOptimized);
+
                 return emitBinaryOperationOptimized(root -> nodeType, rightVarOptimized, leftVarOptimized);
         }
         if(strcmp(root -> LHS, "array") == 0) {
@@ -1134,6 +1167,7 @@ void generateIRCodeOptimized() {
     // Reset temp variable number
     lastIndex = 0;
 
+    printf("\n\n----Perform Code Optimizations----\n\n");
     ASTTraversalOptimized(ast);
     fclose(IRcodeOptimized);
     fflush(stdout);

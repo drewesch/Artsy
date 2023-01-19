@@ -32,7 +32,7 @@ int main(int argc, char**argv) {
     // Call the optimizer to generate optimized IRcode
     // Use this function to generate IRcode that the WAT code generator will actually use
     // Moreover, use this function to compare unoptimized IRcode to optimized IRcode
-   generateIRCodeOptimized(); 
+    generateIRCodeOptimized(); 
 
     // Generate optimized WAT code as a .wat file
     // This function is in webgen.c and webgen.h

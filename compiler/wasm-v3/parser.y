@@ -95,7 +95,7 @@ ProgramStart: Program {
 Program: DeclList StmtList {
 		$$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
 	} |
-	DeclList StmtList Program{
+	DeclList StmtList Program {
 		printf("\nProgram Version: DeclList StmtList Program\n");
 		struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
 		$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
@@ -698,14 +698,12 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 
 FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
+	printf("\nRECOGNIZED RULE: FunctionCall\n");
 	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", $3, $3);
 	$$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
 
 	// Check if the number of call parameters matches the number of function parameters
 	CheckParamLength($1, funcCallParamList);
-
-	// Check to see if the list of call parameters matches the function declaration
-	// compareFuncToExpr($1, funcCallParamList, scopeStack[stackPointer]);
 	
 	// Find the number of parameters
     int numParams = getNumExprs(funcCallParamList);
@@ -718,6 +716,7 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
             char * funcParamType = getFuncParamItemType($1, numParams, i);
 
             // Get the expression parameter type at this index
+			printf("here\n");
 			char * callParamType = getCallListItemType(funcCallParamList, i, 0, scopeStack[stackPointer]);
 
             // Check to see if the two types do not match
@@ -733,44 +732,8 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
 
 %%
 
-
-
-/* [EType]  */
-
-
-
-
-/* 
-EType = CheckPrimaryType($1); */
-/* EType = CheckAssignmentType($1, $3);
-EType = CheckBinOpType($1, $3); */
-
-
-// int main(int argc, char**argv)
-// {
-// /* 
-// 	#ifdef YYDEBUG
-// 		yydebug = 1;
-// 	#endif */
-
-// 	printf("\n \n \n \n \n \n--------------------Parser Start------------------------\n\n\n");
-	
-// 	if (argc > 1){
-// 	  if(!(yyin = fopen(argv[1], "r")))
-//           {
-// 		perror(argv[1]);
-// 		return(1);
-// 	  }
-// 	}
-// 	yyparse();
-// }
-
 int parser_main(FILE*inputfile)
 {
-
-	// #ifdef YYDEBUG
-	// 	yydebug = 1;
-	// #endif
 	printf("\n \n \n \n \n \n--------------------Parser Start------------------------\n\n\n");
 	stackPointer = 0;
 	blockNumber = 0;
@@ -783,7 +746,6 @@ int parser_main(FILE*inputfile)
 		return(1);
 	  }
 	}
-	
 	
 	return yyparse();
 }

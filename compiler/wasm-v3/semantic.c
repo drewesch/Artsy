@@ -113,10 +113,6 @@ void CheckIndexOutOfBound(char * identifier, char * integer, char scopeStack[50]
         exit(1);
     }
 }
- 
-void compareFuncToExpr(char funcName[50], struct AST * funcCallParamList, char * currentScope) {
-
-}
 
 // Helper function to check if a string is alphanumeric
 int isAlpha(char * phrase) {
@@ -210,6 +206,17 @@ char * getPrimaryType(char * phrase) {
     // Check if the phrase is an int
     else if (isInt(phrase)) {
         return "int";
+    } else if (strncmp(phrase, "+", 1) == 0
+        || strncmp(phrase, "-", 1) == 0
+        || strncmp(phrase, "*", 1) == 0
+        || strncmp(phrase, "/", 1) == 0
+        || strncmp(phrase, ">", 1) == 0
+        || strncmp(phrase, ">=", 1) == 0
+        || strncmp(phrase, "<", 1) == 0
+        || strncmp(phrase, "<=", 1) == 0
+        || strncmp(phrase, "==", 1) == 0
+        || strncmp(phrase, "!=", 1) == 0) {
+            return "op";
     }
     // If all cases fail, the type must be a variable
     else {

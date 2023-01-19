@@ -20,13 +20,13 @@ function float average(float a, float b, float c){
 	return avg;
 }
 
-function int unreachableFunction(float x, int y){
+function float unreachableFunction(float x, float y){
    /* 
 	This function does nothing and should
 	Be removed from IR code in the optimization step
    */
 
-   int result;
+   float result;
    result = x*y + x*y;
 
    return result;
@@ -51,7 +51,7 @@ function int displayMessage(){
 	return 0;
 }
 
-function float ambitiousFunction (float a, float b, float c){
+function float ambitiousFunction(float a, float b, float c){
 
    /* great optimization opportunity */
 
