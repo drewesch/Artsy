@@ -17,7 +17,7 @@ function int displayMessage(){
 	message[8] = "i";
 	message[9] = "n";
 	message[10] = "t";
-	message[11] = ":";
+	message[11] = "!";
 	/*message[100] = "Error"; 	*/														/*2. semantic check if not correct number */
 	
 	return numArr[0];
@@ -25,7 +25,7 @@ function int displayMessage(){
 
 // Create strings
 random = displayMessage();
-staticMessage = "static";
+staticMessage = "static message lol haha :)";
 
 numArr[0] = 1;
 numArr[1] = numArr[0];

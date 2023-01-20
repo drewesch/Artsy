@@ -15,6 +15,53 @@ FILE * VARScode;
 FILE * LOCALcode;
 char code[10000];
 
+// String hash table functions
+// Used for updating array index calls by dedicated memory index
+#define TABLE_SIZE 256
+#define MAX_KEY_LENGTH 32
+int currMaxStringIndex = 0;
+
+struct StringEntry {
+    char key[MAX_KEY_LENGTH];
+    int value;
+};
+
+struct StringHashTable {
+    struct StringEntry table[TABLE_SIZE];
+};
+
+unsigned int hash(char* key) {
+    unsigned int value = 0;
+    for (int i = 0; i < strlen(key); i++) {
+        value = value * 31 + key[i];
+    }
+    return value % TABLE_SIZE;
+}
+
+void init(struct StringHashTable* dict) {
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        dict->table[i].key[0] = '\0';
+        dict->table[i].value = 0;
+    }
+}
+
+void set(struct StringHashTable* dict, char* key, int value) {
+    unsigned int index = hash(key);
+    strcpy(dict->table[index].key, key);
+    dict->table[index].value = value;
+}
+
+int get(struct StringHashTable* dict, char* key) {
+    unsigned int index = hash(key);
+    if (strcmp(dict->table[index].key, key) == 0) {
+        return dict->table[index].value;
+    }
+    return -1;
+}
+
+// Create String Hash Table
+struct StringHashTable stringHashes;
+
 // Function to open the files for IRcodeOptimized.ir and WATcode.asm
 // Required before generating any WAT code
 void initAssemblyFile() {
@@ -202,16 +249,22 @@ void generateText() {
                 // If the variable is an array index, call a get_element statement
                 int len = strlen(variable);
                 if (variable[len - 1] == ']') {
-                    // Find the base variable and the array index
-                    strcpy(variable, token);
+                    // Get the array variable and the index number
+                    char * arrayName = malloc(100*sizeof(char));
+                    char * arrIndex = malloc(100*sizeof(char));
+
+                    // Assign variable name
+                    strcpy(arrayName, token);
+
+                    // Assign array index variable
                     token = strtok(NULL, delimiter);
-                    strcpy(index, token);
+                    sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(token));
 
                     // Print array index return code
                     fprintf(LOCALcode, "\t\t(return\n");
                     fprintf(LOCALcode, "\t\t\t(call $get_element\n");
-                    fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", scopeType, variable);
-                    fprintf(LOCALcode, "\t\t\t\t(i32.const %s)\n", index);
+                    fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", scopeType, arrayName);
+                    fprintf(LOCALcode, "\t\t\t\t(i32.const %s)\n", arrIndex);
                     fprintf(LOCALcode, "\t\t\t)\n");
                     fprintf(LOCALcode, "\t\t)\n");
                 } else {
@@ -287,54 +340,74 @@ void generateText() {
                 }
 
                 if (!isGlobal) { // If its within a function, write to WATcode
-                    // Print write statement
-                    fprintf(LOCALcode, writeStr);
-
                     // If the type is an array index, get the array index val and write to the console
                     int len = strlen(variable);
                     if (variable[len - 1] == ']' && strncmp(itemKind, "Array", 5) == 0) {
-                        char * index = malloc(100*sizeof(char));
-                        strcpy(variable, token);
+                        // Get the array variable and the index number
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, token);
+
+                        // Assign array index variable
                         token = strtok(NULL, delimiter);
-                        strcpy(index, token);
-                        fprintf(LOCALcode, " (call $get_element (%s.get $%s) (i32.const %s)))\n", scopeType, variable, index);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(token));
+
+                        // Print get_element call
+                        fprintf(LOCALcode, "%s (call $get_element (%s.get $%s) (i32.const %s)))\n", writeStr, scopeType, arrayName, arrIndex);
+
                     } else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "string", 6) == 0) {
                         // Else if the type is a full array, end the current statement and write out all available indexes
-                        fprintf(LOCALcode, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, variable, 0);
+
+                        // Get the array variable and the index number
+                        int arrIndex = 0;
+
+                        // Assign array index variable
+                        arrIndex = get(&stringHashes, variable);
                         
                         // Print out all available indexes using a for-loop
-                        for (int arrIndex = 0; arrIndex < getArrayLength(variable, scopeStack, 1); arrIndex++) {
-                            fprintf(LOCALcode, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, variable, arrIndex);
+                        for (int newIndex = 0; newIndex < getArrayLength(variable, scopeStack, 1); newIndex++) {
+                            fprintf(LOCALcode, "%s (call $get_element (%s.get $%s) (i32.const %d)))\n", writeStr, scopeType, variable, arrIndex + newIndex);
                         }
                     } else {
                         // Else, print out the standard variable call
-                        fprintf(LOCALcode, "\n\t\t\t(%s.get $%s)\n\t\t)\n", scopeType, variable);
+                        fprintf(LOCALcode, "%s (%s.get $%s))\n", writeStr, scopeType, variable);
                     }
                 }
                 // Else, write to the MAINcode file
                 else {
-                    // Print write statement
-                    fprintf(MAINcode, writeStr);
-
                     // If the type is an array index, get the array index val and write to the console
                     int len = strlen(variable);
                     if (variable[len - 1] == ']' && strncmp(itemKind, "Array", 5) == 0) {
-                        char * index = malloc(100*sizeof(char));
-                        strcpy(variable, token);
+                        // Get the array variable and the index number
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, token);
+
+                        // Assign array index variable
                         token = strtok(NULL, delimiter);
-                        strcpy(index, token);
-                        fprintf(MAINcode, " (call $get_element (%s.get $%s) (i32.const %s)))\n", scopeType, variable, index);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(token));
+
+                        fprintf(MAINcode, "%s (call $get_element (%s.get $%s) (i32.const %s)))\n", writeStr, scopeType, arrayName, arrIndex);
                     } else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "string", 6) == 0) {
                         // Else if the type is a full array, end the current statement and write out all available indexes
-                        fprintf(MAINcode, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, variable, 0);
+
+                        // Get the array variable and the index number
+                        int arrIndex = 0;
+
+                        // Assign array index variable
+                        arrIndex = get(&stringHashes, variable);
                         
                         // Print out all available indexes using a for-loop
-                        for (int arrIndex = 1; arrIndex < getArrayLength(variable, currScope, 1); arrIndex++) {
-                            fprintf(MAINcode, "%s (call $get_element (%s.get $%s) (i32.const %d)))\n", writeStr, scopeType, variable, arrIndex);
+                        for (int newIndex = 0; newIndex < getArrayLength(variable, scopeStack, 1); newIndex++) {
+                            fprintf(MAINcode, "%s (call $get_element (%s.get $%s) (i32.const %d)))\n", writeStr, scopeType, variable, arrIndex + newIndex);
                         }
                     } else {
                         // Else, print out the standard variable call
-                        fprintf(MAINcode, "\n\t\t\t(%s.get $%s)\n\t\t)\n", scopeType, variable);
+                        fprintf(MAINcode, "%s (%s.get $%s))\n", writeStr, scopeType, variable);
                     }
                 }
             }
@@ -427,13 +500,30 @@ void generateText() {
                 
                 // If the type is an array, instantiate the array with the corresponding type
                 if (strncmp(strArr[3], "array", 5) == 0 && strncmp(currScope, "global", 6) == 0) {
+                    // Create string variable in hash table
+                    int indexEntry = currMaxStringIndex;
+                    set(&stringHashes, variable, indexEntry);
+
+                    // Update max string index for the next array entry
+                    currMaxStringIndex += atoi(strArr[4]);
+
+                    // Generate WAT code for creating the new array
                     fprintf(MAINcode, "\t\t(global.set $%s\n", variable);
                     fprintf(MAINcode, "\t\t\t(call $create_array\n");
                     fprintf(MAINcode, "\t\t\t\t(i32.const %s)\n", strArr[4]);
                     fprintf(MAINcode, "\t\t\t)\n");
                     fprintf(MAINcode, "\t\t)\n");
+
                 } else if (strncmp(strArr[3], "array", 5) == 0) {
-                    fprintf(LOCALcode, "\t\t\t(global.set $%s\n", newType);
+                    // Create string variable in hash table
+                    int indexEntry = currMaxStringIndex;
+                    set(&stringHashes, variable, indexEntry);
+
+                    // Update max string index for the next array entry
+                    currMaxStringIndex += atoi(strArr[4]);
+
+                    // Generate WAT code for creating the new array
+                    fprintf(LOCALcode, "\t\t\t(global.set $%s\n", variable);
                     fprintf(LOCALcode, "\t\t\t\t(call $create_array\n");
                     fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", strArr[4]);
                     fprintf(LOCALcode, "\t\t\t\t)\n");
@@ -448,7 +538,7 @@ void generateText() {
             // - STR1 = Var, STR2 = "=", STR3 = primary/variable
 
             // Assignment Operation
-            else if (strArr[3] == NULL || strncmp(strArr[3], "", 1) == 0) {
+            else if (strArr[3] == NULL || strncmp(strArr[3], "", 1) == 0 || strncmp(strArr[3], "\"", 1) == 0) {
                 // Set function return type first if this is the first call in a function
                 if (inParams) {
                     inParams = 0;
@@ -499,10 +589,14 @@ void generateText() {
                         size = strtok(NULL, "[], ");
                     }
 
+                    // Declare a new array index variable
+                    char * arrIndex = malloc(50*sizeof(char));
+                    sprintf(arrIndex, "%d", get(&stringHashes, assignVar) + atoi(size));
+
                     // Start the declaration statement
                     fprintf(MAINcode, "\t\t(call $set_element\n");
                     fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", scopeType, assignVar);
-                    fprintf(MAINcode, "\t\t\t(i32.const %s)\n", size);
+                    fprintf(MAINcode, "\t\t\t(i32.const %s)\n", arrIndex);
                 } else if (assignVar[lenArr0 - 1] == ']') {
                     // Declare a size variable
                     char * size = strtok(strArr[0], "[], ");
@@ -520,10 +614,15 @@ void generateText() {
                         size = strtok(NULL, "[], ");
                     }
 
+                    // Declare a new array index variable
+                    char * arrIndex = malloc(50*sizeof(char));
+                    sprintf(arrIndex, "%d", get(&stringHashes, assignVar) + atoi(size));
+
                     // Start the declaration statement
                     fprintf(LOCALcode, "\t\t(call $set_element\n");
                     fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", scopeType, assignVar);
-                    fprintf(LOCALcode, "\t\t\t(i32.const %s)\n", size);
+                    fprintf(LOCALcode, "\t\t\t(i32.const %s)\n", arrIndex);
+
                 } else if (isGlobal) { // If it's a temp variable in global, print to MAINcode
                     fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
                 }
@@ -552,31 +651,39 @@ void generateText() {
                     if (var2[lenArr2 - 1] == ']' && isGlobal) {
                         // If it's array call in global, print to MAIN code
                         // Get the array variable and the index number
-                        char * arrayVar = malloc(100*sizeof(char));
-                        char * index = malloc(100*sizeof(char));
-                        strcpy(arrayVar, tokenVar2);
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, tokenVar2);
+
+                        // Assign array index variable
                         tokenVar2 = strtok(NULL, delimiter);
-                        strcpy(index, tokenVar2);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(tokenVar2));
 
                         // Print array index code
                         fprintf(MAINcode, "\t\t\t(call $get_element\n");
-                        fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, arrayVar);
-                        fprintf(MAINcode, "\t\t\t\t(i32.const %s)\n", index);
+                        fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
+                        fprintf(MAINcode, "\t\t\t\t(i32.const %s)\n", arrIndex);
                         fprintf(MAINcode, "\t\t\t)\n");
                         
                     } else if (var2[lenArr2 - 1] == ']') {
                         // If it's array call in a function, print to LOCAL code
                         // Get the array variable and the index number
-                        char * arrayVar = malloc(100*sizeof(char));
-                        char * index = malloc(100*sizeof(char));
-                        strcpy(arrayVar, tokenVar2);
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, tokenVar2);
+
+                        // Assign array index variable
                         tokenVar2 = strtok(NULL, delimiter);
-                        strcpy(index, tokenVar2);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(tokenVar2));
 
                         // Print array index code
                         fprintf(LOCALcode, "\t\t\t(call $get_element\n");
-                        fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, arrayVar);
-                        fprintf(LOCALcode, "\t\t\t\t(i32.const %s)\n", index);
+                        fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
+                        fprintf(LOCALcode, "\t\t\t\t(i32.const %s)\n", arrIndex);
                         fprintf(LOCALcode, "\t\t\t)\n");
 
                     } else if (isGlobal) { // If it's a temp variable in global, print to MAINcode
@@ -587,10 +694,16 @@ void generateText() {
                         fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", varScopeType, var2);
                     }
                 } else {
-                    // Check if var2 references a string or char
+                    // Check if var2 references a char
                     // If it does, convert it to an ASCII value
                     if (strncmp(getPrimaryType(var2), "string", 6) == 0) {
                         var2 = convertToASCII(var2);
+                    }
+
+                    // Check if var2 equals zero (unidentified value)
+                    // If so, convert it to a space in ASCII
+                    if (strncmp(var2, "0", 1) == 0) {
+                        var2 = "32";
                     }
                     
                     if (isGlobal) {
@@ -823,31 +936,39 @@ void generateText() {
                     if (var1[lenVar1 - 1] == ']' && isGlobal) {
                         // If it's in global, print to MAIN code
                         // Get the array variable and the index number
-                        char * arrayVar1 = malloc(100*sizeof(char));
-                        char * index1 = malloc(100*sizeof(char));
-                        strcpy(arrayVar1, tokenVar1);
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, tokenVar1);
+
+                        // Assign array index variable
                         tokenVar1 = strtok(NULL, delimiter);
-                        strcpy(index1, tokenVar1);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(tokenVar1));
 
                         // Print array index code
                         fprintf(MAINcode, "\t\t\t\t(call $get_element\n");
-                        fprintf(MAINcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayVar1);
-                        fprintf(MAINcode, "\t\t\t\t\t(i32.const %s)\n", index1);
+                        fprintf(MAINcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
+                        fprintf(MAINcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
                         fprintf(MAINcode, "\t\t\t\t)\n");
 
                     } else if (var1[lenVar1 - 1] == ']') {
                         // If it's in a function, print to LOCAL code
                         // Get the array variable and the index number
-                        char * arrayVar1 = malloc(100*sizeof(char));
-                        char * index1 = malloc(100*sizeof(char));
-                        strcpy(arrayVar1, tokenVar1);
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, tokenVar1);
+
+                        // Assign array index variable
                         tokenVar1 = strtok(NULL, delimiter);
-                        strcpy(index1, tokenVar1);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(tokenVar1));
 
                         // Print array index code
                         fprintf(LOCALcode, "\t\t\t\t(call $get_element\n");
-                        fprintf(LOCALcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayVar1);
-                        fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", index1);
+                        fprintf(LOCALcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
+                        fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
                         fprintf(LOCALcode, "\t\t\t\t)\n");
 
                     } else if (isGlobal) {
@@ -883,31 +1004,39 @@ void generateText() {
                     if (var2[lenVar2 - 1] == ']' && isGlobal) {
                         // If it's in global, print to MAIN code
                         // Get the array variable and the index number
-                        char * arrayVar2 = malloc(100*sizeof(char));
-                        char * index2 = malloc(100*sizeof(char));
-                        strcpy(arrayVar2, tokenVar2);
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, tokenVar2);
+
+                        // Assign array index variable
                         tokenVar2 = strtok(NULL, delimiter);
-                        strcpy(index2, tokenVar2);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(tokenVar2));
 
                         // Print array index code
                         fprintf(MAINcode, "\t\t\t\t(call $get_element\n");
-                        fprintf(MAINcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayVar2);
-                        fprintf(MAINcode, "\t\t\t\t\t(i32.const %s)\n", index2);
+                        fprintf(MAINcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
+                        fprintf(MAINcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
                         fprintf(MAINcode, "\t\t\t\t)\n");
 
                     } else if (var2[lenVar2 - 1] == ']') {
                         // If it's in a function, print to LOCAL code
                         // Get the array variable and the index number
-                        char * arrayVar2 = malloc(100*sizeof(char));
-                        char * index2 = malloc(100*sizeof(char));
-                        strcpy(arrayVar2, tokenVar2);
+                        char * arrayName = malloc(100*sizeof(char));
+                        char * arrIndex = malloc(100*sizeof(char));
+
+                        // Assign variable name
+                        strcpy(arrayName, tokenVar2);
+
+                        // Assign array index variable
                         tokenVar2 = strtok(NULL, delimiter);
-                        strcpy(index2, tokenVar2);
+                        sprintf(arrIndex, "%d", get(&stringHashes, arrayName) + atoi(tokenVar2));
 
                         // Print array index code
                         fprintf(LOCALcode, "\t\t\t\t(call $get_element\n");
-                        fprintf(LOCALcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayVar2);
-                        fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", index2);
+                        fprintf(LOCALcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
+                        fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
                         fprintf(LOCALcode, "\t\t\t\t)\n");
 
                     } else if (isGlobal) {
@@ -1044,6 +1173,9 @@ void completeFile() {
 
 // Main driver function to generate all WAT code
 void generateWATcode() {
+    // Initialize String Hash Table
+    init(&stringHashes);
+
     initAssemblyFile();
     generateModule();
     generateText();
