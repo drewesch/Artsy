@@ -228,6 +228,8 @@ FunDeclListTail: FunDecl {$$ = $1;}
 ;
 
 FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
+		printf("RECOGNIZED RULE: Standard Function\n");
+
 		symTabAccess();
 		int inSymTab = found($3, scopeStack, stackPointer);
 
@@ -249,6 +251,31 @@ FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		strcpy(scopeStack[stackPointer], $3);
 		memset(currentFunctionScope, 0, 50 * sizeof(char));
 		strcpy(currentFunctionScope, $3);
+	}
+	| FUNCTION ID LEFTPAREN ParamDeclList RIGHTPAREN {
+		printf("RECOGNIZED RULE: Void Function\n");
+		
+		symTabAccess();
+		int inSymTab = found($2, scopeStack, stackPointer);
+
+		// Check if the function variable has already been declared
+		// If it has, throw an error
+		if (inSymTab == 0){
+			addFunction("void", $2, $4, scopeStack, stackPointer); //id
+		}
+		else {
+			printf("SEMANTIC ERROR: Function %s has already been declared.\n", $2);
+			exit(1);
+		}
+
+		showSymTable();
+		$$ = AST_DoublyChildNodes("function context", $2, $4, $2, $4);
+
+		stackPointer += 1;
+		memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+		strcpy(scopeStack[stackPointer], $2);
+		memset(currentFunctionScope, 0, 50 * sizeof(char));
+		strcpy(currentFunctionScope, $2);
 	}
 ;
 
@@ -316,7 +343,14 @@ Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	}
 	| RETURN Expr SEMICOLON {
 		printf("\n RECOGNIZED RULE: RETURN statement\n");
-		$$ = AST_SingleChildNode("return", $2,$2); 
+		$$ = AST_SingleChildNode("return", $2, $2); 
+
+		// Semantic check for void functions
+		// If the function is a void function and states a return, throw a semantic error
+		if (strncmp(getItemType(currentFunctionScope, scopeStack, 1), "void", 4) == 0) {
+			printf("SEMANTIC ERROR: Cannot specify a \"return\" command for void actions.\n", $2);
+			exit(1);
+		}
 
 		// Check if the return type matches the function type
 		CheckAssignmentType(currentFunctionScope, getExprOp($2), scopeStack, stackPointer);
@@ -716,7 +750,6 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
             char * funcParamType = getFuncParamItemType($1, numParams, i);
 
             // Get the expression parameter type at this index
-			printf("here\n");
 			char * callParamType = getCallListItemType(funcCallParamList, i, 0, scopeStack[stackPointer]);
 
             // Check to see if the two types do not match

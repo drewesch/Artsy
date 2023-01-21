@@ -30,10 +30,31 @@
 	(export "set_element" (func $set_element))
 
 	;; Artsy Program in WAT
+	(global $aNumber (mut i32) (i32.const 0))
 	(global $message (mut i32) (i32.const 0))
-	(global $staticMessage (mut i32) (i32.const 0))
-	(global $numArr (mut i32) (i32.const 0))
-	(global $random (mut i32) (i32.const 0))
+	(global $justAverage (mut f32) (f32.const 0.0))
+	(func $average (param $a f32) (param $b f32) (param $c f32) (result f32)
+		(local $avg f32)
+		(local $T0 f32)
+		(local $T1 f32)
+		(local.set $T0
+			(f32.add
+				(local.get $a)
+				(local.get $c)
+			)
+		)
+		(local.set $T1
+			(f32.div
+				(local.get $T0)
+				(f32.const 3.0)
+			)
+		)
+		(local.set $avg
+			(local.get $T1)
+		)
+		(return (local.get $avg))		
+	)
+	(export "average" (func $average))
 	(func $displayMessage (result i32)
 		(call $set_element
 			(global.get $message)
@@ -93,221 +114,8 @@
 		(call $set_element
 			(global.get $message)
 			(i32.const 11)
-			(i32.const 33)
-		)
-		(return (i32.const 0))		
-	)
-	(export "displayMessage" (func $displayMessage))
-	;; Start Main Function
-	(func $main
-		(local $T0 i32)
-		(local $T1 i32)
-
-		(global.set $message
-			(call $create_array
-				(i32.const 50)
-			)
-		)
-		(global.set $staticMessage
-			(call $create_array
-				(i32.const 100)
-			)
-		)
-		(global.set $numArr
-			(call $create_array
-				(i32.const 5)
-			)
-		)
-		(call $set_element
-			(global.get $numArr)
-			(i32.const 150)
-			(i32.const 1)
-		)
-		(local.set $T0
-			(call $displayMessage)
-		)
-		(global.set $random
-			(local.get $T0)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 50)
-			(i32.const 115)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 51)
-			(i32.const 116)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 52)
-			(i32.const 97)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 53)
-			(i32.const 116)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 54)
-			(i32.const 105)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 55)
-			(i32.const 99)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 56)
-			(i32.const 32)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 57)
-			(i32.const 109)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 58)
-			(i32.const 101)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 59)
-			(i32.const 115)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 60)
-			(i32.const 115)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 61)
-			(i32.const 97)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 62)
-			(i32.const 103)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 63)
-			(i32.const 101)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 64)
-			(i32.const 32)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 65)
-			(i32.const 108)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 66)
-			(i32.const 111)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 67)
-			(i32.const 108)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 68)
-			(i32.const 32)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 69)
-			(i32.const 104)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 70)
-			(i32.const 97)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 71)
-			(i32.const 104)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 72)
-			(i32.const 97)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 73)
-			(i32.const 32)
-		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 74)
 			(i32.const 58)
 		)
-		(call $set_element
-			(global.get $staticMessage)
-			(i32.const 75)
-			(i32.const 41)
-		)
-		(call $set_element
-			(global.get $numArr)
-			(i32.const 150)
-			(i32.const 1)
-		)
-		(call $set_element
-			(global.get $numArr)
-			(i32.const 151)
-			(call $get_element
-				(global.get $numArr)
-				(i32.const 150)
-			)
-		)
-		(call $set_element
-			(global.get $numArr)
-			(i32.const 152)
-			(i32.const 3)
-		)
-		(call $set_element
-			(global.get $numArr)
-			(i32.const 153)
-			(i32.const 4)
-		)
-		(call $set_element
-			(global.get $numArr)
-			(i32.const 154)
-			(i32.const 5)
-		)
-		(local.set $T1
-			(i32.add
-				(call $get_element
-					(global.get $numArr)
-					(i32.const 150)
-				)
-				(call $get_element
-					(global.get $numArr)
-					(i32.const 152)
-				)
-			)
-		)
-		(global.set $random
-			(local.get $T1)
-		)
-		(call $writeconsoleInt (call $get_element (global.get $numArr) (i32.const 150)))
-		(call $writeconsoleInt (call $get_element (global.get $numArr) (i32.const 151)))
-		(call $writeconsoleInt (call $get_element (global.get $numArr) (i32.const 152)))
-		(call $writeconsoleInt (call $get_element (global.get $numArr) (i32.const 153)))
-		(call $writeconsoleInt (call $get_element (global.get $numArr) (i32.const 154)))
-		(call $newline)
 		(call $writeconsoleString (call $get_element (global.get $message) (i32.const 0)))
 		(call $writeconsoleString (call $get_element (global.get $message) (i32.const 1)))
 		(call $writeconsoleString (call $get_element (global.get $message) (i32.const 2)))
@@ -359,34 +167,142 @@
 		(call $writeconsoleString (call $get_element (global.get $message) (i32.const 48)))
 		(call $writeconsoleString (call $get_element (global.get $message) (i32.const 49)))
 		(call $newline)
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 50)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 51)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 52)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 53)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 54)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 55)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 56)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 57)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 58)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 59)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 60)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 61)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 62)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 63)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 64)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 65)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 66)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 67)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 68)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 69)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 70)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 71)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 72)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 73)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 74)))
-		(call $writeconsoleString (call $get_element (global.get $staticMessage) (i32.const 75)))
+		(return (i32.const 0))		
+	)
+	(export "displayMessage" (func $displayMessage))
+	(func $ambitiousFunction (param $a f32) (param $b f32) (param $c f32) (result f32)
+		(local $result f32)
+		(local $T2 f32)
+		(local $T3 f32)
+		(local $T4 f32)
+		(local $T5 f32)
+		(local.set $T2
+			(call $average
+				(local.get $a)
+				(local.get $b)
+				(local.get $c)
+			)
+		)
+		(local.set $T3
+			(call $average
+				(local.get $a)
+				(local.get $b)
+				(local.get $c)
+			)
+		)
+		(local.set $T4
+			(f32.add
+				(local.get $T2)
+				(local.get $T3)
+			)
+		)
+		(local.set $T5
+			(f32.div
+				(local.get $T4)
+				(f32.const 2.0)
+			)
+		)
+		(local.set $result
+			(local.get $T5)
+		)
+		(return (local.get $result))		
+	)
+	(export "ambitiousFunction" (func $ambitiousFunction))
+	;; Start Main Function
+	(func $main
+		(local $T6 f32)
+		(local $T7 i32)
+		(local $T8 f32)
+		(local $T9 f32)
+		(local $T10 i32)
+		(local $T11 i32)
+		(local $T12 i32)
+		(local $T13 f32)
+		(local $T14 i32)
+
+		(global.set $message
+			(call $create_array
+				(i32.const 50)
+			)
+		)
+		(local.set $T6
+			(call $average
+				(f32.const 12.5)
+				(f32.const 13.7)
+				(f32.const 25.8)
+			)
+		)
+		(global.set $justAverage
+			(local.get $T6)
+		)
+		(local.set $T7
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T7)
+		)
+		(call $writeconsoleFloat (global.get $justAverage))
 		(call $newline)
-		(call $writeconsoleInt (global.get $random))
+		(local.set $T8
+			(f32.mul
+				(global.get $justAverage)
+				(global.get $justAverage)
+			)
+		)
+		(global.set $justAverage
+			(local.get $T8)
+		)
+		(local.set $T9
+			(call $average
+				(global.get $justAverage)
+				(f32.const 0.0)
+				(f32.const 0.0)
+			)
+		)
+		(global.set $justAverage
+			(local.get $T9)
+		)
+		(local.set $T10
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T10)
+		)
+		(call $newline)
+		(local.set $T11
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T11)
+		)
+		(local.set $T12
+			(i32.div_s
+				(global.get $aNumber)
+				(global.get $aNumber)
+			)
+		)
+		(global.set $aNumber
+			(local.get $T12)
+		)
+		(call $writeconsoleInt (global.get $aNumber))
+		(call $newline)
+		(local.set $T13
+			(call $ambitiousFunction
+				(f32.const 1.0)
+				(f32.const 2.0)
+				(f32.const 3.0)
+			)
+		)
+		(global.set $justAverage
+			(local.get $T13)
+		)
+		(local.set $T14
+			(call $displayMessage)
+		)
+		(global.set $aNumber
+			(local.get $T14)
+		)
+		(call $writeconsoleFloat (global.get $justAverage))
 	)
 	(start $main)
 )
