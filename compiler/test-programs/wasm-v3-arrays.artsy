@@ -20,13 +20,13 @@ function float average(float a, float b, float c){
 	return avg;
 }
 
-function int unreachableFunction(float x, int y){
+function float unreachableFunction(float x, float y){
    /* 
 	This function does nothing and should
 	Be removed from IR code in the optimization step
    */
 
-   int result;
+   float result;
    result = x*y + x*y;
 
    return result;
@@ -46,12 +46,13 @@ function int displayMessage(){
 	message[10] = "t";
 	message[11] = ":";
 
-    write message; 
+    write message;
+	addline;
 	
 	return 0;
 }
 
-function float ambitiousFunction (float a, float b, float c){
+function float ambitiousFunction(float a, float b, float c){
 
    /* great optimization opportunity */
 
@@ -65,19 +66,18 @@ function float ambitiousFunction (float a, float b, float c){
 justAverage = average(12.5, 13.7, 25.8);
 aNumber = displayMessage();
 write justAverage;
-writeln;
+addline;
 
 justAverage = justAverage * (justAverage + 2.0);
 justAverage = average(justAverage, 0.0, 0.0);
 aNumber = displayMessage();
-writeln;
+addline;
 
 aNumber = displayMessage();
 aNumber = aNumber / (aNumber + aNumber * aNumber);
 write aNumber;
-writeln;
+addline;
 
 justAverage = ambitiousFunction(1.0, 2.0, 3.0);
 aNumber = displayMessage();
 write justAverage;
-writeln;

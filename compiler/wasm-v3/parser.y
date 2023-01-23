@@ -95,7 +95,7 @@ ProgramStart: Program {
 Program: DeclList StmtList {
 		$$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
 	} |
-	DeclList StmtList Program{
+	DeclList StmtList Program {
 		printf("\nProgram Version: DeclList StmtList Program\n");
 		struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
 		$$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
@@ -228,6 +228,8 @@ FunDeclListTail: FunDecl {$$ = $1;}
 ;
 
 FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
+		printf("RECOGNIZED RULE: Standard Function\n");
+
 		symTabAccess();
 		int inSymTab = found($3, scopeStack, stackPointer);
 
@@ -249,6 +251,31 @@ FuncHeader: FUNCTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		strcpy(scopeStack[stackPointer], $3);
 		memset(currentFunctionScope, 0, 50 * sizeof(char));
 		strcpy(currentFunctionScope, $3);
+	}
+	| FUNCTION ID LEFTPAREN ParamDeclList RIGHTPAREN {
+		printf("RECOGNIZED RULE: Void Function\n");
+		
+		symTabAccess();
+		int inSymTab = found($2, scopeStack, stackPointer);
+
+		// Check if the function variable has already been declared
+		// If it has, throw an error
+		if (inSymTab == 0){
+			addFunction("void", $2, $4, scopeStack, stackPointer); //id
+		}
+		else {
+			printf("SEMANTIC ERROR: Function %s has already been declared.\n", $2);
+			exit(1);
+		}
+
+		showSymTable();
+		$$ = AST_DoublyChildNodes("function context", $2, $4, $2, $4);
+
+		stackPointer += 1;
+		memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
+		strcpy(scopeStack[stackPointer], $2);
+		memset(currentFunctionScope, 0, 50 * sizeof(char));
+		strcpy(currentFunctionScope, $2);
 	}
 ;
 
@@ -316,7 +343,14 @@ Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	}
 	| RETURN Expr SEMICOLON {
 		printf("\n RECOGNIZED RULE: RETURN statement\n");
-		$$ = AST_SingleChildNode("return", $2,$2); 
+		$$ = AST_SingleChildNode("return", $2, $2); 
+
+		// Semantic check for void functions
+		// If the function is a void function and states a return, throw a semantic error
+		if (strncmp(getItemType(currentFunctionScope, scopeStack, 1), "void", 4) == 0) {
+			printf("SEMANTIC ERROR: Cannot specify a \"return\" command for void actions.\n", $2);
+			exit(1);
+		}
 
 		// Check if the return type matches the function type
 		CheckAssignmentType(currentFunctionScope, getExprOp($2), scopeStack, stackPointer);
@@ -698,14 +732,12 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 
 
 FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
+	printf("\nRECOGNIZED RULE: FunctionCall\n");
 	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", $3, $3);
 	$$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
 
 	// Check if the number of call parameters matches the number of function parameters
 	CheckParamLength($1, funcCallParamList);
-
-	// Check to see if the list of call parameters matches the function declaration
-	// compareFuncToExpr($1, funcCallParamList, scopeStack[stackPointer]);
 	
 	// Find the number of parameters
     int numParams = getNumExprs(funcCallParamList);
@@ -733,44 +765,8 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
 
 %%
 
-
-
-/* [EType]  */
-
-
-
-
-/* 
-EType = CheckPrimaryType($1); */
-/* EType = CheckAssignmentType($1, $3);
-EType = CheckBinOpType($1, $3); */
-
-
-// int main(int argc, char**argv)
-// {
-// /* 
-// 	#ifdef YYDEBUG
-// 		yydebug = 1;
-// 	#endif */
-
-// 	printf("\n \n \n \n \n \n--------------------Parser Start------------------------\n\n\n");
-	
-// 	if (argc > 1){
-// 	  if(!(yyin = fopen(argv[1], "r")))
-//           {
-// 		perror(argv[1]);
-// 		return(1);
-// 	  }
-// 	}
-// 	yyparse();
-// }
-
 int parser_main(FILE*inputfile)
 {
-
-	// #ifdef YYDEBUG
-	// 	yydebug = 1;
-	// #endif
 	printf("\n \n \n \n \n \n--------------------Parser Start------------------------\n\n\n");
 	stackPointer = 0;
 	blockNumber = 0;
@@ -783,7 +779,6 @@ int parser_main(FILE*inputfile)
 		return(1);
 	  }
 	}
-	
 	
 	return yyparse();
 }

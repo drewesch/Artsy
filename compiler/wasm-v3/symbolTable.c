@@ -117,7 +117,6 @@ int found(char itemName[50], char scopeStack[50][50], int stackPointer){
 	// Lookup an identifier in the symbol table
 	// return TRUE or FALSE
 	// Later on, this may return additional information for an item being found
-
 	for(int i=0; i<symTabIndex; i++){
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;

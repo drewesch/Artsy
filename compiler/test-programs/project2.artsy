@@ -1,7 +1,3 @@
-
-
-
-
 string message[50];
 
 function int displayMessage(){

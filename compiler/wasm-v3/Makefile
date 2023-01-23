@@ -1,4 +1,18 @@
-all: clean artsy
+# FILE_PATH = ../test-programs/basic.artsy
+
+%:
+    @:
+
+FILE_PATH = `arg="$(filter-out $@,$(MAKECMDGOALS))" && echo $${arg:-${1}}`
+
+all: clean lex.yy.c parser.tab.c parser.tab.h symbolTable.h symbolTable.c AST.c AST.h semantic.c semantic.h ircode.c ircode.h driver.c webgen.c webgen.h
+	gcc -w -o driver parser.tab.c lex.yy.c semantic.c ircode.c driver.c AST.c symbolTable.c webgen.c
+	./driver $(FILE_PATH)
+	rm -f MAINcode.wat LOCALcode.wat VARScode.wat
+	wat2wasm WATcode.wat -o WASMcode.wasm
+
+wasm:
+	wat2wasm WATcode.wat -o WASMcode.wasm
 
 parser.tab.c parser.tab.h:	parser.y
 	bison -t -d parser.y
@@ -8,7 +22,7 @@ lex.yy.c: lexer.l parser.tab.h
 
 artsy: lex.yy.c parser.tab.c parser.tab.h symbolTable.h symbolTable.c AST.c AST.h semantic.c semantic.h ircode.c ircode.h driver.c webgen.c webgen.h
 	gcc -w -o driver parser.tab.c lex.yy.c semantic.c ircode.c driver.c AST.c symbolTable.c webgen.c
-	./driver ../test-programs/project2.artsy
+	./driver $(FILE_PATH)
 	rm -f MAINcode.wat LOCALcode.wat VARScode.wat
 	wat2wasm WATcode.wat -o WASMcode.wasm
 

@@ -6,12 +6,13 @@ declare k as int;
 declare newVar as int;
 
 // Operations
-let x equal 10;
-let y equal 21;
-let k equal 20;
-let newVar equal 23;
-let z equal x plus y plus newVar plus 3 plus 4 plus x;
-let x equal z plus y plus newVar;
+let x = 10;
+let y = 21;
+let k = 20;
+let newVar = 23;
+let z = x + y + newVar + 3 + 4 + x;
+let x = z + y +
+ newVar;
 
 // Output lines
 print x;

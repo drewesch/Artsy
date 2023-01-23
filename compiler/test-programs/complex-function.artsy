@@ -33,7 +33,7 @@ action float ambitiousFunction (float a, float b, float c){
 
    float result;
  
-   result equal (average(a, b, c) plus average(a, b, c)) div 2.0;
+   let result equal (average(a, b, c) plus average(a, b, c)) div 2.0;
 
    report result;
 }
