@@ -151,5 +151,38 @@ write z;
 
 
 
+
 /*4. check that all ast and symbol are up to date*/ 
 /*5. make sure all        root -> nodeType: =           are filled */ 
+
+
+
+
+
+int check1;
+int check2;
+check1 = 1;
+check2 = 2;
+
+
+while (check1 == 1){
+	if (check2 == 2){
+		int check3;
+		check3 = 5;
+		write check3;
+		check2 = 3;
+	}
+	elif (check2 == 3){
+		int check4;
+		check4 = 4;
+		write check4;
+		check2 = 4;
+	}
+	else{
+		int check6;
+		check6 = 6;
+		write check6;
+		check2 = 6;
+
+	}
+}

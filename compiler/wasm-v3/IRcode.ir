@@ -60,3 +60,7 @@ d[3] = " "
 d[4] = "d"
 z = 9
 output z
+type int check1
+type int check2
+check1 = 1
+check2 = 2
