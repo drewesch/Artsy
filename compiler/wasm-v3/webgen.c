@@ -354,18 +354,14 @@ void generateText() {
                     scopeType = "local";
                 }
 
+                char * arrayName = strArr[1];
+
                 // Assign NULL characters to all other values ahead of the call index
-                for (int arrIndex = atoi(strArr[2]); arrIndex < get(&stringSizes, strArr[1]); arrIndex++) {
+                for (int arrIndex = atoi(strArr[2]) + get(&stringAddresses, arrayName); arrIndex < get(&stringAddresses, arrayName) + get(&stringSizes, arrayName); arrIndex++) {
                     if (isGlobal) {
-                        fprintf(MAINcode, "\t\t(call $set_element\n");
-                        fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", scopeType, strArr[1]);
-                        fprintf(MAINcode, "\t\t\t(i32.const %d)\n", arrIndex);
-                        fprintf(MAINcode, "\t\t\t(i32.const 0)\n\t\t)\n");
+                        fprintf(MAINcode, "\t\t(call $set_element (%s.get $%s) (i32.const %d) (i32.const 0))\n", scopeType, arrayName, arrIndex);
                     } else {
-                        fprintf(LOCALcode, "\t\t(call $set_element\n");
-                        fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", scopeType, strArr[1]);
-                        fprintf(LOCALcode, "\t\t\t(i32.const %d)\n", arrIndex);
-                        fprintf(LOCALcode, "\t\t\t(i32.const 0)\n\t\t)\n");
+                        fprintf(LOCALcode, "\t\t(call $set_element (%s.get $%s) (i32.const %d) (i32.const 0))\n", scopeType, arrayName, arrIndex);
                     }
                 }
             }
