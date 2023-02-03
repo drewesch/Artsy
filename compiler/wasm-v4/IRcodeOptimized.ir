@@ -1,0 +1,15 @@
+#### Optimized IR Code ####
+type int anywhere
+anywhere = 5
+output anywhere
+output ""done""
+output 5
+type int a
+type int b
+type int x
+type int z
+x = 0
+a = 5
+b = 3
+z = 9
+output z
