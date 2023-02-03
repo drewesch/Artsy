@@ -1,0 +1,2170 @@
+gcc -o driver parser.tab.c lex.yy.c semantic.c ircode.c driver.c AST.c symbolTable.c webgen.c
+parser.y: In function ‘yyparse’:
+parser.y:96:59: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+   96 |   $$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
+      |                                                 ~~~~~~~   ^    
+      |                                                           |
+      |                                                           struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:96:75: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+   96 |   $$ = AST_DoublyChildNodes("program", $1, $2, $1, $2);
+      |                                                                           ^    
+      |                                                                           |
+      |                                                                           struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:100:74: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  100 |   struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
+      |                                                                ~~~~~~~~~~^~~~~
+      |                                                                          |
+      |                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:100:90: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  100 |   struct AST * funcChildNode = AST_DoublyChildNodes("program", $2, $3, $2, $3);
+      |                                                                                          ^    
+      |                                                                                          |
+      |                                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:101:58: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  101 |   $$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
+      |                                                ~~~~~~~~~~^~~~~
+      |                                                          |
+      |                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:101:65: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  101 |   $$ = AST_DoublyChildNodes("program",$1, funcChildNode, $1, funcChildNode);
+      |                                                                 ^~~~~~~~~~~~ 
+      |                                                                 |
+      |                                                                 struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:110:90: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  110 |  VarDecl DeclList { $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
+      |                                                                                          ^    
+      |                                                                                          |
+      |                                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:110:106: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  110 |  VarDecl DeclList { $$ = AST_DoublyChildNodes("vardec", $1, $2, $1, $2);
+      |                                                                                                          ^    
+      |                                                                                                          |
+      |                                                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:116:54: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  116 |  $$ = AST_SingleChildNode("empty", "empty", "empty");}
+      |                                                      ^      
+      |                                                      |
+      |                                                      char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:147:95: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  147 |   $$ = AST_DoublyChildNodes("type",$1, $2, $1, $2);
+      |                                                                                               ^       
+      |                                                                                               |
+      |                                                                                               char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:147:115: warning: passing argument 5 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  147 |   $$ = AST_DoublyChildNodes("type",$1, $2, $1, $2);
+      |                                                                                                                   ^       
+      |                                                                                                                   |
+      |                                                                                                                   char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:172:96: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  172 |   $$ = AST_DoublyChildNodes("type", $4, $2, $4, $2);
+      |                                                                                                ^       
+      |                                                                                                |
+      |                                                                                                char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:172:116: warning: passing argument 5 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  172 |   $$ = AST_DoublyChildNodes("type", $4, $2, $4, $2);
+      |                                                                                                                    ^       
+      |                                                                                                                    |
+      |                                                                                                                    char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:193:85: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  193 |   struct AST* arraySize = AST_SingleChildNode("size", $4, $4);
+      |                                                                                     ^       
+      |                                                                                     |
+      |                                                                                     char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:194:73: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  194 |   struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
+      |                                                                         ^~~~~~~~~
+      |                                                                         |
+      |                                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:194:84: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  194 |   struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
+      |                                                                                    ^~~~   
+      |                                                                                    |
+      |                                                                                    char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:195:66: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  195 |   $$ = AST_DoublyChildNodes("type", $1, array, $1, array);
+      |                                                                  ^    
+      |                                                                  |
+      |                                                                  struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:195:83: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  195 |   $$ = AST_DoublyChildNodes("type", $1, array, $1, array);
+      |                                                                                   ^       
+      |                                                                                   |
+      |                                                                                   char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:215:85: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  215 |   struct AST* arraySize = AST_SingleChildNode("size", $6, $6);
+      |                                                                                     ^       
+      |                                                                                     |
+      |                                                                                     char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:216:73: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  216 |   struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
+      |                                                                         ^~~~~~~~~
+      |                                                                         |
+      |                                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:216:84: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  216 |   struct AST* array = AST_DoublyChildNodes($2, "array", arraySize, "array", arraySize);
+      |                                                                                    ^~~~   
+      |                                                                                    |
+      |                                                                                    char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:217:66: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  217 |   $$ = AST_DoublyChildNodes("type", $4, array, $4, array);
+      |                                                                  ^    
+      |                                                                  |
+      |                                                                  struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:217:83: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  217 |   $$ = AST_DoublyChildNodes("type", $4, array, $4, array);
+      |                                                                                   ^       
+      |                                                                                   |
+      |                                                                                   char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:221:69: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  221 | FunDeclList: {  $$ = AST_SingleChildNode("empty", "empty", "empty");}
+      |                                                                     ^      
+      |                                                                     |
+      |                                                                     char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:227:107: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  227 |  | FunDecl FunDeclListTail {$$ = AST_DoublyChildNodes("FunDecl FunDeclListTail",$1,$2,$1, $2);}
+      |                                                                                                           ^    
+      |                                                                                                           |
+      |                                                                                                           struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:227:122: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  227 |  | FunDecl FunDeclListTail {$$ = AST_DoublyChildNodes("FunDecl FunDeclListTail",$1,$2,$1, $2);}
+      |                                                                                                                          ^    
+      |                                                                                                                          |
+      |                                                                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:247:88: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  247 |   $$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
+      |                                                                                        ^    
+      |                                                                                        |
+      |                                                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:247:105: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  247 |   $$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
+      |                                                                                                         ^       
+      |                                                                                                         |
+      |                                                                                                         char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:272:88: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  272 |   $$ = AST_DoublyChildNodes("function context", $2, $4, $2, $4);
+      |                                                                                        ^    
+      |                                                                                        |
+      |                                                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:272:105: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  272 |   $$ = AST_DoublyChildNodes("function context", $2, $4, $2, $4);
+      |                                                                                                         ^       
+      |                                                                                                         |
+      |                                                                                                         char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:284:58: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  284 |  $$ = AST_DoublyChildNodes("function",$1,$2,$1, $2);
+      |                                                ~~~~~     ^    
+      |                                                          |
+      |                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:284:73: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  284 |  $$ = AST_DoublyChildNodes("function",$1,$2,$1, $2);
+      |                                                                         ^    
+      |                                                                         |
+      |                                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:292:55: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  292 |   $$ = AST_SingleChildNode("empty", "empty", "empty");
+      |                                                       ^      
+      |                                                       |
+      |                                                       char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:298:126: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  298 |  | ParamDecl COMMA ParamDeclListTail {$$ = AST_DoublyChildNodes("ParaDecl comma ParaDeclListTail", $1, $3, $1, $3);}
+      |                                                                                                                    ~         ^    
+      |                                                                                                                              |
+      |                                                                                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:298:142: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  298 |  | ParamDecl COMMA ParamDeclListTail {$$ = AST_DoublyChildNodes("ParaDecl comma ParaDeclListTail", $1, $3, $1, $3);}
+      |                                                                                                                                              ^    
+      |                                                                                                                                              |
+      |                                                                                                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:302:104: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  302 |   $$ = AST_DoublyChildNodes("variable parm", $1, $2, $1, $2);
+      |                                                                                                        ^       
+      |                                                                                                        |
+      |                                                                                                        char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:302:123: warning: passing argument 5 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  302 |   $$ = AST_DoublyChildNodes("variable parm", $1, $2, $1, $2);
+      |                                                                                                                           ^       
+      |                                                                                                                           |
+      |                                                                                                                           char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:305:102: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  305 |   $$ = AST_DoublyChildNodes("array parm", $1, $2, $1, $2);
+      |                                                                                                      ^       
+      |                                                                                                      |
+      |                                                                                                      char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:305:122: warning: passing argument 5 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  305 |   $$ = AST_DoublyChildNodes("array parm", $1, $2, $1, $2);
+      |                                                                                                                          ^       
+      |                                                                                                                          |
+      |                                                                                                                          char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:315:62: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  315 |   $$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);
+      |                                                    ~~~~~~~   ^    
+      |                                                              |
+      |                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:315:78: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  315 |   $$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);
+      |                                                                              ^    
+      |                                                                              |
+      |                                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:322:80: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  322 | Stmt: SEMICOLON {  $$ = AST_SingleChildNode("empty", "empty", "empty");}
+      |                                                                                ^      
+      |                                                                                |
+      |                                                                                char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:329:59: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  329 |      $$ = AST_SingleChildNode("write", $2, $2);
+      |                                                           ^    
+      |                                                           |
+      |                                                           struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:334:189: warning: passing argument 1 of ‘getPrimaryType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  334 |      if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
+      |                                                                                                                                                                                   ~~~~~~~~~~^~~~~
+      |                                                                                                                                                                                             |
+      |                                                                                                                                                                                             struct AST *
+In file included from parser.y:10:
+semantic.h:17:8: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   17 | char * getPrimaryType(char * phrase);
+      |        ^~~~~~~~~~~~~~
+parser.y:334:232: warning: passing argument 1 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  334 |      if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
+      |                                                                                                                                                                                                                                        ^    
+      |                                                                                                                                                                                                                                        |
+      |                                                                                                                                                                                                                                        struct AST *
+In file included from parser.y:7:
+symbolTable.h:37:16: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |           ~~~~~^~~~~~~~~~~~
+parser.y:335:14: warning: format ‘%s’ expects argument of type ‘char *’, but argument 2 has type ‘struct AST *’ [-Wformat=]
+  335 |       printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
+      |              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  ~~~~           
+      |                                                                         |
+      |                                                                         struct AST *
+parser.y:346:57: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  346 |   $$ = AST_SingleChildNode("return", $2, $2);
+      |                                                         ^    
+      |                                                         |
+      |                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:351:11: warning: too many arguments for format [-Wformat-extra-args]
+  351 |    printf("SEMANTIC ERROR: Cannot specify a \"return\" command for void actions.\n", $2);
+      |           ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+parser.y:366:57: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  366 |  $$ = AST_DoublyChildNodes("IfStmt", $1, $2, $1, $2);
+      |                                               ~~~~~~~   ^    
+      |                                                         |
+      |                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:366:73: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  366 |  $$ = AST_DoublyChildNodes("IfStmt", $1, $2, $1, $2);
+      |                                                                         ^    
+      |                                                                         |
+      |                                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:370:76: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  370 | IfStmtTail: { $$ = AST_SingleChildNode("IfStmtTail else end", "", "");}
+      |                                                                            ^ 
+      |                                                                            |
+      |                                                                            char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:371:84: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  371 |  | Else { $$ = AST_SingleChildNode("IfStmtTail else end", $1, $1);}
+      |                                                                                    ^    
+      |                                                                                    |
+      |                                                                                    struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:372:97: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  372 |  | Elif IfStmtTail { $$ = AST_DoublyChildNodes("IfStmtTail continue", $1, $2, $1, $2); }
+      |                                                                                       ~~        ^    
+      |                                                                                                 |
+      |                                                                                                 struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:372:113: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  372 |  | Elif IfStmtTail { $$ = AST_DoublyChildNodes("IfStmtTail continue", $1, $2, $1, $2); }
+      |                                                                                                                 ^    
+      |                                                                                                                 |
+      |                                                                                                                 struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:383:46: warning: passing argument 1 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  383 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                    ~~~       ^    
+      |                                              |
+      |                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:383:63: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  383 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                                               ^    
+      |                                                               |
+      |                                                               struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:396:55: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  396 |  $$ = AST_DoublyChildNodes("ForL", $1, $2, $1, $2);
+      |                                             ~~~~~~~   ^    
+      |                                                       |
+      |                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:396:71: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  396 |  $$ = AST_DoublyChildNodes("ForL", $1, $2, $1, $2);
+      |                                                                       ^    
+      |                                                                       |
+      |                                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:404:46: warning: passing argument 1 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  404 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                    ~~~       ^    
+      |                                              |
+      |                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:404:63: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  404 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                                               ^    
+      |                                                               |
+      |                                                               struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:416:57: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  416 |  $$ = AST_DoublyChildNodes("WhileL", $1, $2, $1, $2);
+      |                                               ~~~~~~~   ^    
+      |                                                         |
+      |                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:416:73: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  416 |  $$ = AST_DoublyChildNodes("WhileL", $1, $2, $1, $2);
+      |                                                                         ^    
+      |                                                                         |
+      |                                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:424:46: warning: passing argument 1 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  424 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                    ~~~       ^    
+      |                                              |
+      |                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:424:63: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  424 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                                               ^    
+      |                                                               |
+      |                                                               struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:439:53: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  439 |  $$ = AST_DoublyChildNodes("If", $1, $2, $1, $2);
+      |                                           ~~~~~~~   ^    
+      |                                                     |
+      |                                                     struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:439:69: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  439 |  $$ = AST_DoublyChildNodes("If", $1, $2, $1, $2);
+      |                                                                     ^    
+      |                                                                     |
+      |                                                                     struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:447:46: warning: passing argument 1 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  447 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                    ~~~       ^    
+      |                                              |
+      |                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:447:63: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  447 |  $$ = AST_SingleChildNode($3, $3, $3);
+      |                                                               ^    
+      |                                                               |
+      |                                                               struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:461:55: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  461 |  $$ = AST_DoublyChildNodes("Elif", $1, $2, $1, $2);
+      |                                             ~~~~~~~   ^    
+      |                                                       |
+      |                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:461:71: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  461 |  $$ = AST_DoublyChildNodes("Elif", $1, $2, $1, $2);
+      |                                                                       ^    
+      |                                                                       |
+      |                                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:482:53: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  482 |  $$ = AST_SingleChildNode("Else", $2, $2);
+      |                                                     ^    
+      |                                                     |
+      |                                                     struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:490:103: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  490 | Primary :  INTEGER {$$ = AST_SingleChildNode("int", $1, $1); }
+      |                                                                                                       ^       
+      |                                                                                                       |
+      |                                                                                                       char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:491:97: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  491 |  | NUMBER {$$ = AST_SingleChildNode("float", $1, $1); }
+      |                                                                                                 ^       
+      |                                                                                                 |
+      |                                                                                                 char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:492:97: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  492 |  |  ID {$$ = AST_SingleChildNode($1, $1, $1);}
+      |                                                                                                 ^       
+      |                                                                                                 |
+      |                                                                                                 char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:493:92: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  493 |  |  STRING {$$ = AST_SingleChildNode("string", $1, $1);}
+      |                                                                                            ^       
+      |                                                                                            |
+      |                                                                                            char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:494:89: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  494 |  | FLOAT {$$ = AST_SingleChildNode("float", $1, $1);}
+      |                                                                                         ^       
+      |                                                                                         |
+      |                                                                                         char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:500:101: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  500 |   $$ = AST_DoublyChildNodes(arrayPrefix, $1, $3, $1, $3);
+      |                                                                                                     ^       
+      |                                                                                                     |
+      |                                                                                                     char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:500:121: warning: passing argument 5 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  500 |   $$ = AST_DoublyChildNodes(arrayPrefix, $1, $3, $1, $3);
+      |                                                                                                                         ^       
+      |                                                                                                                         |
+      |                                                                                                                         char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:506:63: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  506 |    $$ = AST_SingleChildNode("exprlist end", $1, $1);
+      |                                                               ^    
+      |                                                               |
+      |                                                               struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:509:70: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  509 |    $$ = AST_DoublyChildNodes("exprlist exprtail", $1, $3, $1, $3);
+      |                                                            ~~~~~~~   ^    
+      |                                                                      |
+      |                                                                      struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:509:86: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  509 |    $$ = AST_DoublyChildNodes("exprlist exprtail", $1, $3, $1, $3);
+      |                                                                                      ^    
+      |                                                                                      |
+      |                                                                                      struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:520:55: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  520 |   $$ = AST_SingleChildNode("block",$2, $2);
+      |                                                       ^    
+      |                                                       |
+      |                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:528:50: warning: passing argument 1 of ‘CheckPrimaryType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  528 |   strcpy(tempNodeType, CheckPrimaryType($1, scopeStack, stackPointer));
+      |                                         ~~~~~~~~~^~~~~
+      |                                                  |
+      |                                                  struct AST *
+In file included from parser.y:10:
+semantic.h:8:7: note: expected ‘char *’ but argument is of type ‘struct AST *’
+    8 | char* CheckPrimaryType(char*arg1, char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~~~~~~
+parser.y:546:6: warning: implicit declaration of function ‘checkID’; did you mean ‘CheckID’? [-Wimplicit-function-declaration]
+  546 |      checkID($1, scopeStack, stackPointer);
+      |      ^~~~~~~
+      |      CheckID
+parser.y:553:75: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  553 |      $$ = AST_DoublyChildNodes("=", $1, $3, $1, $3);
+      |                                                                           ^    
+      |                                                                           |
+      |                                                                           struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:553:92: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  553 |      $$ = AST_DoublyChildNodes("=", $1, $3, $1, $3);
+      |                                                                                            ^       
+      |                                                                                            |
+      |                                                                                            char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:581:105: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  581 |      struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $3, $6, $3, $6);
+      |                                                                                                         ^    
+      |                                                                                                         |
+      |                                                                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:581:122: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  581 |      struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $3, $6, $3, $6);
+      |                                                                                                                          ^       
+      |                                                                                                                          |
+      |                                                                                                                          char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:583:66: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  583 |      $$ = AST_DoublyChildNodes("=", $1, arrayElement, $1, arrayElement);
+      |                                                                  ^~~~~~~     
+      |                                                                  |
+      |                                                                  struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:583:90: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  583 |      $$ = AST_DoublyChildNodes("=", $1, arrayElement, $1, arrayElement);
+      |                                                                                          ^       
+      |                                                                                          |
+      |                                                                                          char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:608:74: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  608 |      $$ = AST_DoublyChildNodes("=",$2, $4, $2, $4);
+      |                                                                          ^    
+      |                                                                          |
+      |                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:608:91: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  608 |      $$ = AST_DoublyChildNodes("=",$2, $4, $2, $4);
+      |                                                                                           ^       
+      |                                                                                           |
+      |                                                                                           char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:628:55: warning: passing argument 2 of ‘CheckAssignmentType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  628 |      CheckAssignmentType($2, $7, scopeStack, stackPointer);
+      |                                              ~~~~~~~~~^~~~~
+      |                                                       |
+      |                                                       struct AST *
+In file included from parser.y:10:
+semantic.h:11:52: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   11 | void CheckAssignmentType(char * identifier, char * exprType, char scopeStack[50][50], int stackPointer);
+      |                                             ~~~~~~~^~~~~~~~
+parser.y:632:105: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  632 |      struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $4, $7, $4, $7);
+      |                                                                                                         ^    
+      |                                                                                                         |
+      |                                                                                                         struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:632:122: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  632 |      struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $4, $7, $4, $7);
+      |                                                                                                                          ^       
+      |                                                                                                                          |
+      |                                                                                                                          char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:634:66: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  634 |      $$ = AST_DoublyChildNodes("=", $2, arrayElement, $2, arrayElement);
+      |                                                                  ^~~~~~~     
+      |                                                                  |
+      |                                                                  struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:634:90: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  634 |      $$ = AST_DoublyChildNodes("=", $2, arrayElement, $2, arrayElement);
+      |                                                                                          ^       
+      |                                                                                          |
+      |                                                                                          char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:645:56: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  645 |      $$ = AST_DoublyChildNodes("+", $1, $3, $1, $3);
+      |                                              ~~~~~~~   ^    
+      |                                                        |
+      |                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:645:72: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  645 |      $$ = AST_DoublyChildNodes("+", $1, $3, $1, $3);
+      |                                                                        ^    
+      |                                                                        |
+      |                                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:655:55: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  655 |      $$ = AST_DoublyChildNodes("-",$1,$3, $1, $3);
+      |                                             ~~~~~~    ^    
+      |                                                       |
+      |                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:655:70: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  655 |      $$ = AST_DoublyChildNodes("-",$1,$3, $1, $3);
+      |                                                                      ^    
+      |                                                                      |
+      |                                                                      struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:664:56: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  664 |      $$ = AST_DoublyChildNodes("*", $1, $3, $1, $3);
+      |                                              ~~~~~~~   ^    
+      |                                                        |
+      |                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:664:72: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  664 |      $$ = AST_DoublyChildNodes("*", $1, $3, $1, $3);
+      |                                                                        ^    
+      |                                                                        |
+      |                                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:673:56: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  673 |      $$ = AST_DoublyChildNodes("/", $1, $3, $1, $3);
+      |                                              ~~~~~~~   ^    
+      |                                                        |
+      |                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:673:72: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  673 |      $$ = AST_DoublyChildNodes("/", $1, $3, $1, $3);
+      |                                                                        ^    
+      |                                                                        |
+      |                                                                        struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:676:27: warning: passing argument 1 of ‘strncmp’ from incompatible pointer type [-Wincompatible-pointer-types]
+  676 |      if (strncmp($3, "int", 3) == 0) {
+      |                  ~~~~~~~~~^~~~~
+      |                           |
+      |                           struct AST *
+In file included from parser.y:5:
+/usr/include/string.h:140:33: note: expected ‘const char *’ but argument is of type ‘struct AST *’
+  140 | extern int strncmp (const char *__s1, const char *__s2, size_t __n)
+      |                     ~~~~~~~~~~~~^~~~
+parser.y:688:34: warning: passing argument 1 of ‘strncmp’ from incompatible pointer type [-Wincompatible-pointer-types]
+  688 |      } else if (strncmp($3, "float", 5) == 0) {
+      |                         ~~~~~~~~~^~~~~
+      |                                  |
+      |                                  struct AST *
+In file included from parser.y:5:
+/usr/include/string.h:140:33: note: expected ‘const char *’ but argument is of type ‘struct AST *’
+  140 | extern int strncmp (const char *__s1, const char *__s2, size_t __n)
+      |                     ~~~~~~~~~~~~^~~~
+parser.y:710:55: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  710 |     $$ = AST_DoublyChildNodes("^", $1, $3, $1, $3);
+      |                                             ~~~~~~~   ^    
+      |                                                       |
+      |                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:710:71: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  710 |     $$ = AST_DoublyChildNodes("^", $1, $3, $1, $3);
+      |                                                                       ^    
+      |                                                                       |
+      |                                                                       struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:718:58: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  718 |     $$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
+      |                                                ~~~~~~~   ^    
+      |                                                          |
+      |                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:718:74: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  718 |     $$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
+      |                                                                          ^    
+      |                                                                          |
+      |                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:723:78: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  723 |   struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
+      |                                                                              ^    
+      |                                                                              |
+      |                                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:723:94: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  723 |   struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
+      |                                                                                              ^    
+      |                                                                                              |
+      |                                                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:724:51: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  724 |   $$ = AST_SingleChildNode("Comparsion", tempNode, tempNode);
+      |                                                   ^~~~~~~~
+      |                                                   |
+      |                                                   struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:726:94: warning: passing argument 2 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  726 |  | Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical", $1, $3, $1, $3);}
+      |                                                                                    ~         ^    
+      |                                                                                              |
+      |                                                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:726:110: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  726 |  | Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical", $1, $3, $1, $3);}
+      |                                                                                                              ^    
+      |                                                                                                              |
+      |                                                                                                              struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:729:90: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  729 |  | TRUE {$$ = AST_SingleChildNode("boolean", $1, $1);}
+      |                                                                                          ^       
+      |                                                                                          |
+      |                                                                                          char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:730:90: warning: passing argument 3 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  730 |  | FALSE {$$ = AST_SingleChildNode("boolean",$1, $1);}
+      |                                                                                          ^       
+      |                                                                                          |
+      |                                                                                          char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:736:92: warning: passing argument 2 of ‘AST_SingleChildNode’ from incompatible pointer type [-Wincompatible-pointer-types]
+  736 |  struct AST* funcCallParamList = AST_SingleChildNode("function call param list", $3, $3);
+      |                                                                                  ~~~~~~~~  ^    
+      |                                                                                            |
+      |                                                                                            struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:22:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   22 | struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode);
+      |              ^~~~~~~~~~~~~~~~~~~
+parser.y:737:74: warning: passing argument 3 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  737 |  $$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
+      |                                                                          ^~~~~~~~~~~~~~~~~
+      |                                                                          |
+      |                                                                          struct AST *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘char *’ but argument is of type ‘struct AST *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:737:103: warning: passing argument 4 of ‘AST_DoublyChildNodes’ from incompatible pointer type [-Wincompatible-pointer-types]
+  737 |  $$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
+      |                                                                                                       ^       
+      |                                                                                                       |
+      |                                                                                                       char *
+In file included from symbolTable.h:5,
+                 from parser.y:7:
+AST.h:25:14: note: expected ‘struct AST *’ but argument is of type ‘char *’
+   25 | struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50], struct AST * leftChildNode, struct AST * rightChildNode);
+      |              ^~~~~~~~~~~~~~~~~~~~
+parser.y:740:2: warning: implicit declaration of function ‘CheckParamLength’ [-Wimplicit-function-declaration]
+  740 |  CheckParamLength($1, funcCallParamList);
+      |  ^~~~~~~~~~~~~~~~
+parser.y:470:25: warning: ‘%s’ directive writing 4 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  470 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "else", blockNumber);
+      |                         ^~~~~~~~~~                            ~~~~~~
+parser.y:470:2: note: ‘sprintf’ output between 8 and 67 bytes into a destination of size 50
+  470 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "else", blockNumber);
+      |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+parser.y:449:25: warning: ‘%s’ directive writing 4 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  449 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "elif", blockNumber);
+      |                         ^~~~~~~~~~                            ~~~~~~
+parser.y:449:2: note: ‘sprintf’ output between 8 and 67 bytes into a destination of size 50
+  449 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "elif", blockNumber);
+      |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+parser.y:426:25: warning: ‘%s’ directive writing 2 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  426 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "if", blockNumber);
+      |                         ^~~~~~~~~~                            ~~~~
+parser.y:426:2: note: ‘sprintf’ output between 6 and 65 bytes into a destination of size 50
+  426 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "if", blockNumber);
+      |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+parser.y:406:25: warning: ‘%s’ directive writing 5 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  406 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "while", blockNumber);
+      |                         ^~~~~~~~~~                            ~~~~~~~
+parser.y:406:2: note: ‘sprintf’ output between 9 and 68 bytes into a destination of size 50
+  406 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "while", blockNumber);
+      |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+parser.y:385:25: warning: ‘%s’ directive writing 3 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  385 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "for", blockNumber);
+      |                         ^~~~~~~~~~                            ~~~~~
+parser.y:385:2: note: ‘sprintf’ output between 7 and 66 bytes into a destination of size 50
+  385 |  sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "for", blockNumber);
+      |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+semantic.c: In function ‘CheckGlobal’:
+semantic.c:17:28: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+   17 |     char ** scopeStack = { "global" };
+      |                            ^~~~~~~~
+semantic.c:17:28: note: (near initialization for ‘scopeStack’)
+semantic.c:18:47: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+   18 |     if (nonGlobal != 0 && found(variableName, scopeStack, 0) == 1) {
+      |                                               ^~~~~~~~~~
+      |                                               |
+      |                                               char **
+In file included from semantic.c:6:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+semantic.c: In function ‘checkID’:
+semantic.c:48:27: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+   48 |     if (found(identifier, scopeStack, stackPointer) == 0) {
+      |                           ^~~~~~~~~~
+      |                           |
+      |                           char **
+In file included from semantic.c:6:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+semantic.c: In function ‘CheckIndexOutOfBound’:
+semantic.c:108:125: warning: format ‘%d’ expects argument of type ‘int’, but argument 4 has type ‘char *’ [-Wformat=]
+  108 |         printf("\nSEMANTIC ERROR: The total number of call parameters for \"%s\" (%s) does not match function declaration (%d).\n", identifier, integer, scopeStack[stackPointer]);
+      |                                                                                                                            ~^                                      ~
+      |                                                                                                                             |                                      |
+      |                                                                                                                             int                                    char *
+      |                                                                                                                            %s
+ircode.c: In function ‘emitBinaryOperation’:
+ircode.c:151:42: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  151 |             opType = getItemType(token1, currIRScope, 1);
+      |                                          ^~~~~~~~~~~
+      |                                          |
+      |                                          char *
+In file included from ircode.c:7:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+ircode.c: In function ‘emitBinaryOperationOptimized’:
+ircode.c:248:42: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  248 |             opType = getItemType(token1, currIRScope, 1);
+      |                                          ^~~~~~~~~~~
+      |                                          |
+      |                                          char *
+In file included from ircode.c:7:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+ircode.c: In function ‘emitAssignment’:
+ircode.c:276:30: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  276 |         char ** scopeStack = currIRScope;
+      |                              ^~~~~~~~~~~
+ircode.c:279:49: warning: passing argument 2 of ‘getArrayLength’ from incompatible pointer type [-Wincompatible-pointer-types]
+  279 |         if (strlen(id2)-2 > getArrayLength(id1, scopeStack, 0)) {
+      |                                                 ^~~~~~~~~~
+      |                                                 |
+      |                                                 char **
+In file included from ircode.c:7:
+symbolTable.h:49:44: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   49 | int getArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                                       ~~~~~^~~~~~~~~~~~~~~~~~
+ircode.c:280:40: warning: passing argument 2 of ‘updateItemArrayLength’ from incompatible pointer type [-Wincompatible-pointer-types]
+  280 |             updateItemArrayLength(id1, scopeStack, 0, strlen(id2)-2);
+      |                                        ^~~~~~~~~~
+      |                                        |
+      |                                        char **
+In file included from ircode.c:7:
+symbolTable.h:39:52: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   39 | void updateItemArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer, int newLen);
+      |                                               ~~~~~^~~~~~~~~~~~~~~~~~
+ircode.c: In function ‘emitEntry’:
+ircode.c:590:28: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  590 |     char ** scopeStack = { "global", currIRScope };
+      |                            ^~~~~~~~
+ircode.c:590:28: note: (near initialization for ‘scopeStack’)
+ircode.c:590:38: warning: excess elements in scalar initializer
+  590 |     char ** scopeStack = { "global", currIRScope };
+      |                                      ^~~~~~~~~~~
+ircode.c:590:38: note: (near initialization for ‘scopeStack’)
+ircode.c:591:35: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  591 |     char * type = getItemType(id, scopeStack, 1);
+      |                                   ^~~~~~~~~~
+      |                                   |
+      |                                   char **
+In file included from ircode.c:7:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+ircode.c: In function ‘emitEntryOptimized’:
+ircode.c:604:28: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  604 |     char ** scopeStack = { "global", currIRScope };
+      |                            ^~~~~~~~
+ircode.c:604:28: note: (near initialization for ‘scopeStack’)
+ircode.c:604:38: warning: excess elements in scalar initializer
+  604 |     char ** scopeStack = { "global", currIRScope };
+      |                                      ^~~~~~~~~~~
+ircode.c:604:38: note: (near initialization for ‘scopeStack’)
+ircode.c:605:35: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  605 |     char * type = getItemType(id, scopeStack, 1);
+      |                                   ^~~~~~~~~~
+      |                                   |
+      |                                   char **
+In file included from ircode.c:7:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+ircode.c: In function ‘emitFunctionCall’:
+ircode.c:679:36: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  679 |             char ** scopeStack = { "global", currIRScope };
+      |                                    ^~~~~~~~
+ircode.c:679:36: note: (near initialization for ‘scopeStack’)
+ircode.c:679:46: warning: excess elements in scalar initializer
+  679 |             char ** scopeStack = { "global", currIRScope };
+      |                                              ^~~~~~~~~~~
+ircode.c:679:46: note: (near initialization for ‘scopeStack’)
+ircode.c:680:38: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  680 |             opType = getItemType(id, scopeStack, 1);
+      |                                      ^~~~~~~~~~
+      |                                      |
+      |                                      char **
+In file included from ircode.c:7:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+ircode.c: In function ‘emitFunctionCallOptimized’:
+ircode.c:731:36: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  731 |             char ** scopeStack = { "global", currIRScope };
+      |                                    ^~~~~~~~
+ircode.c:731:36: note: (near initialization for ‘scopeStack’)
+ircode.c:731:46: warning: excess elements in scalar initializer
+  731 |             char ** scopeStack = { "global", currIRScope };
+      |                                              ^~~~~~~~~~~
+ircode.c:731:46: note: (near initialization for ‘scopeStack’)
+ircode.c:732:38: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  732 |             opType = getItemType(id, scopeStack, 1);
+      |                                      ^~~~~~~~~~
+      |                                      |
+      |                                      char **
+In file included from ircode.c:7:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+ircode.c: In function ‘ASTTraversal’:
+ircode.c:803:27: warning: passing argument 1 of ‘strcmp’ from incompatible pointer type [-Wincompatible-pointer-types]
+  803 |             if(strcmp(root-> right, "int") == 0
+      |                       ~~~~^~~~~~~~
+      |                           |
+      |                           struct AST *
+In file included from ircode.c:4:
+/usr/include/string.h:137:32: note: expected ‘const char *’ but argument is of type ‘struct AST *’
+  137 | extern int strcmp (const char *__s1, const char *__s2)
+      |                    ~~~~~~~~~~~~^~~~
+ircode.c:804:27: warning: passing argument 1 of ‘strcmp’ from incompatible pointer type [-Wincompatible-pointer-types]
+  804 |             || strcmp(root-> right, "float") == 0) {
+      |                       ~~~~^~~~~~~~
+      |                           |
+      |                           struct AST *
+In file included from ircode.c:4:
+/usr/include/string.h:137:32: note: expected ‘const char *’ but argument is of type ‘struct AST *’
+  137 | extern int strcmp (const char *__s1, const char *__s2)
+      |                    ~~~~~~~~~~~~^~~~
+ircode.c:806:34: warning: passing argument 1 of ‘strcmp’ from incompatible pointer type [-Wincompatible-pointer-types]
+  806 |             } else if(strcmp(root-> right, "string") == 0) {
+      |                              ~~~~^~~~~~~~
+      |                                  |
+      |                                  struct AST *
+In file included from ircode.c:4:
+/usr/include/string.h:137:32: note: expected ‘const char *’ but argument is of type ‘struct AST *’
+  137 | extern int strcmp (const char *__s1, const char *__s2)
+      |                    ~~~~~~~~~~~~^~~~
+ircode.c: In function ‘ASTTraversalOptimized’:
+ircode.c:1176:13: warning: null argument where non-null required (argument 2) [-Wnonnull]
+ 1176 |             memcpy(arrElVar, 0, 50);
+      |             ^~~~~~
+ircode.c: In function ‘ASTTraversal’:
+ircode.c:879:51: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  879 |                             sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
+      |                                                   ^~
+ircode.c:879:29: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+  879 |                             sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:864:50: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  864 |                             sprintf(leftVar, "%s[%s]", root->right->right->left->LHS, root->right->right->left->RHS);
+      |                                                  ^~
+ircode.c:864:29: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+  864 |                             sprintf(leftVar, "%s[%s]", root->right->right->left->LHS, root->right->right->left->RHS);
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:871:51: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  871 |                             sprintf(rightVar, "%s[%s]", root->right->right->right->LHS, root->right->right->right->RHS);
+      |                                                   ^~
+ircode.c:871:29: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+  871 |                             sprintf(rightVar, "%s[%s]", root->right->right->right->LHS, root->right->right->right->RHS);
+      |                             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:916:46: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  916 |                         sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+      |                                              ^~
+ircode.c:916:25: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+  916 |                         sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:932:47: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+  932 |                         sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+      |                                               ^~
+ircode.c:932:25: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+  932 |                         sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c: In function ‘ASTTraversalOptimized’:
+ircode.c:1111:55: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+ 1111 |                                 sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
+      |                                                       ^~
+ircode.c:1111:33: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+ 1111 |                                 sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:1095:54: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+ 1095 |                                 sprintf(leftVar, "%s[%s]", root->right->right->left->LHS, root->right->right->left->RHS);
+      |                                                      ^~
+ircode.c:1095:33: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+ 1095 |                                 sprintf(leftVar, "%s[%s]", root->right->right->left->LHS, root->right->right->left->RHS);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:1102:55: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+ 1102 |                                 sprintf(rightVar, "%s[%s]", root->right->right->right->LHS, root->right->right->right->RHS);
+      |                                                       ^~
+ircode.c:1102:33: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+ 1102 |                                 sprintf(rightVar, "%s[%s]", root->right->right->right->LHS, root->right->right->right->RHS);
+      |                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:1146:46: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+ 1146 |                         sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+      |                                              ^~
+ircode.c:1146:25: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+ 1146 |                         sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ircode.c:1162:47: warning: ‘%s’ directive writing up to 49 bytes into a region of size between 0 and 49 [-Wformat-overflow=]
+ 1162 |                         sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+      |                                               ^~
+ircode.c:1162:25: note: ‘sprintf’ output between 3 and 101 bytes into a destination of size 50
+ 1162 |                         sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
+      |                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+AST.c: In function ‘getExprOp’:
+AST.c:102:26: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  102 |   char ** scopeStack = { "global" };
+      |                          ^~~~~~~~
+AST.c:102:26: note: (near initialization for ‘scopeStack’)
+AST.c:103:55: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  103 |   char * funcType = getItemType(root->left->nodeType, scopeStack, 0);
+      |                                                       ^~~~~~~~~~
+      |                                                       |
+      |                                                       char **
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c: In function ‘evaluateIntExpr’:
+AST.c:126:6: warning: implicit declaration of function ‘isInt’ [-Wimplicit-function-declaration]
+  126 |  if (isInt(root->nodeType) == 1) {
+      |      ^~~~~
+AST.c: In function ‘evaluateFloatExpr’:
+AST.c:137:6: warning: implicit declaration of function ‘isFloat’ [-Wimplicit-function-declaration]
+  137 |  if (isFloat(root->nodeType) == 1) {
+      |      ^~~~~~~
+AST.c: In function ‘containsNonVars’:
+AST.c:148:6: warning: implicit declaration of function ‘isNotVar’ [-Wimplicit-function-declaration]
+  148 |  if (isNotVar(root->nodeType) == 1) {
+      |      ^~~~~~~~
+AST.c: In function ‘getCallListItemType’:
+AST.c:219:45: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  219 |     if (!found(root->right->left->nodeType, "global", 0)) {
+      |                                             ^~~~~~~~
+      |                                             |
+      |                                             char *
+In file included from AST.c:6:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+AST.c:220:58: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  220 |      funcType = getItemType(root->right->left->nodeType, currentScope, 0);
+      |                                                          ^~~~~~~~~~~~
+      |                                                          |
+      |                                                          char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c:222:58: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  222 |      funcType = getItemType(root->right->left->nodeType, "global", 0);
+      |                                                          ^~~~~~~~
+      |                                                          |
+      |                                                          char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c:234:26: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  234 |     if (!found(nodeType, "global", 0)) {
+      |                          ^~~~~~~~
+      |                          |
+      |                          char *
+In file included from AST.c:6:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+AST.c:235:38: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  235 |      varType = getItemType(nodeType, currentScope, 0);
+      |                                      ^~~~~~~~~~~~
+      |                                      |
+      |                                      char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c:237:38: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  237 |      varType = getItemType(nodeType, "global", 0);
+      |                                      ^~~~~~~~
+      |                                      |
+      |                                      char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c:268:45: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  268 |     if (!found(root->right->left->nodeType, "global", 0)) {
+      |                                             ^~~~~~~~
+      |                                             |
+      |                                             char *
+In file included from AST.c:6:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+AST.c:269:58: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  269 |      funcType = getItemType(root->right->left->nodeType, currentScope, 0);
+      |                                                          ^~~~~~~~~~~~
+      |                                                          |
+      |                                                          char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c:271:58: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  271 |      funcType = getItemType(root->right->left->nodeType, "global", 0);
+      |                                                          ^~~~~~~~
+      |                                                          |
+      |                                                          char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c:283:26: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  283 |     if (!found(nodeType, "global", 0)) {
+      |                          ^~~~~~~~
+      |                          |
+      |                          char *
+In file included from AST.c:6:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+AST.c:284:38: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  284 |      varType = getItemType(nodeType, currentScope, 0);
+      |                                      ^~~~~~~~~~~~
+      |                                      |
+      |                                      char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+AST.c:286:38: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  286 |      varType = getItemType(nodeType, "global", 0);
+      |                                      ^~~~~~~~
+      |                                      |
+      |                                      char *
+In file included from AST.c:6:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+symbolTable.c: In function ‘getNumFuncParams’:
+symbolTable.c:430:25: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  430 |  char ** scopeStack = { "global" };
+      |                         ^~~~~~~~
+symbolTable.c:430:25: note: (near initialization for ‘scopeStack’)
+symbolTable.c:431:41: warning: passing argument 2 of ‘getItemID’ from incompatible pointer type [-Wincompatible-pointer-types]
+  431 |  return countParams(getItemID(funcName, scopeStack, 0));
+      |                                         ^~~~~~~~~~
+      |                                         |
+      |                                         char **
+symbolTable.c:236:39: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+  236 | int getItemID(char itemName[50], char scopeStack[50][50], int stackPointer) {
+      |                                  ~~~~~^~~~~~~~~~~~~~~~~~
+symbolTable.c: In function ‘getFuncParamItemType’:
+symbolTable.c:455:25: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  455 |  char ** scopeStack = { "global" };
+      |                         ^~~~~~~~
+symbolTable.c:455:25: note: (near initialization for ‘scopeStack’)
+symbolTable.c:456:42: warning: passing argument 2 of ‘getItemID’ from incompatible pointer type [-Wincompatible-pointer-types]
+  456 |  return getParamType(getItemID(funcName, scopeStack, 0), numParams, index);
+      |                                          ^~~~~~~~~~
+      |                                          |
+      |                                          char **
+symbolTable.c:236:39: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+  236 | int getItemID(char itemName[50], char scopeStack[50][50], int stackPointer) {
+      |                                  ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c: In function ‘generateText’:
+webgen.c:220:36: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  220 |             char ** scopeStack = { "global" , currScope };
+      |                                    ^~~~~~~~
+webgen.c:220:36: note: (near initialization for ‘scopeStack’)
+webgen.c:220:47: warning: excess elements in scalar initializer
+  220 |             char ** scopeStack = { "global" , currScope };
+      |                                               ^~~~~~~~~
+webgen.c:220:47: note: (near initialization for ‘scopeStack’)
+webgen.c:223:31: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  223 |             if (!found(token, scopeStack, scopePointer)) {
+      |                               ^~~~~~~~~~
+      |                               |
+      |                               char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:349:40: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  349 |                 char ** scopeStack = { "global", currScope };
+      |                                        ^~~~~~~~
+webgen.c:349:40: note: (near initialization for ‘scopeStack’)
+webgen.c:349:50: warning: excess elements in scalar initializer
+  349 |                 char ** scopeStack = { "global", currScope };
+      |                                                  ^~~~~~~~~
+webgen.c:349:50: note: (near initialization for ‘scopeStack’)
+webgen.c:352:39: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  352 |                 if (!found(strArr[1], scopeStack, scopePointer)) {
+      |                                       ^~~~~~~~~~
+      |                                       |
+      |                                       char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:412:44: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  412 |                     char ** scopeStack = { "global", currScope };
+      |                                            ^~~~~~~~
+webgen.c:412:44: note: (near initialization for ‘scopeStack’)
+webgen.c:412:54: warning: excess elements in scalar initializer
+  412 |                     char ** scopeStack = { "global", currScope };
+      |                                                      ^~~~~~~~~
+webgen.c:412:54: note: (near initialization for ‘scopeStack’)
+webgen.c:415:42: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  415 |                     if (!found(variable, scopeStack, scopePointer)) {
+      |                                          ^~~~~~~~~~
+      |                                          |
+      |                                          char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:430:58: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  430 |                         primaryType = getItemType(token, "global", scopePointer);
+      |                                                          ^~~~~~~~
+      |                                                          |
+      |                                                          char *
+In file included from webgen.c:8:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+webgen.c:431:55: warning: passing argument 2 of ‘getItemKind’ from incompatible pointer type [-Wincompatible-pointer-types]
+  431 |                         itemKind = getItemKind(token, "global", scopePointer);
+      |                                                       ^~~~~~~~
+      |                                                       |
+      |                                                       char *
+In file included from webgen.c:8:
+symbolTable.h:45:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   45 | char* getItemKind(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+webgen.c:433:58: warning: passing argument 2 of ‘getItemType’ from incompatible pointer type [-Wincompatible-pointer-types]
+  433 |                         primaryType = getItemType(token, currScope, scopePointer);
+      |                                                          ^~~~~~~~~
+      |                                                          |
+      |                                                          char *
+In file included from webgen.c:8:
+symbolTable.h:47:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   47 | char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+webgen.c:434:55: warning: passing argument 2 of ‘getItemKind’ from incompatible pointer type [-Wincompatible-pointer-types]
+  434 |                         itemKind = getItemKind(token, currScope, scopePointer);
+      |                                                       ^~~~~~~~~
+      |                                                       |
+      |                                                       char *
+In file included from webgen.c:8:
+symbolTable.h:45:7: note: expected ‘char (*)[50]’ but argument is of type ‘char *’
+   45 | char* getItemKind(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |       ^~~~~~~~~~~
+webgen.c:640:52: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  640 |                             char ** scopeStack = { "global", currScope };
+      |                                                    ^~~~~~~~
+webgen.c:640:52: note: (near initialization for ‘scopeStack’)
+webgen.c:640:62: warning: excess elements in scalar initializer
+  640 |                             char ** scopeStack = { "global", currScope };
+      |                                                              ^~~~~~~~~
+webgen.c:640:62: note: (near initialization for ‘scopeStack’)
+webgen.c:643:55: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  643 |                             if (!found(strArr[index], scopeStack, scopePointer)) {
+      |                                                       ^~~~~~~~~~
+      |                                                       |
+      |                                                       char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:700:40: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  700 |                 char ** scopeStack = { "global", currScope };
+      |                                        ^~~~~~~~
+webgen.c:700:40: note: (near initialization for ‘scopeStack’)
+webgen.c:700:50: warning: excess elements in scalar initializer
+  700 |                 char ** scopeStack = { "global", currScope };
+      |                                                  ^~~~~~~~~
+webgen.c:700:50: note: (near initialization for ‘scopeStack’)
+webgen.c:703:39: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  703 |                 if (!found(strArr[0], scopeStack, scopePointer)) {
+      |                                       ^~~~~~~~~~
+      |                                       |
+      |                                       char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:725:38: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  725 |                     if (!found(size, scopeStack, scopePointer)) {
+      |                                      ^~~~~~~~~~
+      |                                      |
+      |                                      char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:751:38: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  751 |                     if (!found(size, scopeStack, scopePointer)) {
+      |                                      ^~~~~~~~~~
+      |                                      |
+      |                                      char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:792:43: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  792 |                     if (!found(tokenVar2, scopeStack, scopePointer)) {
+      |                                           ^~~~~~~~~~
+      |                                           |
+      |                                           char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:889:40: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+  889 |                 char ** scopeStack = { "global", currScope };
+      |                                        ^~~~~~~~
+webgen.c:889:40: note: (near initialization for ‘scopeStack’)
+webgen.c:889:50: warning: excess elements in scalar initializer
+  889 |                 char ** scopeStack = { "global", currScope };
+      |                                                  ^~~~~~~~~
+webgen.c:889:50: note: (near initialization for ‘scopeStack’)
+webgen.c:892:39: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  892 |                 if (!found(strArr[0], scopeStack, scopePointer)) {
+      |                                       ^~~~~~~~~~
+      |                                       |
+      |                                       char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:960:55: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+  960 |                             if (!found(strArr[index], scopeStack, scopePointer)) {
+      |                                                       ^~~~~~~~~~
+      |                                                       |
+      |                                                       char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:1018:40: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+ 1018 |                 char ** scopeStack = { "global", currScope };
+      |                                        ^~~~~~~~
+webgen.c:1018:40: note: (near initialization for ‘scopeStack’)
+webgen.c:1018:50: warning: excess elements in scalar initializer
+ 1018 |                 char ** scopeStack = { "global", currScope };
+      |                                                  ^~~~~~~~~
+webgen.c:1018:50: note: (near initialization for ‘scopeStack’)
+webgen.c:1021:39: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+ 1021 |                 if (!found(assignVar, scopeStack, scopePointer)) {
+      |                                       ^~~~~~~~~~
+      |                                       |
+      |                                       char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:1084:44: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+ 1084 |                     char ** scopeStack = { "global", currScope };
+      |                                            ^~~~~~~~
+webgen.c:1084:44: note: (near initialization for ‘scopeStack’)
+webgen.c:1084:54: warning: excess elements in scalar initializer
+ 1084 |                     char ** scopeStack = { "global", currScope };
+      |                                                      ^~~~~~~~~
+webgen.c:1084:54: note: (near initialization for ‘scopeStack’)
+webgen.c:1087:43: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+ 1087 |                     if (!found(tokenVar1, scopeStack, scopePointer)) {
+      |                                           ^~~~~~~~~~
+      |                                           |
+      |                                           char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+webgen.c:1154:44: warning: initialization of ‘char **’ from incompatible pointer type ‘char *’ [-Wincompatible-pointer-types]
+ 1154 |                     char ** scopeStack = { "global", currScope };
+      |                                            ^~~~~~~~
+webgen.c:1154:44: note: (near initialization for ‘scopeStack’)
+webgen.c:1154:54: warning: excess elements in scalar initializer
+ 1154 |                     char ** scopeStack = { "global", currScope };
+      |                                                      ^~~~~~~~~
+webgen.c:1154:54: note: (near initialization for ‘scopeStack’)
+webgen.c:1157:43: warning: passing argument 2 of ‘found’ from incompatible pointer type [-Wincompatible-pointer-types]
+ 1157 |                     if (!found(tokenVar2, scopeStack, scopePointer)) {
+      |                                           ^~~~~~~~~~
+      |                                           |
+      |                                           char **
+In file included from webgen.c:8:
+symbolTable.h:37:35: note: expected ‘char (*)[50]’ but argument is of type ‘char **’
+   37 | int found(char itemName[50], char scopeStack[50][50], int stackPointer);
+      |                              ~~~~~^~~~~~~~~~~~~~~~~~
+./driver `arg="../../test-programs/void-function.artsy" && echo ${arg:-}`
+
+
+--------------------Parser Start------------------------
+
+string : TYPE
+launchMessage : IDENTIFIER
+; : SEMICOLON
+
+ RECOGNIZED RULE: Variable declaration launchMessage
+::::> Symbol table accessed.
+itemID    itemName    itemKind    itemType     ArrayLength    itemScope
+-----------------------------------------------------------------------
+    0   launchMessage      Var   string      0          global 
+-----------------------------------------------------------------------
+action : FUNCTION
+testMessage : IDENTIFIER
+( : LEFTPAREN
+) : RIGHTPAREN
+RECOGNIZED RULE: Void Function
+::::> Symbol table accessed.
+itemID    itemName    itemKind    itemType     ArrayLength    itemScope
+-----------------------------------------------------------------------
+    0   launchMessage      Var   string      0          global 
+    1     testMessage  function     void      0          global 
+-----------------------------------------------------------------------
+{ : LEFTBRACKET
+string : TYPE
+test : IDENTIFIER
+; : SEMICOLON
+
+ RECOGNIZED RULE: Variable declaration test
+::::> Symbol table accessed.
+itemID    itemName    itemKind    itemType     ArrayLength    itemScope
+-----------------------------------------------------------------------
+    0   launchMessage      Var   string      0          global 
+    1     testMessage  function     void      0          global 
+    2            test      Var   string      0     testMessage 
+-----------------------------------------------------------------------
+test : IDENTIFIER
+= : EQ
+"Test Void Function: " : STRING
+
+ RECOGNIZED RULE: Simplest expression
+; : SEMICOLON
+
+ RECOGNIZED RULE: Assignment statement
+DEBUG -- GENERATE AST
+print : KEYWORD
+test : IDENTIFIER
+; : SEMICOLON
+
+ RECOGNIZED RULE: WRITE statement
+write: testaddline : KEYWORD
+; : SEMICOLON
+
+ RECOGNIZED RULE: WRITEIN statement
+print : KEYWORD
+launchMessage : IDENTIFIER
+; : SEMICOLON
+
+ RECOGNIZED RULE: WRITE statement
+write: launchMessageaddline : KEYWORD
+; : SEMICOLON
+
+ RECOGNIZED RULE: WRITEIN statement
+} : RIGHTBRACKET
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: Block statement
+launchMessage : IDENTIFIER
+= : EQ
+"Launching in 3, 2, 1, lift off!" : STRING
+
+ RECOGNIZED RULE: Simplest expression
+; : SEMICOLON
+
+ RECOGNIZED RULE: Assignment statement
+DEBUG -- GENERATE AST
+print : KEYWORD
+launchMessage : IDENTIFIER
+; : SEMICOLON
+
+ RECOGNIZED RULE: WRITE statement
+write: launchMessageaddline : KEYWORD
+; : SEMICOLON
+
+ RECOGNIZED RULE: WRITEIN statement
+testMessage : IDENTIFIER
+( : LEFTPAREN
+) : RIGHTPAREN
+
+RECOGNIZED RULE: FunctionCall
+; : SEMICOLON
+launchMessage : IDENTIFIER
+= : EQ
+"Ending Program" : STRING
+
+ RECOGNIZED RULE: Simplest expression
+; : SEMICOLON
+
+ RECOGNIZED RULE: Assignment statement
+DEBUG -- GENERATE AST
+print : KEYWORD
+launchMessage : IDENTIFIER
+; : SEMICOLON
+
+ RECOGNIZED RULE: WRITE statement
+write: launchMessage
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+ RECOGNIZED RULE: StmtList statement
+
+Program Version: DeclList StmtList Program
+
+--------------------Parser End------------------------
+
+
+----Generate IRCode----
+
+root -> nodeType: program
+root -> nodeType: vardec
+root -> nodeType: type
+root -> nodeType: empty
+root -> nodeType: program
+root -> nodeType: function
+root -> nodeType: function context
+root -> nodeType: empty
+root -> nodeType: block
+root -> nodeType: program
+root -> nodeType: vardec
+root -> nodeType: type
+root -> nodeType: empty
+root -> nodeType: statements
+root -> nodeType: =
+root -> nodeType: string
+made it here
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: statements
+root -> nodeType: writeln
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: statements
+root -> nodeType: writeln
+root -> nodeType: empty
+root -> nodeType: program
+root -> nodeType: empty
+root -> nodeType: statements
+root -> nodeType: =
+root -> nodeType: string
+made it here
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: statements
+root -> nodeType: writeln
+root -> nodeType: statements
+root -> nodeType: function call
+root -> nodeType: function call param list
+root -> nodeType: exprlist end
+new func var: testMessage
+root -> nodeType: statements
+root -> nodeType: =
+root -> nodeType: string
+made it here
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: empty
+
+
+----Perform Code Optimizations----
+
+root -> nodeType: program
+root -> nodeType: vardec
+root -> nodeType: type
+root -> nodeType: empty
+root -> nodeType: program
+root -> nodeType: function
+root -> nodeType: function context
+root -> nodeType: empty
+root -> nodeType: block
+root -> nodeType: program
+root -> nodeType: vardec
+root -> nodeType: type
+root -> nodeType: empty
+root -> nodeType: statements
+root -> nodeType: =
+root -> nodeType: string
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: statements
+root -> nodeType: writeln
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: statements
+root -> nodeType: writeln
+root -> nodeType: empty
+root -> nodeType: program
+root -> nodeType: empty
+root -> nodeType: statements
+root -> nodeType: =
+root -> nodeType: string
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: statements
+root -> nodeType: writeln
+root -> nodeType: statements
+root -> nodeType: function call
+root -> nodeType: function call param list
+root -> nodeType: exprlist end
+root -> nodeType: statements
+root -> nodeType: =
+root -> nodeType: string
+root -> nodeType: statements
+root -> nodeType: write
+root -> nodeType: empty
+
+Opening WAT Code file
+
+#### Optimized IR Code ####
+type string launchMessage array 100
+entry void testMessage
+type string test array 100
+test[0] = "T"
+test[1] = "e"
+test[2] = "s"
+test[3] = "t"
+test[4] = " "
+test[5] = "V"
+test[6] = "o"
+test[7] = "i"
+test[8] = "d"
+test[9] = " "
+test[10] = "F"
+test[11] = "u"
+test[12] = "n"
+test[13] = "c"
+test[14] = "t"
+test[15] = "i"
+test[16] = "o"
+test[17] = "n"
+test[18] = ":"
+test[19] = " "
+endstring test 20
+output test
+addline
+output launchMessage
+addline
+exit
+launchMessage[0] = "L"
+launchMessage[1] = "a"
+launchMessage[2] = "u"
+launchMessage[3] = "n"
+launchMessage[4] = "c"
+launchMessage[5] = "h"
+launchMessage[6] = "i"
+launchMessage[7] = "n"
+launchMessage[8] = "g"
+launchMessage[9] = " "
+launchMessage[10] = "i"
+launchMessage[11] = "n"
+launchMessage[12] = " "
+launchMessage[13] = "3"
+launchMessage[14] = ","
+launchMessage[15] = " "
+launchMessage[16] = "2"
+launchMessage[17] = ","
+launchMessage[18] = " "
+launchMessage[19] = "1"
+launchMessage[20] = ","
+launchMessage[21] = " "
+launchMessage[22] = "l"
+launchMessage[23] = "i"
+launchMessage[24] = "f"
+launchMessage[25] = "t"
+launchMessage[26] = " "
+launchMessage[27] = "o"
+launchMessage[28] = "f"
+launchMessage[29] = "f"
+launchMessage[30] = "!"
+endstring launchMessage 31
+output launchMessage
+addline
+call testMessage args
+launchMessage[0] = "E"
+launchMessage[1] = "n"
+launchMessage[2] = "d"
+launchMessage[3] = "i"
+launchMessage[4] = "n"
+launchMessage[5] = "g"
+launchMessage[6] = " "
+launchMessage[7] = "P"
+launchMessage[8] = "r"
+launchMessage[9] = "o"
+launchMessage[10] = "g"
+launchMessage[11] = "r"
+launchMessage[12] = "a"
+launchMessage[13] = "m"
+endstring launchMessage 14
+output launchMessage
+
+Artsy Compilation Time: 0.001189 seonds
+
+rm -f MAINcode.wat LOCALcode.wat VARScode.wat
+wat2wasm WATcode.wat -o WASMcode.wasm
+make: Nothing to be done for '../../test-programs/void-function.artsy'.
