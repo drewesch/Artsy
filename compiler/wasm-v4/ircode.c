@@ -799,6 +799,20 @@ char* ASTTraversal(struct AST* root) {
             ASTTraversal(root -> left);
             ASTTraversal(root -> right);
         }
+        // TO-DO: Ircode Handling
+        if(strcmp(root->nodeType, "WhileL") == 0 
+            || strcmp(root->nodeType, "IfStmt") == 0
+            || strcmp(root->nodeType, "IfStmtTail continue") == 0
+            || strcmp(root->nodeType, "If") == 0
+            || strcmp(root->nodeType, "Elif") == 0) {
+            ASTTraversal(root -> left);
+            ASTTraversal(root -> right);
+        }
+        // TO-DO: Ircode Handling
+        if(strcmp(root->nodeType, "IfStmtTail else end") == 0
+            || strcmp(root->nodeType, "Else") == 0) {
+            ASTTraversal(root -> right);
+        }
         if(strcmp(root->nodeType, "write") == 0) {
             if(strcmp(root-> right, "int") == 0
             || strcmp(root-> right, "float") == 0) {
@@ -999,6 +1013,20 @@ char* ASTTraversalOptimized(struct AST* root) {
             || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
             || strcmp(root->nodeType, "statements") == 0) { 
             ASTTraversalOptimized(root -> left);
+            ASTTraversalOptimized(root -> right);
+        }
+        // TO-DO: Ircode Handling
+        if(strcmp(root->nodeType, "WhileL") == 0 
+            || strcmp(root->nodeType, "IfStmt") == 0
+            || strcmp(root->nodeType, "IfStmtTail continue") == 0
+            || strcmp(root->nodeType, "If") == 0
+            || strcmp(root->nodeType, "Elif") == 0) {
+            ASTTraversalOptimized(root -> left);
+            ASTTraversalOptimized(root -> right);
+        }
+        // TO-DO: Ircode Handling
+        if(strcmp(root->nodeType, "IfStmtTail else end") == 0
+            || strcmp(root->nodeType, "Else") == 0) {
             ASTTraversalOptimized(root -> right);
         }
         if(strcmp(root->nodeType, "variable parm") == 0){

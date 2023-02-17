@@ -31,34 +31,15 @@
 
 	;; Artsy Program in WAT
 	(global $anywhere (mut i32) (i32.const 0))
+	(global $n (mut void) (void.const 0))
+	(global $k (mut void) (void.const 0))
 	(global $a (mut i32) (i32.const 0))
 	(global $b (mut i32) (i32.const 0))
 	(global $x (mut i32) (i32.const 0))
 	(global $z (mut i32) (i32.const 0))
-	;; Start Main Function
-	(func $main
-
-		(global.set $anywhere
-			(i32.const 5)
-		)
-		(call $writeconsoleInt (global.get $anywhere))
-			(void.const ""done"")
-		)
-			(void.const 5)
-		)
-		(global.set $x
-			(i32.const 32)
-		)
-		(global.set $a
-			(i32.const 5)
-		)
-		(global.set $b
-			(i32.const 3)
-		)
-		(global.set $z
-			(i32.const 9)
-		)
-		(call $writeconsoleInt (global.get $z))
-	)
-	(start $main)
-)
+	(global $c (mut i32) (i32.const 0))
+	(global $d (mut i32) (i32.const 0))
+	(global $majortest (mut i32) (i32.const 0))
+	(global $check1 (mut i32) (i32.const 0))
+	(global $check2 (mut i32) (i32.const 0))
+	(global $check3 (mut i32) (i32.const 0))

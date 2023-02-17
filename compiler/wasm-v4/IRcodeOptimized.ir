@@ -4,12 +4,62 @@ anywhere = 5
 output anywhere
 output ""done""
 output 5
+type boolean n
+type boolean k
 type int a
 type int b
 type int x
 type int z
+type string c array 100
+type string d array 100
+type int majortest
+majortest = 1
 x = 0
 a = 5
 b = 3
+n = 0
+k = 0
+c[0] = "c"
+c[1] = " "
+c[2] = "c"
+c[3] = " "
+c[4] = "c"
+endstring c 5
+d[0] = "d"
+d[1] = " "
+d[2] = "d"
+d[3] = " "
+d[4] = "d"
+endstring d 5
+z = 5
+output z
+x = 1
+z = 6
+output z
+x = 2
+z = 7
+output z
+x = 3
+z = 8
+output z
+x = 4
+output c
+output d
 z = 9
 output z
+type int check1
+type int check2
+check1 = 1
+check2 = 2
+type int check3
+check3 = 5
+output check3
+check2 = 3
+type int check4
+check4 = 4
+output check4
+check2 = 4
+type int check6
+check6 = 6
+output check6
+check2 = 6
