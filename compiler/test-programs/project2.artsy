@@ -1,35 +1,35 @@
-string message[50];
+declare message as string[50];
 
-function int displayMessage(){
-	message[0] = "I"; 																		
-	message[1] = " ";																
-	message[3] = "a";
-	message[4] = "n";
-	message[5] = " ";
-	message[6] = "p";
-	message[7] = "r";
-	message[8] = "i";
-	message[9] = "n";
-	message[10] = "t";
-	message[11] = ":";
-	int a;
-	a = 1;
+action int displayMessage(){
+	let message[0] = "I"; 																		
+	let message[1] = " ";																
+	let message[3] = "a";
+	let message[4] = "n";
+	let message[5] = " ";
+	let message[6] = "p";
+	let message[7] = "r";
+	let message[8] = "i";
+	let message[9] = "n";
+	let message[10] = "t";
+	let message[11] = ":";
+	declare a as int;
+	let a = 1;
 	if(a == 1) {
-		int b;
-		b = 2;
+		declare b as int;
+		let b = 2;
 	}
 	/* message[100] = "Error"; 	*/														
 	
-	return 0;
+	report 0;
 }
 
 
 
-int anywhere; 										
-anywhere = 5;										
-write anywhere; 									
-write "done";																						
-write 5;
+declare anywhere as int; 										
+let anywhere = 5;										
+print anywhere; 									
+print "done";																						
+print 5;
 
 
 
@@ -68,117 +68,101 @@ write 5;
 /*4. check that all ast and symbol are up to date*/ 
 /*5. make sure all        root -> nodeType: =           are filled */ 
 
-
-
-boolean t;
-boolean f;
-boolean n;
-boolean k;
+declare t as flag;
+declare f as flag;
+declare n as flag;
+declare k as flag;
  
 
-int a;
-int b;
-int x;
-int y;
-int z;
-string c;
-string d;
+declare a as int;
+declare b as int;
+declare x as int;
+declare y as int;
+declare z as int;
+declare c as string;
+declare d as string;
 
-// string majortest;
-// majortest = "hello";
+// declare majortest as string;
+// let majortest = "hello";
 
-int majortest;
-majortest = 1;
-
-
+declare majortest as int;
+let majortest = 1;
 
 
-x = 0;
-a = 5;
-b = 3;
-y = x + a;
-t = TRUE; 								
-f = FALSE;								 
-n = (a > b);                             
-k = (a < b); 							 
-c = "c c c";
-d = "d d d";
-
-
+let x = 0;
+let a = 5;
+let b = 3;
+let y = x + a;
+let t = TRUE; 								
+let f = FALSE;								 
+let n = (a > b);                             
+let k = (a < b); 							 
+let c = "c c c";
+let d = "d d d";
 
 while (majortest < 4){ 														/*1 should be error*/				
-	int abc;
+	declare abc as int;
 	if (majortest < 1){														/*2 should be error*/
-		int h;
-		z = 5;
-		write z;
-		x = x + 1;
+		declare h as int;
+		let z = 5;
+		print z;
+		let x = x + 1;
 		/*int ifone;*/  													/*3*/
 	}
 	elif (majortest == 1 || x < 0){        		
-		z = 6;
-		write z;
-		x = x + 1;
+		let z = 6;
+		print z;
+		let x = x + 1;
 		/*int iftwo; */														/*3*/
-		int abcde;
+		declare abcde as int;
 	}
 	elif (x == majortest && x > 1){				 
-		z = 7;
-		write z;
-		x = x + 1;
+		let z = 7;
+		print z;
+		let x = x + 1;
 	}
 	else{
-		z = 8;
-		write z;
-		x = x + 1;
+		let z = 8;
+		print z;
+		let x = x + 1;
 		if (n == TRUE){				
-			write c; 
+			print c; 
 			if (k == FALSE){			
-				write d; 
-				int abcdefg;
+				print d;
+				declare abcdefg as int; 
 			}
 		}
 	}
 }
 
-
-z = 9;
-write z; 
-
-
-
+let z = 9;
+print z; 
 
 /*4. check that all ast and symbol are up to date*/ 
 /*5. make sure all        root -> nodeType: =           are filled */ 
 
-
-
-
-
-int check1;
-int check2;
-check1 = 1;
-check2 = 2;
-
+declare check1 as int;
+declare check2 as int;
+let check1 = 1;
+let check2 = 2;
 
 while (check1 == 1){
 	if (check2 == 2){
-		int check3;
-		check3 = 5;
-		write check3;
-		check2 = 3;
+		declare check3 as int;
+		let check3 = 5;
+		print check3;
+		let check2 = 3;
 	}
 	elif (check2 == 3){
-		int check4;
-		check4 = 4;
-		write check4;
-		check2 = 4;
+		declare check4 as int;
+		let check4 = 4;
+		print check4;
+		let check2 = 4;
 	}
 	else{
-		int check6;
-		check6 = 6;
-		write check6;
-		check2 = 6;
-
+		declare check6 as int;
+		let check6 = 6;
+		print check6;
+		let check2 = 6;
 	}
 }

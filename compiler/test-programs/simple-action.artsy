@@ -1,4 +1,4 @@
-// Simple function program
+// Simple action program
 declare x as int;
 declare y as int;
 

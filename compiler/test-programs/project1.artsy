@@ -12,31 +12,31 @@
 
 
 
-boolean t;
-boolean f;
-boolean n;
-boolean k;
+declare t as flag;
+declare f as flag;
+declare n as flag;
+declare k as flag;
  
 
-int a;
-int b;
-int x;
-int y;
-int z;
-string c;
-string d;
-string majortest;
-majortest = "hello";
+declare a as int;
+declare b as int;
+declare x as int;
+declare y as int;
+declare z as int;
+declare c as string;
+declare d as string;
+declare majortest as string;
+let majortest = "hello";
 
 
 
 
-x = 0;
-a = 5;
-b = 3;
-t = TRUE; 								 /*4. TRUE*/
-f = FALSE;								 /*5. FALSE*/
-n = (a > b);                             /*6. This should be TRUE*/
-k = (a < b); 							 /*7. This should be FALSE*/
-c = "c c c";
-d = "d d d";
+let x = 0;
+let a = 5;
+let b = 3;
+let t = TRUE; 								 /*4. TRUE*/
+let f = FALSE;								 /*5. FALSE*/
+let n = (a > b);                             /*6. This should be TRUE*/
+let k = (a < b); 							 /*7. This should be FALSE*/
+let c = "c c c";
+let d = "d d d";

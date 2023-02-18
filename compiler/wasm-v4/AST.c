@@ -82,7 +82,7 @@ char * getExprOp(struct AST * root) {
 	if (strncmp(root->nodeType, "int", 3) == 0
 		|| strncmp(root->nodeType, "float", 5) == 0
 		|| strncmp(root->nodeType, "string", 6) == 0
-		|| strncmp(root->nodeType, "boolean", 7) == 0) {
+		|| strncmp(root->nodeType, "flag", 7) == 0) {
 		char * op = "";
 
 		// Assign number/variable type to operation type variable
@@ -109,7 +109,7 @@ char * getExprOp(struct AST * root) {
 		// Return operation type
 		return op;
 	} else if (strncmp(root -> nodeType, "Comparsion", 10) == 0) {
-		return "boolean";
+		return "flag";
 	} else if (strncmp(root->LHS, "", 1) != 0) {
 		return getExprOp(root->left);
 	} else if (strncmp(root->RHS, "", 1) != 0) {
@@ -123,7 +123,7 @@ int evaluateIntExpr(struct AST * root) {
     if (root == NULL)
         return 0;
 	int val = 0;
-	if (isInt(root->nodeType)) {
+	if (isInt(root->nodeType) == 1) {
 		val = atoi(root->nodeType);
 	}
 
@@ -134,7 +134,7 @@ float evaluateFloatExpr(struct AST * root) {
     if (root == NULL)
         return 0.0;
 	float val = 0.0;
-	if (isFloat(root->nodeType)) {
+	if (isFloat(root->nodeType) == 1) {
 		val = atof(root->nodeType);
 	}
 
@@ -145,7 +145,7 @@ int containsNonVars(struct AST * root) {
 	if (root == NULL) {
 		return 0;
 	}
-	if (isNotVar(root->nodeType)) {
+	if (isNotVar(root->nodeType) == 1) {
 		return 1;
 	}
 

@@ -78,11 +78,10 @@ void initAssemblyFile() {
 void generateModule() {
     fprintf(WATcode, "(module\n");
     fprintf(WATcode, "\t;; WAT Setup Declarations\n");
-    fprintf(WATcode, "\t(import \"env\" \"jsprint\" (func $jsprint (param i32)))\n");
-    fprintf(WATcode, "\t(import \"env\" \"newline\" (func $newline))\n");
     fprintf(WATcode, "\t(import \"env\" \"writeconsoleInt\" (func $writeconsoleInt (param i32)))\n");
     fprintf(WATcode, "\t(import \"env\" \"writeconsoleFloat\" (func $writeconsoleFloat (param f32)))\n");
 	fprintf(WATcode, "\t(import \"env\" \"writeconsoleString\" (func $writeconsoleString (param i32)))\n");
+    fprintf(WATcode, "\t(import \"env\" \"newline\" (func $newline))\n");
     fprintf(WATcode, "\t(memory $0 100)\n");
     fprintf(WATcode, "\t(export \"pagememory\" (memory $0))\n");
     fprintf(WATcode, "\t(func $create_array (param $size i32) (result i32)\n");

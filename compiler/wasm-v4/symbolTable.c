@@ -209,8 +209,7 @@ struct Entry* getItem(char itemName[50], char scopeStack[50][50], int stackPoint
 					for(int j = stackPointer; j >= 0; j--) {
 						int str2 = strcmp(tempList -> scope, scopeStack[j]);
 						if(str2 == 0) {
-							//printf("Found: %s\n-----------------------", itemName);
-							return 1; // found the ID in the table
+							return &symTabItems[i]; // found the ID in the table
 						}
 					}
 				}
@@ -245,7 +244,7 @@ int getItemID(char itemName[50], char scopeStack[50][50], int stackPointer) {
 				int str1 = strcmp(tempList -> itemName, itemName);
 
 				// If these strings are the same, return true
-				if( str1 == 0){
+				if(str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
 						int str2 = strcmp(tempList -> scope, scopeStack[j]);
 						if (str2 == 0) {

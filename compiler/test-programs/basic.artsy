@@ -1,4 +1,4 @@
 // Artsy Program
 declare x as float;
-let x equal 10.0;
+let x = 10.0;
 print x;

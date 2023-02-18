@@ -54,20 +54,20 @@ void checkID(char* identifier, char* scopeStack[50], int stackPointer) {
 void CheckComparisonType(struct AST * leftExprTreeNode, struct AST * rightExprTreeNode, char scopeStack[50][50], int stackPointer) {
     char* leftType;
     char* rightType;
-    if(found(leftExprTreeNode, scopeStack, stackPointer)) {
-        leftType = getItemType(leftExprTreeNode, scopeStack, stackPointer);
+    if(found(leftExprTreeNode->nodeType, scopeStack, stackPointer)) {
+        leftType = getItemType(leftExprTreeNode->nodeType, scopeStack, stackPointer);
     } else {
-        leftType = leftExprTreeNode -> nodeType;
+        leftType = leftExprTreeNode->nodeType;
     }
 
-    if(found(rightExprTreeNode, scopeStack, stackPointer)) {
-        rightType = getItemType(rightExprTreeNode, scopeStack, stackPointer);
+    if(found(rightExprTreeNode->nodeType, scopeStack, stackPointer)) {
+        rightType = getItemType(rightExprTreeNode->nodeType, scopeStack, stackPointer);
     } else {
-        rightType = rightExprTreeNode -> nodeType;
+        rightType = rightExprTreeNode->nodeType;
     }
 
     if(strcmp(leftType, rightType) != 0) {
-        printf("SEMANTIC ERROR: the type of leftExprTreeNode: %s does not match the type of the rightExprTreeNode: %s. \n", leftExprTreeNode, rightExprTreeNode);
+        printf("SEMANTIC ERROR: the type of leftExprTreeNode: %s does not match the type of the rightExprTreeNode: %s. \n", leftExprTreeNode->nodeType, rightExprTreeNode->nodeType);
         printf("\nleftType: %s\n", leftType);
         printf("\nrightType: %s\n", rightType);
         exit(1);

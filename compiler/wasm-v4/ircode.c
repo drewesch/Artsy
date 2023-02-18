@@ -23,7 +23,7 @@ int lastIndex = 0;
 int lastArrayTempIndex = 0;
 char outputId[50];
 char buffer[50];
-char arrElVar[50];
+char * arrElVar;
 char c[50][50];
 int cindex = 0;
 
@@ -286,7 +286,7 @@ void emitAssignment(char * id1, char * id2){
         }
 
         // Indicate end of full string with length
-        fprintf(IRcode, "endstring %s %d\n", id1, strlen(id2)-2);
+        fprintf(IRcode, "endstring %s %ld\n", id1, strlen(id2)-2);
     } else {
         fprintf(IRcode, "%s = %s\n", id1, id2);
     }
@@ -364,7 +364,7 @@ void emitAssignmentOptimized(char * id1, char * id2){
             fprintf(IRcodeOptimized, "%s[%d] = \"%c\"\n", id1, i-1, id2[i]);
         }
         // Indicate end of full string with length
-        fprintf(IRcodeOptimized, "endstring %s %d\n", id1, strlen(id2)-2);
+        fprintf(IRcodeOptimized, "endstring %s %ld\n", id1, strlen(id2)-2);
     } else {
         fprintf(IRcodeOptimized, "%s = %s\n", id1, id2);
     }
@@ -773,7 +773,7 @@ char* ASTTraversal(struct AST* root) {
         if(strcmp(root -> nodeType, "int") == 0
             || strcmp(root -> nodeType, "float") == 0
             || strcmp(root -> nodeType, "string") == 0
-            || strcmp(root -> nodeType, "boolean") == 0) {
+            || strcmp(root -> nodeType, "flag") == 0) {
                 return root -> RHS;
         }
         if(strcmp(root->nodeType, "type") == 0) {
@@ -860,7 +860,7 @@ char* ASTTraversal(struct AST* root) {
             cindex = 0;
             return buffer;
         }
-        if(strcmp(root -> nodeType, "return") == 0) {
+        if(strcmp(root -> nodeType, "report") == 0) {
             strcpy(rightVar, ASTTraversal(root-> right));
             emitReturn(rightVar);
         }
@@ -951,9 +951,9 @@ char* ASTTraversal(struct AST* root) {
                 return emitBinaryOperation(root->nodeType, leftVar, rightVar);
         }
         if(strcmp(root -> LHS, "array") == 0) {
-            memcpy(arrElVar, 0, 50);
-            strcat(arrElVar, root -> nodeType);
-            strcat(arrElVar, root-> RHS);
+            arrElVar = malloc(50*sizeof(char));
+            strcat(arrElVar, root->nodeType);
+            strcat(arrElVar, root->RHS);
             return arrElVar;
         }
         return "";
@@ -995,7 +995,7 @@ char* ASTTraversalOptimized(struct AST* root) {
         if(strcmp(root -> nodeType, "int") == 0
             || strcmp(root -> nodeType, "float") == 0
             || strcmp(root -> nodeType, "string") == 0
-            || strcmp(root -> nodeType, "boolean") == 0) {
+            || strcmp(root -> nodeType, "flag") == 0) {
                 return root -> RHS;
         }
         if(strcmp(root->nodeType, "type") == 0) {
@@ -1038,13 +1038,13 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitTypeArrayDeclarationOptimized(root -> LHS, root ->RHS, "-1");
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if(strcmp(root-> right, "int") == 0
-            || strcmp(root-> right, "float") == 0) {
-                emitWriteNum(root -> right -> RHS);
-            } else if(strcmp(root-> right, "string") == 0) {
-                emitWriteString(root -> right -> RHS);
+            if(strcmp(root->RHS, "int") == 0
+            || strcmp(root->RHS, "float") == 0) {
+                emitWriteNum(root->right->RHS);
+            } else if(strcmp(root->RHS, "string") == 0) {
+                emitWriteString(root->right->RHS);
             } else {
-                if (isUsedVar(root -> RHS)) {
+                if (isUsedVar(root->RHS)) {
                     emitWriteIdOptimized(root -> RHS);
                 }
             }
@@ -1100,7 +1100,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             cindex = 0;
             return buffer;
         }
-        if(strcmp(root -> nodeType, "return") == 0) {
+        if(strcmp(root -> nodeType, "report") == 0) {
             strcpy(rightVar, ASTTraversalOptimized(root-> right));
             emitReturnOptimized(rightVar);
         }
