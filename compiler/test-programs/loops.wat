@@ -1,11 +1,10 @@
 (module
 	;; WAT Setup Declarations
-	(import "env" "jsprint" (func $jsprint (param i32)))
-	(import "env" "newline" (func $newline))
 	(import "env" "writeconsoleInt" (func $writeconsoleInt (param i32)))
 	(import "env" "writeconsoleFloat" (func $writeconsoleFloat (param f32)))
 	(import "env" "writeconsoleString" (func $writeconsoleString (param i32)))
-	(memory $0 10)
+	(import "env" "newline" (func $newline))
+    (memory $0 10)
 	(export "pagememory" (memory $0))
     (func $create_array (param $size i32) (result i32)
         (local $ptr i32)
