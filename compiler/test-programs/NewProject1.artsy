@@ -43,7 +43,7 @@ let d = "d d d";
 
 
 
-while (x < 4){ 							/*5. Make x a string to test*/
+/*while (x < 4){ */							/*5. Make x a string to test*/
 	if (x < 1){
 		let z = 5;
 		print z;
@@ -72,7 +72,7 @@ while (x < 4){ 							/*5. Make x a string to test*/
 			}
 		}
 	}
-}
+/*}*/
 
 
 let z = 9;
