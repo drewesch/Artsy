@@ -1,3 +1,4 @@
+
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +27,10 @@ char buffer[50];
 char * arrElVar;
 char c[50][50];
 int cindex = 0;
+int currIfIndices[50];
+int currIfPointer = 0;
+int currWhileIndices[50];
+int currWhilePointer = 0;
 
 // Bool for checking if type is a parameter
 int isParam = 0;
@@ -654,6 +659,42 @@ void emitExitOptimized() {
     fprintf(IRcodeOptimized, "exit\n");
 }
 
+char * emitIfConditionStatement() {
+    // Open IRfile if it is not open
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+
+    fprintf(IRcode, "if\n");
+}
+
+char * emitIfGoToStatement() {
+    fprintf(IRcode, "goto L%dS%d elsegoto L%dS%d", currIfPointer, currIfIndices[currIfPointer], currIfPointer, currIfIndices[currIfPointer]+1);
+    fprintf(IRcode, "\nL%dS%d: ", currIfPointer, currIfIndices[currIfPointer]);
+}
+
+char * emitWhileConditionStatement() {
+    if (startIR == 0) {
+        initIRcodeFile();
+        startIR = 1;
+    }
+    fprintf(IRcode, "\nL%dL%d:\n", currWhilePointer, currWhileIndices[currWhilePointer]);
+    fprintf(IRcode, "if\n");
+}
+
+char * emitWhileCondition2Statement() {
+    fprintf(IRcode, "whileelsegoto L%dL%d\n", currWhilePointer, currWhileIndices[currWhilePointer]+1);
+}
+
+char * emitWhileEndStatement() {
+    fprintf(IRcode, "\ngoto L%dL%d\nL%dL%d", currWhilePointer, currWhileIndices[currWhilePointer], currWhilePointer, currWhileIndices[currWhilePointer]+1);
+}
+
+char * emitIfEndStatement() {
+    fprintf(IRcode, "\nL%dS%d: ", currIfPointer, currIfIndices[currIfPointer]);
+}
+
 char * emitFunctionCall(char *id) {
     // Open IRfile if it is not open
     if (startIR == 0) {
@@ -776,6 +817,10 @@ char* ASTTraversal(struct AST* root) {
             || strcmp(root -> nodeType, "flag") == 0) {
                 return root -> RHS;
         }
+        // Handle Logical keyword
+        // if(strcmp(root -> nodeType, "Logical") == 0) {
+
+        // }
         if(strcmp(root->nodeType, "type") == 0) {
             if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
                 emitTypeArrayDeclaration(root -> LHS, root -> RHS, root -> right -> right -> RHS);
@@ -795,23 +840,47 @@ char* ASTTraversal(struct AST* root) {
             || strcmp(root->nodeType, "vardec") == 0
             || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
             || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
-            || strcmp(root->nodeType, "statements") == 0) { 
-            ASTTraversal(root -> left);
-            ASTTraversal(root -> right);
-        }
-        // TO-DO: Ircode Handling
-        if(strcmp(root->nodeType, "WhileL") == 0 
-            || strcmp(root->nodeType, "IfStmt") == 0
+            || strcmp(root->nodeType, "statements") == 0
             || strcmp(root->nodeType, "IfStmtTail continue") == 0
-            || strcmp(root->nodeType, "If") == 0
-            || strcmp(root->nodeType, "Elif") == 0) {
+            || strcmp(root->nodeType, "IfStmt") == 0) { 
             ASTTraversal(root -> left);
             ASTTraversal(root -> right);
         }
-        // TO-DO: Ircode Handling
-        if(strcmp(root->nodeType, "IfStmtTail else end") == 0
-            || strcmp(root->nodeType, "Else") == 0) {
+
+        if(strcmp(root->nodeType, "WhileL") == 0) {
+
+            emitWhileConditionStatement();
+            ASTTraversal(root->left);
+            emitWhileCondition2Statement();
+            ASTTraversal(root->right);
+            emitWhileEndStatement();
+            
+        }
+
+        if(strcmp(root->nodeType, "If") == 0
+            || strcmp(root->nodeType, "Elif") == 0) {
+            emitIfConditionStatement();
+            ASTTraversal(root->left);
+            emitIfGoToStatement();
+            currIfIndices[currIfPointer]++;
+            
+            currIfPointer ++;
+            ASTTraversal(root->right);
+            currIfPointer --;
+            emitIfEndStatement();
+        }
+
+        if(strcmp(root->nodeType, "IfStmtTail else end") == 0) {
+            if(strcmp(root->right, "") == 0) {
+                return "";
+            }
             ASTTraversal(root -> right);
+        }
+        if(strcmp(root->nodeType, "Else") == 0) {
+            currIfPointer ++;
+            ASTTraversal(root -> right);
+            currIfPointer --;
+
         }
         if(strcmp(root->nodeType, "write") == 0) {
             if(strcmp(root-> right, "int") == 0
@@ -950,6 +1019,7 @@ char* ASTTraversal(struct AST* root) {
                 }
                 return emitBinaryOperation(root->nodeType, leftVar, rightVar);
         }
+
         if(strcmp(root -> LHS, "array") == 0) {
             arrElVar = malloc(50*sizeof(char));
             strcat(arrElVar, root->nodeType);
@@ -960,10 +1030,18 @@ char* ASTTraversal(struct AST* root) {
     }
 }
 
+void initIRCodeEnvironment() {
+    for(int i =  0; i < 50; i++) {
+        currIfIndices[i] = 0;
+        currWhileIndices[i] = 0;
+    }
+}
+
 // Main function for IRcode generation
 // After IRcode is generated, close the file
 void generateIRCode(){
     printf("\n\n----Generate IRCode----\n\n");
+    initIRCodeEnvironment();
     ASTTraversal(ast);
     fclose(IRcode);
 }
@@ -1218,6 +1296,7 @@ void generateIRCodeOptimized() {
     lastIndex = 0;
 
     printf("\n\n----Perform Code Optimizations----\n\n");
+    initIRCodeEnvironment();
     ASTTraversalOptimized(ast);
     fclose(IRcodeOptimized);
     fflush(stdout);

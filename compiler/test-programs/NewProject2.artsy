@@ -1,0 +1,80 @@
+
+declare t as flag;
+declare f as flag;
+declare n as flag;
+declare k as flag;
+ 
+
+declare a as int;
+declare b as int;
+declare x as int;
+declare y as int;
+declare z as int;
+declare c as string;
+declare d as string;
+
+
+
+let x = 0;
+let a = 5;
+let b = 3;
+let t = TRUE; 								 /*1. TRUE*/
+let f = FALSE;								 /*2. FALSE*/
+let n = (a > b);                             /*3. This should be TRUE*/
+let k = (a < b); 							 /*4. This should be FALSE*/
+let c = "c c c";
+let d = "d d d";
+
+while (x < 4){							/*5. Make x a string to test*/
+	if (x < 1){
+		let z = 5;
+		print z;
+		let x = x + 1;
+	}
+
+	elif (x == 1){        		/*6. Test Sematic*/ 
+		let z = 6;
+		print z;
+		let x = x + 1;
+	}
+
+	elif (x == 2){				/*7. Test Sematic*/ 
+		let z = 7;
+		print z;
+		let x = x + 1;
+	}
+	else{
+		let z = 8;
+		print z;
+		let x = x + 1;
+		if (n == TRUE ){				/*8. Test Sematic*/ 
+			print c; 
+			if (k == FALSE){			/*9. Test Sematic*/ 
+				print d; 
+			}
+		}
+	}
+}
+
+
+let z = 9;
+print z; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

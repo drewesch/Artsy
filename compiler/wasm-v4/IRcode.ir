@@ -33,32 +33,58 @@ d[2] = "d"
 d[3] = " "
 d[4] = "d"
 endstring d 5
+
+L0L0:
+if
 subop int
-T2 = x < 1
-z = 5
-output z
-subop int
-T3 = x + 1
-x = T3
-z = 6
+T2 = x < 4
+whileelsegoto L0L1
+if
+T3 = x < 1
+goto L0S0 elsegoto L0S1
+L0S0: z = 5
 output z
 subop int
 T4 = x + 1
 x = T4
-z = 7
-output z
+
+L0S1: if
 subop int
-T5 = x + 1
-x = T5
-z = 8
+T5 = x == 1
+goto L0S1 elsegoto L0S2
+L0S1: z = 6
 output z
 subop int
 T6 = x + 1
 x = T6
+
+L0S2: if
+subop int
+T7 = x == 2
+goto L0S2 elsegoto L0S3
+L0S2: z = 7
+output z
+subop int
+T8 = x + 1
+x = T8
+
+L0S3: z = 8
+output z
+subop int
+T9 = x + 1
+x = T9
+if
 subop flag
-T7 = n == TRUE
-output c
-T8 = k == FALSE
-output d
-z = 9
+T10 = n == TRUE
+goto L1S0 elsegoto L1S1
+L1S0: output c
+if
+T11 = k == FALSE
+goto L2S0 elsegoto L2S1
+L2S0: output d
+
+L2S1: 
+L1S1: 
+goto L0L0
+L0L1z = 9
 output z
