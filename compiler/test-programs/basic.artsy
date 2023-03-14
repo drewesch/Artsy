@@ -1,4 +1,4 @@
-// Artsy Program
+# Artsy Program
 declare x as float;
-let x = 10.0;
-print x;
+let x = 12.1;
+print "test";

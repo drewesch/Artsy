@@ -17,6 +17,8 @@ int isFloat(char * phrase);
 char * getPrimaryType(char * phrase);
 void checkIntDivisionError(int numerator, int denominator);
 void checkFloatDivisionError(float numerator, float denominator);
+void checkEscapeChars(char * phrase);
+int countEscapeChars(char * phrase);
 
 #endif
 

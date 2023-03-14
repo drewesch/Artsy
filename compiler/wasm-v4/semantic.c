@@ -44,7 +44,7 @@ char* CheckPrimaryType(char * variableName, char scopeStack[50][50], int stackPo
     return getItemType(variableName, scopeStack, stackPointer);
 }
 
-void checkID(char* identifier, char* scopeStack[50], int stackPointer) {
+void checkID(char* identifier, char scopeStack[50][50], int stackPointer) {
     if (found(identifier, scopeStack, stackPointer) == 0) {
         printf("SEMANTIC ERROR: Variable %s does not exist.\n", identifier);
         exit(1);
@@ -245,7 +245,64 @@ void checkFloatDivisionError(float numerator, float denominator) {
     }
 }
 
+void checkEscapeChars(char * phrase) {
+    int len = strlen(phrase);
 
+    // Detect escape characters by looping through each char
+    for (int i = 0; i < len; i++) {
+        // Detect if the escape character is referenced
+        if (phrase[i] == '\\') {
+            // If the next character is the null character, throw a semantic error
+            // Incomplete escape character
+            if (phrase[i+1] == '\0') {
+                printf("\nSemantic Error: Incomplete escape character reference.\n");
+                exit(1);
+            }
+
+            // Throw a semantic error if the next char does not make this a valid escape char combination
+            if (phrase[i+1] != '\"' && phrase[i+1] != '\'' && phrase[i+1] != '\\' && phrase[i+1] != 'n' && phrase[i+1] != 't') {
+                printf("\nSemantic Error: Invalid escape character combination (\\%c).\n", phrase[i+1]);
+                exit(1);
+            }
+
+            // Skip over index for loop
+            i++;
+        }
+    }
+}
+
+int countEscapeChars(char * phrase) {
+    int len = strlen(phrase);
+    int numEscapeChars = 0;
+
+    // Count the escape characters by looping through each char
+    for (int i = 0; i < len; i++) {
+        // Detect if the escape character is referenced
+        if (phrase[i] == '\\') {
+            // If the next character is the null character, throw a semantic error
+            // Incomplete escape character
+            if (phrase[i+1] == '\0') {
+                printf("\nSemantic Error: Incomplete escape character reference.\n");
+                exit(1);
+            }
+
+            // Throw a semantic error if the next char does not make this a valid escape char combination
+            if (phrase[i+1] != '\"' && phrase[i+1] != '\'' && phrase[i+1] != '\\' && phrase[i+1] != 'n' && phrase[i+1] != 't') {
+                printf("\nSemantic Error: Invalid escape character combination (\\%c).\n", phrase[i+1]);
+                exit(1);
+            }
+
+            // If no semantic error occurs, add to the count
+            numEscapeChars++;
+
+            // Skip over index for loop
+            i++;
+        }
+    }
+
+    // Return final total
+    return numEscapeChars;
+}
 
 
 

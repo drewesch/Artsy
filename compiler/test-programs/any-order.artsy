@@ -1,0 +1,10 @@
+# Print Program
+addline;
+
+declare x as int;
+let x = 10;
+print x;
+addline;
+
+print -923.2;
+addline;

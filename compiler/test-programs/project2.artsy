@@ -18,7 +18,7 @@ action int displayMessage(){
 		declare b as int;
 		let b = 2;
 	}
-	/* message[100] = "Error"; 	*/														
+	/# message[100] = "Error"; 	#/														
 	
 	report 0;
 }
@@ -62,11 +62,11 @@ print 5;
 
 
 
-/*1. semantic check for loop comparsion*/
-/*2. semantic check for if comparsion*/
-/*3. Add AST nodes in the parser for if statements and loops and Add symbol table support for if statements and loops (adding scopes declarations) */
-/*4. check that all ast and symbol are up to date*/ 
-/*5. make sure all        root -> nodeType: =           are filled */ 
+/#1. semantic check for loop comparsion#/
+/#2. semantic check for if comparsion#/
+/#3. Add AST nodes in the parser for if statements and loops and Add symbol table support for if statements and loops (adding scopes declarations) #/
+/#4. check that all ast and symbol are up to date#/ 
+/#5. make sure all        root -> nodeType: =           are filled #/ 
 
 declare t as flag;
 declare f as flag;
@@ -82,8 +82,8 @@ declare z as int;
 declare c as string;
 declare d as string;
 
-// declare majortest as string;
-// let majortest = "hello";
+# declare majortest as string;
+# let majortest = "hello";
 
 declare majortest as int;
 let majortest = 1;
@@ -100,20 +100,20 @@ let k = (a < b);
 let c = "c c c";
 let d = "d d d";
 
-while (majortest < 4){ 														/*1 should be error*/				
+while (majortest < 4){ 														/#1 should be error#/				
 	declare abc as int;
-	if (majortest < 1){														/*2 should be error*/
+	if (majortest < 1){														/#2 should be error#/
 		declare h as int;
 		let z = 5;
 		print z;
 		let x = x + 1;
-		/*int ifone;*/  													/*3*/
+		/#int ifone;#/  													/#3#/
 	}
 	elif (majortest == 1 || x < 0){        		
 		let z = 6;
 		print z;
 		let x = x + 1;
-		/*int iftwo; */														/*3*/
+		/#int iftwo; #/														/#3#/
 		declare abcde as int;
 	}
 	elif (x == majortest && x > 1){				 
@@ -138,8 +138,8 @@ while (majortest < 4){ 														/*1 should be error*/
 let z = 9;
 print z; 
 
-/*4. check that all ast and symbol are up to date*/ 
-/*5. make sure all        root -> nodeType: =           are filled */ 
+/#4. check that all ast and symbol are up to date#/ 
+/#5. make sure all        root -> nodeType: =           are filled #/ 
 
 declare check1 as int;
 declare check2 as int;

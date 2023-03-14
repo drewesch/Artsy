@@ -1,16 +1,16 @@
 
-/* 1. accept comments            */
-/* 2. actions= action int hi(int x, int y){x = 2; y = 3; report x;}
-/* 3. order of operation */
-/* 4. multiply float and int */ 
-/* 6. adding to an array of strings. (no char, and like python) */ 
-/* 7. everytime displayMessage, it should show message*/ 
-/* 8. addln is line breaks*/ 
+/# 1. accept comments            #/
+/# 2. actions= action int hi(int x, int y){x = 2; y = 3; report x;}
+/# 3. order of operation #/
+/# 4. multiply float and int #/ 
+/# 6. adding to an array of strings. (no char, and like python) #/ 
+/# 7. everytime displayMessage, it should show message#/ 
+/# 8. addln is line breaks#/ 
 
 
 declare aNumber as int;
 declare secondNumber as float;
-declare someLetter as string;  /* unused variable */
+declare someLetter as string;  /# unused variable #/
 declare message as string[50];
 declare justAverage as float;
 
@@ -21,10 +21,10 @@ action float average(float a, float b, float c){
 }
 
 action float unreachableaction(float x, float y){
-   /* 
+   	/# 
 	This action does nothing and should
 	Be removed from IR code in the optimization step
-   */
+   	#/
 
    declare result as float;
    let result = x*y + x*y;
@@ -54,7 +54,7 @@ action int displayMessage(){
 
 action float ambitiousAction(float a, float b, float c){
 
-   /* great optimization opportunity */
+   /# great optimization opportunity #/
    declare result as float;
  
    let result = (average(a, b, c) + average(a, b, c))/2.0;

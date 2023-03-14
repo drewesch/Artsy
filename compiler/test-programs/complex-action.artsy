@@ -1,7 +1,7 @@
-// Complex Action (Function) Program in Artsy
+# Complex Action (Function) Program in Artsy
 declare aNumber as int;
 declare secondNumber as float;
-declare someLetter as string; // unsupported type
+declare someLetter as string; # unsupported type
 declare justAverage as float;
 declare test as float;
 
@@ -12,10 +12,10 @@ action float average(float a, float b, float c){
 }
 
 action int unreachable(int x, int y){
-   /*
+   /#
 	This action (or function) does nothing and should
 	Be removed from IR code in the optimization step
-   */
+   #/
 
    declare result as int;
    let result = x * y + x * y;
@@ -29,7 +29,7 @@ action int displayMessage(){
 
 action float ambitiousAction (float a, float b, float c){
 
-   /* great optimization opportunity */
+   /# great optimization opportunity #/
 
    declare result as float;
  

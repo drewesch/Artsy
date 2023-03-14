@@ -1,7 +1,7 @@
-// Simple implementation of void action
+# Simple implementation of void action
 declare launchMessage as string;
 
-// Print two messages using a void action
+# Print two messages using a void action
 action testMessage() {
     declare test as string;
     let test = "Test Void Function: ";
@@ -11,14 +11,14 @@ action testMessage() {
     addline;
 }
 
-// Create launchMessage
+# Create launchMessage
 let launchMessage = "Launching in 3, 2, 1, lift off!";
 print launchMessage;
 addline;
 
-// Test void action
+# Test void action
 testMessage();
 
-// Confirm exit
+# Confirm exit
 let launchMessage = "Ending Program";
 print launchMessage;

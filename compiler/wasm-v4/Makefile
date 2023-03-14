@@ -11,8 +11,6 @@ all: clean lex.yy.c parser.tab.c parser.tab.h symbolTable.h symbolTable.c AST.c 
 	@rm -f MAINcode.wat LOCALcode.wat VARScode.wat
 	@wat2wasm WATcode.wat -o WASMcode.wasm
 	@echo
-	@echo Artsy file was successfully compiled!
-	@echo
 
 wasm:
 	@wat2wasm $(FILE_PATH) -o WASMcode.wasm
@@ -31,9 +29,6 @@ artsy: lex.yy.c parser.tab.c parser.tab.h symbolTable.h symbolTable.c AST.c AST.
 	@./driver $(FILE_PATH)
 	@rm -f MAINcode.wat LOCALcode.wat VARScode.wat
 	@wat2wasm WATcode.wat -o WASMcode.wasm
-	@echo
-	@echo Artsy file was successfully compiled!
-	@echo
 
 clean:
 	@rm -f parser lexer parser.tab.c lex.yy.c parser.tab.h parser.output

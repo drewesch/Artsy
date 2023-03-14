@@ -18,8 +18,6 @@ FILE * IRcode;
 FILE * IRcodeOptimized;
 
 // Constant declarations for generating variables and statements in the IRcode
-int startIR = 0;
-int startIROptimized = 0;
 int lastIndex = 0;
 int lastArrayTempIndex = 0;
 char outputId[50];
@@ -95,10 +93,18 @@ char* getVarConstant(char var[50]){
 	return var;
 }
 
+// Function to add a variable to the unused variable table
+void addUnusedVar(char var[50]) {
+    strncpy(uvTable[uvIndex].var, var, 50);
+    uvTable[uvIndex].boolVal = 0;
+    uvIndex++;
+}
+
 // Function to update variable declarations if the variable is unused - part of the optimization process
 void updateUnusedVar(char var[50]) {
+    // printf("uvindex = %d\n", uvIndex);
 	for(int i=0; i<uvIndex; i++){
-        if (strcmp(uvTable[i].var, var) == 0){
+        if (strcmp(uvTable[i].var, var) == 0) {
             uvTable[i].boolVal = 1;
             return;
 		}
@@ -108,25 +114,37 @@ void updateUnusedVar(char var[50]) {
 // Checks the symbol table
 // Returns true or false depending if the variable is used or not (for code optimization)
 int isUsedVar(char var[50]) {
-    for(int i=0; i<uvIndex; i++){
-        if (strcmp(uvTable[i].var, var) == 0){
+    for (int i = 0; i < uvIndex; i++){
+        if (strcmp(uvTable[i].var, var) == 0) {
+            // printf("Found var in isUsed: %s\n", var);
             return uvTable[i].boolVal;
 		}
 	}
     return 0;
 }
 
+char * escapeCharType(char c) {
+    if (c == '\"') {
+        return "ESC_DOUBLE";  
+    }
+    if (c == '\'') {
+        return "ESC_SINGLE";  
+    }
+    if (c == '\\') {
+        return "ESC_BACK";  
+    }
+    if (c == 'n') {
+        return "ESC_NEWLINE";  
+    }
+    if (c == 't') {
+        return "ESC_TAB";  
+    }
+    return "NONE";
+}
+
 // For unoptimized IRcode
 // Generates the IRcode for assignments
 char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
-    // Opens IRcode file if it is not open already
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
-    // printf("id1: %s\n", id1);
-
     // Assign temporary variables for tracking base array variables
     char * token1 = malloc(strlen(id1)*sizeof(char));
     char * token2 = malloc(strlen(id2)*sizeof(char));
@@ -184,13 +202,6 @@ int isnumeric(char var[50]) {
 
 // Optimized version of binary operations for IRcodeOptimized.ir
 char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2){
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-
-    // printf("id1: %s\n", id1);
-
     memset(outputId, 0, 50);
 
     // Assign temporary variables for tracking base array variables
@@ -268,11 +279,6 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
 
 // Unoptimized IRcode operation for variable assignment
 void emitAssignment(char * id1, char * id2){
-    // Open IRfile if it is not open
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
 
     // Print the assignment statement using the two basic IDs
     // If the statement is a combined string, separate it as a set of array index assignments
@@ -280,18 +286,28 @@ void emitAssignment(char * id1, char * id2){
         // Update the symbol table with the new array length
         char ** scopeStack = currIRScope;
 
+        // Get the number of escape characters
+        // Used in calculating the new array length
+        int numEscapeCharacters = countEscapeChars(id2);
+
         // If new array length is bigger, update it to that
-        if (strlen(id2)-2 > getArrayLength(id1, scopeStack, 0)) {
+        if (strlen(id2)-2-numEscapeCharacters > getArrayLength(id1, scopeStack, 0)) {
             updateItemArrayLength(id1, scopeStack, 0, strlen(id2)-2);
         }
 
         // Print each index assignment statement
-        for (int i = 1; i < strlen(id2)-1; i++) {
-            fprintf(IRcode, "%s[%d] = \"%c\"\n", id1, i-1, id2[i]);
+        int loopEscapeChars = 0; // Tracks total escape chars encountered
+        for (int i = 1; i < strlen(id2)-1-numEscapeCharacters; i++) {
+            if (id2[i+loopEscapeChars] == '\\') {
+                fprintf(IRcode, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+1+loopEscapeChars]));
+                loopEscapeChars++;
+            } else {
+                fprintf(IRcode, "%s[%d] = \"%c\"\n", id1, i-1, id2[i+loopEscapeChars]);
+            }
         }
 
         // Indicate end of full string with length
-        fprintf(IRcode, "endstring %s %ld\n", id1, strlen(id2)-2);
+        fprintf(IRcode, "endstring %s %ld\n", id1, strlen(id2)-2-numEscapeCharacters);
     } else {
         fprintf(IRcode, "%s = %s\n", id1, id2);
     }
@@ -302,24 +318,12 @@ void emitAssignment(char * id1, char * id2){
 
 // Unoptimized IRcode operation for variable assignment (for array)
 void emitAssignmentForElement(char *id1, char * elementNum, char * id2) {
-    // Open IRfile if it is not open
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
     // Print the assignment statement using the two basic IDs with an element number
     fprintf(IRcode, "%s[%s] = %s\n", id1, elementNum, id2);
 }
 
 void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2) {
     int flag = 1;
-    
-    // Open IRfile if it is not open
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
 
     if(isnumeric(id2)) {
         for(int i=0; i<cvIndex; i++){
@@ -343,10 +347,6 @@ void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2)
 // Optimized assignment operation function for IRcodeOptimized.ir
 void emitAssignmentOptimized(char * id1, char * id2){
     int flag = 1;
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
     if(isnumeric(id2)) {
         for(int i=0; i<cvIndex; i++){
             if (strcmp(cvTable[i].var, id1) == 0){
@@ -365,11 +365,20 @@ void emitAssignmentOptimized(char * id1, char * id2){
     // If the statement is a combined string,
     // separate it out into a set of array index assignments
     if (strncmp(getPrimaryType(id2), "string", 6) == 0) {
-        for (int i = 1; i < strlen(id2)-1; i++) {
-            fprintf(IRcodeOptimized, "%s[%d] = \"%c\"\n", id1, i-1, id2[i]);
+        // Get the number of escape characters
+        // Used in calculating the new array length
+        int numEscapeCharacters = countEscapeChars(id2);
+        int loopEscapeChars = 0; // Tracks total escape chars encountered
+        for (int i = 1; i < strlen(id2)-1-numEscapeCharacters; i++) {
+            if (id2[i+loopEscapeChars] == '\\') {
+                fprintf(IRcodeOptimized, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+1+loopEscapeChars]));
+                loopEscapeChars++;
+            } else {
+                fprintf(IRcodeOptimized, "%s[%d] = \"%c\"\n", id1, i-1, id2[i+loopEscapeChars]);
+            }
         }
         // Indicate end of full string with length
-        fprintf(IRcodeOptimized, "endstring %s %ld\n", id1, strlen(id2)-2);
+        fprintf(IRcodeOptimized, "endstring %s %ld\n", id1, strlen(id2)-2-numEscapeCharacters);
     } else {
         fprintf(IRcodeOptimized, "%s = %s\n", id1, id2);
     }
@@ -379,64 +388,33 @@ void emitAssignmentOptimized(char * id1, char * id2){
 
 }
 
-void emitWriteNum(char * value) {
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
+void emitWritePrimary(char * value) {
     fprintf(IRcode, "output %s\n", value);
 }
 
-void emitWriteString(char * value) {
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-    fprintf(IRcode, "output \"%s\"\n", value);
+void emitWritePrimaryOptimized(char * value) {
+    fprintf(IRcodeOptimized, "output %s\n", value);
 }
 
 // Unoptimized IRcode operation for the write keyword
 void emitWriteId(char * id){
-    // Open IRfile if it is not open
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
     // Update the code if it is unused
+    // printf("update write id: %s\n", updateArrayId(id));
     updateUnusedVar(updateArrayId(id));
 
     fprintf(IRcode, "output %s\n", id);
 }
 
 void emitWriteLn(){
-    // Open IRfile if it is not open
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
     fprintf(IRcode, "addline\n");
 }
 
 void emitWriteLnOptimized(){
-    // Open IRfile if it is not open
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-
-    fprintf(IRcode, "addline\n");
+    fprintf(IRcodeOptimized, "addline\n");
 }
 
 // Optimized IRCode operation for writing 
 void emitWriteIdOptimized(char * id){
-    // Opens IRcodeOptimized file is it is not open
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-
     // Print output keyword with the associated ID
     // Unused variables are already removed prior to this step, so it is redundant to include it here
     fprintf(IRcodeOptimized, "output %s\n", id);
@@ -450,22 +428,14 @@ void emitTypeDeclaration(char * type, char * id){
     // Char variable to determine if the variable is a type or a parameter
     char * varType = "type";
     
-    // Opens the IRcode file if it is not open already
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
     // Check the whole UV table
-    // If the type is unused, do not generate IRcode
+    // If the type is already in the table, set the flag to 0
     for(int i=0; i<uvIndex; i++){
         if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
     }
-    // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
+    // If the flag is still true, add the new id to the unused variable table
     if(flag) {
-        strcpy(uvTable[uvIndex].var, id);
-        uvTable[uvIndex].boolVal = 0;
-        uvIndex ++;
+        addUnusedVar(id);
     }
 
     if(isParam) {
@@ -494,36 +464,24 @@ void emitTypeArrayDeclaration(char * type, char * id, char * size){
     if(isParam) {
         varType = "param";
     }
-    
-    // Opens the IRcode file if it is not open already
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
 
     // Check the whole UV table
-    // If the type is unused, do not generate IRcode
+    // If the type is already in the table, set the flag to 0
     for(int i=0; i<uvIndex; i++){
         if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
     }
 
-    // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
-    if(flag) {
-        strcpy(uvTable[uvIndex].var, id);
-        uvTable[uvIndex].boolVal = 0;
-        uvIndex++;
-        fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
+    // If the flag is still true, add the new id to the unused variable table
+    // Also, print the 
+    if (flag) {
+        addUnusedVar(id);
     }
+
+    fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
 }
 
 // Emit the type declaration for optimized IRcode file
 void emitTypeDeclarationOptimized(char * type, char * id){
-    // Open the IRcodeOptimized.ir file if it is not open already
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-
     // Char variable to determine if the variable is a type or a parameter
     char * varType = "type";
 
@@ -533,7 +491,6 @@ void emitTypeDeclarationOptimized(char * type, char * id){
 
     // Already includes optimizations prior to this step, so doing optimization beforehand is redundant
     // Print variable declaration IRcode to file
-        // Print variable declaration IRcode to file
     // If the type is a string, print a statement with a default size limit
     if (strncmp(type, "string", 6) == 0) {
         char * size = "100";
@@ -543,20 +500,12 @@ void emitTypeDeclarationOptimized(char * type, char * id){
         fprintf(IRcodeOptimized, "%s %s %s\n", varType, type, id);
     }
 
-
-    // fprintf(IRcodeOptimized, "%s %s %s\n", varType, type, id);
 }
 
 // Outputs the variable and type for variable declaration (unoptimized) (for array)
 void emitTypeArrayDeclarationOptimized(char * type, char * id, char * size){
     // Flag variable for unused code optimization testing
     int flag = 1;
-    
-    // Opens the IRcode file if it is not open already
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
 
     // Char variable to determine if the variable is a type or a parameter
     char * varType = "type";
@@ -572,23 +521,16 @@ void emitTypeArrayDeclarationOptimized(char * type, char * id, char * size){
 
 void emitEntry(char * id) {
     int flag = 1;
-    
-    // Open IRfile if it is not open
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
 
     // Check the whole UV table
-    // If the type is unused, do not generate IRcode
+    // If the type is already in the table, set the flag to 0
     for(int i=0; i<uvIndex; i++){
         if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
     }
-    // If the flag is still true, continue with generating IRcode, update the table, and increase the uvIndex
+
+    // If the flag is still true, add the new id to the unused variable table
     if(flag) {
-        strcpy(uvTable[uvIndex].var, id);
-        uvTable[uvIndex].boolVal = 0;
-        uvIndex ++;
+        addUnusedVar(id);
     }
 
     // Get type and update current scope
@@ -600,12 +542,6 @@ void emitEntry(char * id) {
 }
 
 void emitEntryOptimized(char * id) {    
-    // Open IRfile if it is not open
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-
     char ** scopeStack = { "global", currIRScope };
     char * type = getItemType(id, scopeStack, 1);
     currIRScope = id;
@@ -614,10 +550,6 @@ void emitEntryOptimized(char * id) {
 }
 
 void emitReturn(char * id) {
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
     // Create a temporary variable for array return support
     char token[50];
     strcpy(token, id);
@@ -630,42 +562,21 @@ void emitReturn(char * id) {
     fprintf(IRcode, "return %s\n", id);
 }
 
-void emitReturnOptimized(char * id) {
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-    
+void emitReturnOptimized(char * id) {    
     fprintf(IRcodeOptimized, "return %s\n", id);
 }
 
 void emitExit() {
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
     currIRScope = "global";
     fprintf(IRcode, "exit\n");
 }
 
 void emitExitOptimized() {
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-
     currIRScope = "global";
     fprintf(IRcodeOptimized, "exit\n");
 }
 
 char * emitIfConditionStatement() {
-    // Open IRfile if it is not open
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
     fprintf(IRcode, "if\n");
 }
 
@@ -675,10 +586,6 @@ char * emitIfGoToStatement() {
 }
 
 char * emitWhileConditionStatement() {
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
     fprintf(IRcode, "\nL%dL%d:\n", currWhilePointer, currWhileIndices[currWhilePointer]);
     fprintf(IRcode, "if\n");
 }
@@ -696,12 +603,6 @@ char * emitIfEndStatement() {
 }
 
 char * emitFunctionCall(char *id) {
-    // Open IRfile if it is not open
-    if (startIR == 0) {
-        initIRcodeFile();
-        startIR = 1;
-    }
-
     memset(outputId, 0, 50);
     char currLabelIndexBuffer[50];
     sprintf(currLabelIndexBuffer, "%d", lastIndex);
@@ -753,12 +654,6 @@ char * emitFunctionCall(char *id) {
 }
 
 char * emitFunctionCallOptimized(char *id) {
-    // Open IRfile if it is not open
-    if (startIROptimized == 0) {
-        initIRcodeFileOptimized();
-        startIROptimized = 1;
-    }
-
     memset(outputId, 0, 50);
     char currLabelIndexBuffer[50];
     sprintf(currLabelIndexBuffer, "%d", lastIndex);
@@ -825,7 +720,7 @@ char* ASTTraversal(struct AST* root) {
             if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
                 emitTypeArrayDeclaration(root -> LHS, root -> RHS, root -> right -> right -> RHS);
             } else {
-                emitTypeDeclaration(root -> LHS, root -> RHS);
+                emitTypeDeclaration(root->LHS, root->RHS);
             }
         }
         if(strcmp(root->nodeType, "variable parm") == 0){
@@ -883,13 +778,20 @@ char* ASTTraversal(struct AST* root) {
 
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if(strcmp(root-> right, "int") == 0
-            || strcmp(root-> right, "float") == 0) {
-                emitWriteNum(root -> right -> RHS);
-            } else if(strcmp(root-> right, "string") == 0) {
-                emitWriteString(root -> right -> RHS);
+            printf("Write RHS: %s\n", root->RHS);
+            printf("Write RHS RHS: %s\n", root->right->RHS);
+            if(strcmp(root->RHS, "int") == 0
+            || strcmp(root->RHS, "float") == 0
+            || strcmp(root->RHS, "string") == 0) {
+                emitWritePrimary(root->right->RHS);
+            } else if (strncmp(getPrimaryType(root->RHS), "var", 3) == 0) {
+                emitWriteId(root->RHS);
             } else {
-                emitWriteId(root -> RHS);
+                // Get tempVar from ASTtraversal
+                char * tempVar = ASTTraversal(root->right);
+
+                // Emit write operation using temporary variable
+                emitWriteId(tempVar);
             }
         }
         if(strcmp(root->nodeType, "writeln") == 0) {
@@ -923,7 +825,6 @@ char* ASTTraversal(struct AST* root) {
             char * funcVar = malloc(100*sizeof(char));
             ASTTraversal(root -> right);
             strncpy(funcVar, root->LHS, 100);
-            printf("new func var: %s\n", funcVar);
             memset(buffer, 0, 50);
             strcpy(buffer, emitFunctionCall(funcVar));
             cindex = 0;
@@ -966,7 +867,6 @@ char* ASTTraversal(struct AST* root) {
                         emitAssignmentForElement(root->LHS, root->right->LHS, rightVar);
                     }
             } else {
-                printf("made it here\n");
                 emitAssignment(root -> LHS, rightVar);
             }
         }
@@ -1041,6 +941,7 @@ void initIRCodeEnvironment() {
 // After IRcode is generated, close the file
 void generateIRCode(){
     printf("\n\n----Generate IRCode----\n\n");
+    initIRcodeFile();
     initIRCodeEnvironment();
     ASTTraversal(ast);
     fclose(IRcode);
@@ -1077,8 +978,8 @@ char* ASTTraversalOptimized(struct AST* root) {
                 return root -> RHS;
         }
         if(strcmp(root->nodeType, "type") == 0) {
-            if(isUsedVar(root -> RHS)) {
-                if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
+            if (isUsedVar(root -> RHS)) {
+                if (root->right != NULL && strncmp(root->right->LHS, "array", 5) == 0) {
                     emitTypeArrayDeclarationOptimized(root -> LHS, root -> RHS, root -> right -> right -> RHS);
                 } else {
                     emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
@@ -1117,14 +1018,19 @@ char* ASTTraversalOptimized(struct AST* root) {
         }
         if(strcmp(root->nodeType, "write") == 0) {
             if(strcmp(root->RHS, "int") == 0
-            || strcmp(root->RHS, "float") == 0) {
-                emitWriteNum(root->right->RHS);
-            } else if(strcmp(root->RHS, "string") == 0) {
-                emitWriteString(root->right->RHS);
-            } else {
+            || strcmp(root->RHS, "float") == 0
+            || strcmp(root->RHS, "string") == 0) {
+                emitWritePrimaryOptimized(root->right->RHS);
+            } else if (strncmp(getPrimaryType(root->RHS), "var", 3) == 0) {
                 if (isUsedVar(root->RHS)) {
                     emitWriteIdOptimized(root -> RHS);
                 }
+            } else {
+                // Get tempVar from ASTtraversal
+                char * tempVar = ASTTraversalOptimized(root->right);
+
+                // Emit write operation using temporary variable
+                emitWriteIdOptimized(tempVar);
             }
         }
         if(strcmp(root->nodeType, "writeln") == 0) {
@@ -1296,6 +1202,7 @@ void generateIRCodeOptimized() {
     lastIndex = 0;
 
     printf("\n\n----Perform Code Optimizations----\n\n");
+    initIRcodeFileOptimized();
     initIRCodeEnvironment();
     ASTTraversalOptimized(ast);
     fclose(IRcodeOptimized);

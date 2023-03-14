@@ -23,7 +23,8 @@ LINEBREAK	(\n\r)|(\r\n)|[\n\r]
 ws          {delim}+
 CHAR		'([^'\n]|\\n|\\\\)'
 STRING		\"([^\\\"]|\\.)*\"
-COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
+SINGLE_LINE_COMMENT	\#.*
+MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 
 %%
 
@@ -435,8 +436,8 @@ COMMENT 	"/*"([^*]|\*+[^*/])*\*+"/"
 			  yylval.string = strdup(yytext); 
 			  return STRING;
 			}
-\/\/.*		{ /* Ignored (comment) */ }
-{COMMENT}	{ /* Ignored (comment) */}
+{SINGLE_LINE_COMMENT}		{ /* Ignored (comment) */ }
+{MULTI_LINE_COMMENT}	{ /* Ignored (comment) */}
 
 {LINEBREAK}	{lines++; chars=0;}
 [ \t]	{chars++;}

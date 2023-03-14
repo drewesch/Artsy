@@ -84,8 +84,6 @@ int blockNumber;
 
 // Main program parser rule, generates the whole AST for the program
 ProgramStart: Program {
-	printf("\n--------------------Parser End------------------------\n");
-
 	ast = $$;
 }
 
@@ -273,27 +271,27 @@ Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	| Expr SEMICOLON	{
 		// Simplest expr statement in grammar
 		$$ = $1;
+	}
+	| PRINT Expr SEMICOLON	{ printf("\n RECOGNIZED RULE: PRINT statement\n");
+		// Generate write declarations as a statement in the parser
+		$$ = AST_SingleChildNode("write", $2, $2);
+
+		printf("Write: %s", $2->nodeType);
+
+		// If the primary type is a variable, check if the variable is in the symbol table
+		if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
+			printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
+			exit(1);
 		}
-	| PRINT Primary SEMICOLON	{ printf("\n RECOGNIZED RULE: PRINT statement\n");
-					// Generate write declarations as a statement in the parser
-					$$ = AST_SingleChildNode("write", $2, $2);
 
-					printf("write: %s", $2 -> nodeType);
-
-					// If the primary type is a variable, check if the variable is in the symbol table
-					if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
-						printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
-						exit(1);
-					}
-
-				}
+	}
 	| ADDLINE SEMICOLON {
 		printf("\n RECOGNIZED RULE: ADDLINE statement\n");
 		$$ = AST_SingleChildNode("writeln", "\n", 0);
 	}
 	| FINISH SEMICOLON {
 		printf("\n RECOGNIZED RULE: FINISH statement\n");
-		$$ = AST_SingleChildNode("writeln", "\n", 0);
+		$$ = AST_SingleChildNode("finish", 0, 0);
 	}
 	| REPORT Expr SEMICOLON {
 		printf("\n RECOGNIZED RULE: REPORT statement\n");
@@ -419,7 +417,12 @@ Else:  ElseHead Block {
 Primary :	 INTEGER	{$$ = AST_SingleChildNode("int", $1, $1); }
 	|	NUMBER	{$$ = AST_SingleChildNode("float", $1, $1); }
 	|  ID {$$ = AST_SingleChildNode($1, $1, $1);}
-	|  STRING {$$ = AST_SingleChildNode("string", $1, $1);}
+	|  STRING {
+		// SEMANTIC CHECK: See if the string contains any invalid escape character combinations
+		checkEscapeChars($1);
+		
+		$$ = AST_SingleChildNode("string", $1, $1);
+	}
 	| FLOAT {$$ = AST_SingleChildNode("float", $1, $1);}
 	| ID LEFTSQUARE INTEGER RIGHTSQUARE {
 		char * arrayPrefix = malloc(100*sizeof(char));
@@ -642,7 +645,7 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
 
 int parser_main(FILE*inputfile)
 {
-	printf("\n\n--------------------Parser Start------------------------\n\n");
+	printf("\n----Starting Lexer and Parser----\n\n");
 	stackPointer = 0;
 	blockNumber = 0;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));

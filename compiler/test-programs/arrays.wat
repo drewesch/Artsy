@@ -30,6 +30,7 @@
     (export "set_element" (func $set_element))
 
     (global $globarrPtr (mut i32) (i32.const 0))
+    (data (i32.const 100) "Hello, \tworld!")
     (func $main
         (local $arrPtr i32)
         (local $arrPtr2 i32)
@@ -91,7 +92,7 @@
 		)
 		(call $newline)
 		(call $writeconsoleString
-			(local.get $getValTest2)
+			(i32.const 100)
 		)
 	)
 	(start $main)

@@ -63,10 +63,23 @@ int get(struct StringHashTable* dict, char* key) {
 struct StringHashTable stringAddresses;
 struct StringHashTable stringSizes;
 
+// Generate a struct for a temporary variable type
+struct TempVar {
+    char * name;
+    char * type;
+    char * kind;
+};
+
+// Generate a table of temporary variables
+struct TempVar tempVarTable[TABLE_SIZE];
+
+// Current temporary variable table index
+int tempVarIndex = 0;
+
 // Function to open the files for IRcodeOptimized.ir and WATcode.asm
 // Required before generating any WAT code
 void initAssemblyFile() {
-    printf("\nOpening WAT Code file\n\n"); // Creates a WAT file with a generic header that needs to be in every file
+    printf("\n----Generating WebAssembly Text File----\n\n"); // Creates a WAT file with a generic header that needs to be in every file
     IRcode = fopen("IRcodeOptimized.ir", "r");
     WATcode = fopen("WATcode.wat", "w");
     MAINcode = fopen("MAINcode.wat", "w");
@@ -82,6 +95,7 @@ void generateModule() {
     fprintf(WATcode, "\t(import \"env\" \"writeconsoleFloat\" (func $writeconsoleFloat (param f32)))\n");
 	fprintf(WATcode, "\t(import \"env\" \"writeconsoleString\" (func $writeconsoleString (param i32)))\n");
     fprintf(WATcode, "\t(import \"env\" \"newline\" (func $newline))\n");
+    fprintf(WATcode, "\t(import \"env\" \"newline\" (func $newtab))\n");
     fprintf(WATcode, "\t(memory $0 100)\n");
     fprintf(WATcode, "\t(export \"pagememory\" (memory $0))\n");
     fprintf(WATcode, "\t(func $create_array (param $size i32) (result i32)\n");
@@ -138,9 +152,69 @@ int getMoveAmount(char * phrase) {
 
 // Helper function to convert string phrases to an ASCII character 
 char * convertToASCII(char * phrase) {
-    char * asciiVal;
-    snprintf(asciiVal, 100, "%d", (int)phrase[1]);
+    // Define ASCII val variable as a string
+    char * asciiVal = malloc(sizeof(char)*10);
+
+    // If the index is a special escape character, return one of the following outputs
+    // Else, return the associated char ASCII value
+    if (strncmp(phrase, "\"ESC_DOUBLE\"", 11) == 0) {
+        strncpy(asciiVal, "34", 10);
+    } else if (strncmp(phrase, "\"ESC_SINGLE\"", 11) == 0) {
+        strncpy(asciiVal, "39", 10);
+    } else if (strncmp(phrase, "\"ESC_BACK\"", 11) == 0) {
+        strncpy(asciiVal, "92", 10);
+    } else if (strncmp(phrase, "\"ESC_NEWLINE\"", 11) == 0) {
+        strncpy(asciiVal, "13", 10);
+    } else if (strncmp(phrase, "\"ESC_TAB\"", 11) == 0) {
+        strncpy(asciiVal, "9", 10);
+    } else {
+        snprintf(asciiVal, 10, "%d", (int)phrase[1]);
+    }
+
+    // Return ASCII value
     return asciiVal;
+}
+
+char * addTempVarItem(char * name, char * type, char * kind) {
+    // Assign memory to each item field
+    tempVarTable[tempVarIndex].name = malloc(sizeof(char)*100);
+    tempVarTable[tempVarIndex].type = malloc(sizeof(char)*100);
+    tempVarTable[tempVarIndex].kind = malloc(sizeof(char)*100);
+    
+    // Copy string contents to struct field
+    strncpy(tempVarTable[tempVarIndex].name, name, 100);
+    strncpy(tempVarTable[tempVarIndex].type, type, 100);
+    strncpy(tempVarTable[tempVarIndex].kind, kind, 100);
+
+    // Increase Temp Variable Table Index
+    tempVarIndex++;
+}
+
+int isTempVar(char * name) {
+    for (int i = 0; i < tempVarIndex; i++) {
+        if (strncmp(tempVarTable[i].name, name, 1000) == 0) {
+            return 1;
+		}
+	}
+    return 0;
+}
+
+char * getTempVarType(char * name) {
+    for (int i = 0; i < tempVarIndex; i++){
+        if (strcmp(tempVarTable[i].name, name) == 0) {
+            return tempVarTable[i].type;
+		}
+	}
+    return 0;
+}
+
+char * getTempVarKind(char * name) {
+    for (int i = 0; i < tempVarIndex; i++){
+        if (strcmp(tempVarTable[i].name, name) == 0) {
+            return tempVarTable[i].kind;
+		}
+	}
+    return 0;
 }
 
 // Standard function to generate the main section and text section
@@ -288,7 +362,7 @@ void generateText() {
             strcpy(currOp, variable);
         }
         // If the file contains a newline or a comment, ignore the statement
-        else if (strncmp(code, "\n", 1) == 0 || strncmp(code, "#", 1) == 0){
+        else if (strncmp(code, "\n", 1) == 0 || strncmp(code, "#", 1) == 0) { // Ignore comment
         }
         // If the IRcode declares an assignment, operation, or call statement
         else {
@@ -378,34 +452,36 @@ void generateText() {
                 }
 
                 char * variable = strArr[1];
+                char * varType = getPrimaryType(variable);
 
                 // If the write statement does not use a variable
-                if (strncmp(getPrimaryType(variable), "var", 3) != 0) {
+                if (strncmp(varType, "var", 3) != 0) {
+                    
                     if (!isGlobal) { // If its within a function, write to WATcode
-                        if (strncmp(variable, "int", 3) == 0) {
+                        if (strncmp(varType, "int", 3) == 0) {
                             fprintf(LOCALcode, "\t\t(call $writeconsoleInt\n");
-                        } else if (strncmp(variable, "float", 3) == 0) {
+                        } else if (strncmp(varType, "float", 3) == 0) {
                             fprintf(LOCALcode, "\t\t(call $writeconsoleFloat\n");
-                        } else if (strncmp(variable, "string", 3) == 0) {
+                        } else if (strncmp(varType, "string", 3) == 0) {
                             fprintf(LOCALcode, "\t\t(call $writeconsoleString\n");
                         }
-                        fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(variable), variable);
+                        fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
                         fprintf(LOCALcode, "\t\t)\n");
                     }
                     // Else, write to the MAINcode file
                     else {
-                        if (strncmp(variable, "int", 3) == 0) {
+                        if (strncmp(varType, "int", 3) == 0) {
                             fprintf(MAINcode, "\t\t(call $writeconsoleInt\n");
-                        } else if (strncmp(variable, "float", 3) == 0) {
+                        } else if (strncmp(varType, "float", 3) == 0) {
                             fprintf(MAINcode, "\t\t(call $writeconsoleFloat\n");
-                        } else if (strncmp(variable, "string", 3) == 0) {
+                        } else if (strncmp(varType, "string", 3) == 0) {
                             fprintf(MAINcode, "\t\t(call $writeconsoleString\n");
                         }
-                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", getWATType(variable), variable);
+                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
                         fprintf(MAINcode, "\t\t)\n");
                     }
 
-                } else { // Else, the variable uses a variable
+                } else { // Else, the write statement uses a variable
                     // Determine if the variable is global or variable
                     char * scopeType = "global";
                     char ** scopeStack = { "global", currScope };
@@ -416,19 +492,25 @@ void generateText() {
                         scopeType = "local";
                     }
 
-                    // Get primary type of the output
+                    // Get primary type and item kind of the output
                     char * token;
+                    char * primaryType;
+                    char * itemKind;
                     char delimiter[] = "[], ";
                     token = strtok(variable, delimiter);
 
-                    // If scopeType is global, use "global"
-                    // Else, use currScope
-                    char * primaryType;
-                    char * itemKind;
-                    if (strncmp(scopeType, "global", 6) == 0) {
+                    // Case 1: It uses a temporary variable
+                    if (isTempVar(token)) {
+                        primaryType = getTempVarType(token);
+                        itemKind = getTempVarKind(token);
+                    }
+                    // Case 2: It's a regular variable in the global scope
+                    else if (strncmp(scopeType, "global", 6) == 0) {
                         primaryType = getItemType(token, "global", scopePointer);
                         itemKind = getItemKind(token, "global", scopePointer);
-                    } else {
+                    }
+                    // Case 3: It's a regular variable in the local scope
+                    else {
                         primaryType = getItemType(token, currScope, scopePointer);
                         itemKind = getItemKind(token, currScope, scopePointer);
                     }
@@ -673,7 +755,7 @@ void generateText() {
 
             // Assignment Statements
             // Total Strings = 3
-            // STR1 = Var, STR2 = "=", STR3 = primary/variable
+            // STR1 = Assigned Variable, STR2 = "=", STR3 = Primary Variable
 
             // Assignment Operation
             else if (strArr[3] == NULL || strncmp(strArr[3], "", 1) == 0 || strncmp(strArr[3], "\"", 1) == 0) {
@@ -689,12 +771,12 @@ void generateText() {
 
                 // Declare all three variables
                 char * assignVar = strArr[0];
-                char * var2 = strArr[2];
+                char * primaryVar = strArr[2];
                 
                 // Declare operation type variable
                 char * opType;
 
-                // Determine if the variable is global or variable
+                // Determine if the variable is global or local
                 char * scopeType = "global";
                 char ** scopeStack = { "global", currScope };
                 int scopePointer = 0;
@@ -706,7 +788,7 @@ void generateText() {
 
                 // If a current operation has not been assigned, get the current operation from the assignment statement
                 if (strncmp(currOp, "", 1) == 0 || currOp == NULL) {
-                    currOp = getPrimaryType(var2);
+                    currOp = getPrimaryType(primaryVar);
                 }
 
                 // Determine the operation type
@@ -776,36 +858,36 @@ void generateText() {
                     fprintf(LOCALcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
                 }
 
-                char * tokenVar2 = malloc(100*sizeof(char));
+                char * primaryToken = malloc(100*sizeof(char));
                 char delimiter[] = "[], ";
-                strcpy(tokenVar2, var2);
-                tokenVar2 = strtok(tokenVar2, delimiter);
-                int lenArr2 = strlen(var2);
+                strcpy(primaryToken, primaryVar);
+                primaryToken = strtok(primaryToken, delimiter);
+                int lenArr2 = strlen(primaryVar);
 
-                // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-                if (strncmp(getPrimaryType(tokenVar2), "var", 3) == 0) {
+                // If primaryVar references an actual variable, add a dollar sign in front and build the line accordingly
+                if (strncmp(getPrimaryType(primaryToken), "var", 3) == 0) {
                     // Determine if the variable is global or variable
                     char * varScopeType = "global";
                     scopePointer = 0;
 
-                    if (!found(tokenVar2, scopeStack, scopePointer)) {
+                    if (!found(primaryToken, scopeStack, scopePointer)) {
                         scopePointer = 1;
                         varScopeType = "local";
                     }
 
                     // If var is an array index callout, generate a call to the appropriate index
-                    if (var2[lenArr2 - 1] == ']' && isGlobal) {
+                    if (primaryVar[lenArr2 - 1] == ']' && isGlobal) {
                         // If it's array call in global, print to MAIN code
                         // Get the array variable and the index number
                         char * arrayName = malloc(100*sizeof(char));
                         char * arrIndex = malloc(100*sizeof(char));
 
                         // Assign variable name
-                        strcpy(arrayName, tokenVar2);
+                        strcpy(arrayName, primaryToken);
 
                         // Assign array index variable
-                        tokenVar2 = strtok(NULL, delimiter);
-                        sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(tokenVar2));
+                        primaryToken = strtok(NULL, delimiter);
+                        sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(primaryToken));
 
                         // Print array index code
                         fprintf(MAINcode, "\t\t\t(call $get_element\n");
@@ -813,18 +895,18 @@ void generateText() {
                         fprintf(MAINcode, "\t\t\t\t(i32.const %s)\n", arrIndex);
                         fprintf(MAINcode, "\t\t\t)\n");
                         
-                    } else if (var2[lenArr2 - 1] == ']') {
+                    } else if (primaryVar[lenArr2 - 1] == ']') {
                         // If it's array call in a function, print to LOCAL code
                         // Get the array variable and the index number
                         char * arrayName = malloc(100*sizeof(char));
                         char * arrIndex = malloc(100*sizeof(char));
 
                         // Assign variable name
-                        strcpy(arrayName, tokenVar2);
+                        strcpy(arrayName, primaryToken);
 
                         // Assign array index variable
-                        tokenVar2 = strtok(NULL, delimiter);
-                        sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(tokenVar2));
+                        primaryToken = strtok(NULL, delimiter);
+                        sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(primaryToken));
 
                         // Print array index code
                         fprintf(LOCALcode, "\t\t\t(call $get_element\n");
@@ -833,29 +915,29 @@ void generateText() {
                         fprintf(LOCALcode, "\t\t\t)\n");
 
                     } else if (isGlobal) { // If it's a temp variable in global, print to MAINcode
-                        fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", varScopeType, var2);
+                        fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", varScopeType, primaryVar);
                     }
                     // Else, print to WATcode
                     else {
-                        fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", varScopeType, var2);
+                        fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", varScopeType, primaryVar);
                     }
                 } else {
-                    // Check if var2 references a char
+                    // Check if primaryVar references a char
                     // If it does, convert it to an ASCII value
-                    if (strncmp(getPrimaryType(var2), "string", 6) == 0) {
-                        var2 = convertToASCII(var2);
+                    if (strncmp(getPrimaryType(primaryVar), "string", 6) == 0) {
+                        primaryVar = convertToASCII(primaryVar);
                     }
 
-                    // Check if var2 equals zero (unidentified value)
+                    // Check if primaryVar equals zero (unidentified value)
                     // If so, convert it to a space in ASCII
-                    if (strncmp(var2, "0", 1) == 0) {
-                        var2 = "32";
+                    if (strncmp(primaryVar, "0", 1) == 0) {
+                        primaryVar = "32";
                     }
                     
                     if (isGlobal) {
-                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", opType, var2);
+                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", opType, primaryVar);
                     } else {
-                        fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", opType, var2);
+                        fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", opType, primaryVar);
                     }
                 }
 
@@ -906,7 +988,12 @@ void generateText() {
                     }
                 }
                 // Else, print a temporary variable declaration line with the WAT type
+                // Save the temporary variable to the table
                 else {
+                    // Add the temporary variable to the table
+                    addTempVarItem(assignVar, currOp, "Var");
+
+                    // Insert into either global or local scope
                     if (isGlobal) {
                         fprintf(VARScode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
                     } else {
@@ -1000,8 +1087,8 @@ void generateText() {
 
             // c. Basic Operations
             // - Total Strings = 5
-            // - STR1 = Var, STR2 = "=", STR3 = primary/variable,
-            // - STR4 = Operand, STR5 = primary/variable
+            // - STR1 = Assign Variable, STR2 = "=", STR3 = Primary Variable 1,
+            // - STR4 = Operand, STR5 = Primary Variable 2
 
             else if (strncmp(strArr[3], "+", 1) == 0 || strncmp(strArr[3], "-", 1) == 0 || strncmp(strArr[3], "*", 1) == 0 || strncmp(strArr[3], "/", 1) == 0) {
                 // Declare all three variables
@@ -1025,7 +1112,12 @@ void generateText() {
                 opType = getWATType(currOp);
 
                 // If not in parameters, print a temporary variable declaration line with the WAT type
+                // Save the temporary variable to the table
                 if (!inParams) {
+                    // Add the temporary variable to the table
+                    addTempVarItem(assignVar, currOp, "Var");
+
+                    // Insert into either global or local scope
                     if (isGlobal) {
                         fprintf(VARScode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
                     } else {

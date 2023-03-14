@@ -5,9 +5,9 @@ declare random as int;
 
 let numArr[0] = 1;
 
-action int displayMessage(){
-	let message[0] = "I"; 																		/*1. allow array to accept word */
-	let message[1] = " ";																/*1.5 semantic check (array) string not int */ 
+action int displayMessage() {
+	let message[0] = "I"; 																		/#1. allow array to accept word #/
+	let message[1] = " ";																/#1.5 semantic check (array) string not int #/ 
 	let message[2] = "c";
 	let message[3] = "a";
 	let message[4] = "n";
@@ -18,12 +18,12 @@ action int displayMessage(){
 	let message[9] = "n";
 	let message[10] = "t";
 	let message[11] = "!";
-	/*let message[100] = "Error"; 	*/														/*2. semantic check if not correct number */
+	/# let message[100] = "Error"; #/														/#2. semantic check if not correct number #/
 	
 	report numArr[0];
 }
 
-// Create strings
+# Create strings
 let random = displayMessage();
 let staticMessage = "static message lol haha :)";
 
@@ -31,8 +31,8 @@ let numArr[0] = 1;
 let numArr[1] = numArr[0];
 let numArr[2] = 3; 																
 let numArr[3] = 4; 	
-let numArr[4] = 5; 	
-// let numArr[5] = 10; Semantic Error
+let numArr[4] = 5;
+# let numArr[5] = 10; Semantic Error
 
 let random = numArr[0] + numArr[2];
 
