@@ -1,4 +1,10 @@
 #### IR Code ####
-type float x
-x = 12.1
-output "test"
+output "The answer is:\t"
+subop int
+T0 = 1823 - 100
+output T0
+addline
+output "Or a similar float value is:\t\'"
+T1 = 1182.3 * 1.5
+output T1
+output "\'"

@@ -4,32 +4,86 @@
 #include <ctype.h>
 #include <string.h>
 #include "webgen.h"
+#include "helper.h"
 #include "semantic.h"
 #include "symbolTable.h"
 
-// Initialize WATcode file, IRcode file, MAINcode file, and other required variables
-FILE * WATcode;
-FILE * IRcode;
-FILE * MAINcode;
-FILE * VARScode;
-FILE * LOCALcode;
+// All file variables
+
+// The WATcode file has the following purposes:
+// 1. To place code directly first within the final file first (e.g., start module code)
+// 2. To start functions, hold function parameters, and the function result parameter
+// 3. To end functions with an export line
+// 4. To declare global variables
+// 5. To place temporary variables at the top of a local scope
+// 6. Once the compilation process is complete, the other files will copy their contents into this file
+
+FILE * WATcode; // Generates WATcode.wat
+
+// All other files are helper files used in the compilation process
+FILE * MAINcode; // File used to place code within the main function
+FILE * VARScode; // File used to place variables at the top of the main function
+FILE * LOCALcode; // File used to place code within a local scope
+FILE * IRcode; // Optimized IRcode file
+
 char code[10000];
 
+// File functions
+
+// Function to open the files for the WebAssembly Generator
+// Required before generating any WAT code
+void initAssemblyFile() {
+    printf("\n----Generating WebAssembly Text File----\n\n"); // Creates a WAT file with a generic header that needs to be in every file
+    IRcode = fopen("IRcodeOptimized.ir", "r"); 
+    WATcode = fopen("WATcode.wat", "w"); 
+    MAINcode = fopen("MAINcode.wat", "w"); 
+    VARScode = fopen("VARScode.wat", "w"); 
+    LOCALcode = fopen("LOCALcode.wat", "w"); 
+}
+
+// Function to get file type from string
+FILE * getFileType(char * fileType) {
+    if (strncmp(fileType, "MAINcode", 8) == 0) {
+        return MAINcode;
+    } else if (strncmp(fileType, "LOCALcode", 9) == 0) {
+        return LOCALcode;
+    } else if (strncmp(fileType, "VARScode", 8) == 0) {
+        return VARScode;
+    } else if (strncmp(fileType, "WATcode", 7) == 0) {
+        return WATcode;
+    }
+    return 0;
+}
+
+// Function to get file type from string
+FILE * getHelperFileType(char * fileType) {
+    if (strncmp(fileType, "MAINcode", 8) == 0) {
+        return VARScode;
+    } else if (strncmp(fileType, "LOCALcode", 9) == 0) {
+        return WATcode;
+    }
+    return 0;
+}
+
 // String hash table functions
-// Used for updating array index calls by dedicated memory index
+
+// Define iterator and default variables for updating array index calls by dedicated memory index
 #define TABLE_SIZE 256
 #define MAX_KEY_LENGTH 32
 int currMaxStringIndex = 0;
 
+// Define StringEntry struct for each table
 struct StringEntry {
     char key[MAX_KEY_LENGTH];
     int value;
 };
 
+// Define the hash table
 struct StringHashTable {
     struct StringEntry table[TABLE_SIZE];
 };
 
+// Get hash value from key
 unsigned int hash(char* key) {
     unsigned int value = 0;
     for (int i = 0; i < strlen(key); i++) {
@@ -38,6 +92,7 @@ unsigned int hash(char* key) {
     return value % TABLE_SIZE;
 }
 
+// Function to initialize a string hash table
 void init(struct StringHashTable* dict) {
     for (int i = 0; i < TABLE_SIZE; i++) {
         dict->table[i].key[0] = '\0';
@@ -45,12 +100,14 @@ void init(struct StringHashTable* dict) {
     }
 }
 
+// Function to set an entry in a string hash table
 void set(struct StringHashTable* dict, char* key, int value) {
     unsigned int index = hash(key);
     strcpy(dict->table[index].key, key);
     dict->table[index].value = value;
 }
 
+// Function to get an entry from a string hash table
 int get(struct StringHashTable* dict, char* key) {
     unsigned int index = hash(key);
     if (strcmp(dict->table[index].key, key) == 0) {
@@ -62,6 +119,8 @@ int get(struct StringHashTable* dict, char* key) {
 // Create String Hash Tables
 struct StringHashTable stringAddresses;
 struct StringHashTable stringSizes;
+
+// Temporary Variable Table implementation
 
 // Generate a struct for a temporary variable type
 struct TempVar {
@@ -76,19 +135,59 @@ struct TempVar tempVarTable[TABLE_SIZE];
 // Current temporary variable table index
 int tempVarIndex = 0;
 
-// Function to open the files for IRcodeOptimized.ir and WATcode.asm
-// Required before generating any WAT code
-void initAssemblyFile() {
-    printf("\n----Generating WebAssembly Text File----\n\n"); // Creates a WAT file with a generic header that needs to be in every file
-    IRcode = fopen("IRcodeOptimized.ir", "r");
-    WATcode = fopen("WATcode.wat", "w");
-    MAINcode = fopen("MAINcode.wat", "w");
-    VARScode = fopen("VARScode.wat", "w");
-    LOCALcode = fopen("LOCALcode.wat", "w");
+// Iterator variable for curr print string
+int currPrintStrings = 0;
+
+// Add temporary variable item to the table
+char * addTempVarItem(char * name, char * type, char * kind) {
+    // Assign memory to each item field
+    tempVarTable[tempVarIndex].name = malloc(sizeof(char)*100);
+    tempVarTable[tempVarIndex].type = malloc(sizeof(char)*100);
+    tempVarTable[tempVarIndex].kind = malloc(sizeof(char)*100);
+    
+    // Copy string contents to struct field
+    strncpy(tempVarTable[tempVarIndex].name, name, 100);
+    strncpy(tempVarTable[tempVarIndex].type, type, 100);
+    strncpy(tempVarTable[tempVarIndex].kind, kind, 100);
+
+    // Increase Temp Variable Table Index
+    tempVarIndex++;
 }
 
+// Check if item name is in the temporary variable table
+int isTempVar(char * name) {
+    for (int i = 0; i < tempVarIndex; i++) {
+        if (strncmp(tempVarTable[i].name, name, 1000) == 0) {
+            return 1;
+		}
+	}
+    return 0;
+}
+
+// Get the temporary variable type based on the name
+char * getTempVarType(char * name) {
+    for (int i = 0; i < tempVarIndex; i++){
+        if (strcmp(tempVarTable[i].name, name) == 0) {
+            return tempVarTable[i].type;
+		}
+	}
+    return 0;
+}
+
+// Get the temporary variable kind based on the name
+char * getTempVarKind(char * name) {
+    for (int i = 0; i < tempVarIndex; i++){
+        if (strcmp(tempVarTable[i].name, name) == 0) {
+            return tempVarTable[i].kind;
+		}
+	}
+    return 0;
+}
+
+// WAT CODE PRINT MODULES
+
 // Function to generate the initial set of lines required for proper WebAssembly output
-void generateModule() {
+void generateStartModule() {
     fprintf(WATcode, "(module\n");
     fprintf(WATcode, "\t;; WAT Setup Declarations\n");
     fprintf(WATcode, "\t(import \"env\" \"writeconsoleInt\" (func $writeconsoleInt (param i32)))\n");
@@ -122,99 +221,71 @@ void generateModule() {
     fprintf(WATcode, "\t;; Artsy Program in WAT\n");
 }
 
-// Helper function that maps IRcode to the corresponding WebAssembly type
-char * getWATType(char * phrase) {
-    char * watType = "";
+// Function module for handling printing solo string in Artsy code
+void generatePrintStringWAT(char * strVal, char * fileType) {
+    // Step 1: Generate a unique print variable name
+    char * printVar = malloc(sizeof(char)*100);
+    snprintf(printVar, 100, "_printstr_%d", currPrintStrings);
+    currPrintStrings++; // Iterate current number of solo print strings in the program
 
-    if (strncmp(phrase, "float", 5) == 0) {
-        watType = "f32";
-        return watType;
-    } else if (strncmp(phrase, "int", 3) == 0 || strncmp(phrase, "string", 6) == 0) {
-        watType = "i32";
-        return watType;
-    } else {
-        // Uses a void or undefined keyword
-        watType = "void";
-        return watType;
-    }
-}
+    // Step 2: Convert the strVal to a usable format that supports escape characters
+    int numEscapeCharacters = countEscapeChars(strVal);
+    int printStrArrSize = strlen(strVal)-3-numEscapeCharacters; // Iterator variable to keep track of size
+    char ** printStrArr = (char **) malloc(printStrArrSize * 10 * sizeof(char)); // Create string array variable
 
-// Helper function that returns the number of characters to move after finding the corresponding WebAssembly type
-int getMoveAmount(char * phrase) {
-    if (strncmp(phrase, "float", 5) == 0) {
-        return 6;
-    } else if (strncmp(phrase, "int", 3) == 0) {
-        return 4;
-    } else if (strncmp(phrase, "string", 6) == 0) {
-        return 7;
-    }
-}
-
-// Helper function to convert string phrases to an ASCII character 
-char * convertToASCII(char * phrase) {
-    // Define ASCII val variable as a string
-    char * asciiVal = malloc(sizeof(char)*10);
-
-    // If the index is a special escape character, return one of the following outputs
-    // Else, return the associated char ASCII value
-    if (strncmp(phrase, "\"ESC_DOUBLE\"", 11) == 0) {
-        strncpy(asciiVal, "34", 10);
-    } else if (strncmp(phrase, "\"ESC_SINGLE\"", 11) == 0) {
-        strncpy(asciiVal, "39", 10);
-    } else if (strncmp(phrase, "\"ESC_BACK\"", 11) == 0) {
-        strncpy(asciiVal, "92", 10);
-    } else if (strncmp(phrase, "\"ESC_NEWLINE\"", 11) == 0) {
-        strncpy(asciiVal, "13", 10);
-    } else if (strncmp(phrase, "\"ESC_TAB\"", 11) == 0) {
-        strncpy(asciiVal, "9", 10);
-    } else {
-        snprintf(asciiVal, 10, "%d", (int)phrase[1]);
+    // Allocate memory for each string
+    for (int i = 0; i < printStrArrSize; i++){
+        printStrArr[i] = (char *) malloc(20 * sizeof(char));
     }
 
-    // Return ASCII value
-    return asciiVal;
-}
+    // Populate printStrArr variable
+    int loopEscapeChars = 0; // Tracks total escape chars encountered
+    for (int i = 1; i < printStrArrSize + 1; i++) {
+        // Declare insertStr variable
+        char * insertStr = malloc(sizeof(char)*20);
 
-char * addTempVarItem(char * name, char * type, char * kind) {
-    // Assign memory to each item field
-    tempVarTable[tempVarIndex].name = malloc(sizeof(char)*100);
-    tempVarTable[tempVarIndex].type = malloc(sizeof(char)*100);
-    tempVarTable[tempVarIndex].kind = malloc(sizeof(char)*100);
-    
-    // Copy string contents to struct field
-    strncpy(tempVarTable[tempVarIndex].name, name, 100);
-    strncpy(tempVarTable[tempVarIndex].type, type, 100);
-    strncpy(tempVarTable[tempVarIndex].kind, kind, 100);
+        // Form insertStr variable
+        if (strVal[i+loopEscapeChars] == '\\') { // Case for an escape character
+            snprintf(insertStr, 20, "\"%s\"", escapeCharType(strVal[i+1+loopEscapeChars]));
+            loopEscapeChars++;
+        } else { // Standard case (no escape character)
+            snprintf(insertStr, 20, "\"%c\"", strVal[i+loopEscapeChars]);
+        }
 
-    // Increase Temp Variable Table Index
-    tempVarIndex++;
-}
+        // Put the insertStr variable into the string array
+        strncpy(printStrArr[i-1], insertStr, 20);
+    }
 
-int isTempVar(char * name) {
-    for (int i = 0; i < tempVarIndex; i++) {
-        if (strncmp(tempVarTable[i].name, name, 1000) == 0) {
-            return 1;
-		}
-	}
-    return 0;
-}
+    // Step 3: Add the string to the string hash table
+    int indexEntry = currMaxStringIndex;
+    int strSize = printStrArrSize;
+    set(&stringAddresses, printVar, indexEntry);
+    set(&stringSizes, printVar, strSize);
+    currMaxStringIndex += strSize; // Update max string index for the next array entry
 
-char * getTempVarType(char * name) {
-    for (int i = 0; i < tempVarIndex; i++){
-        if (strcmp(tempVarTable[i].name, name) == 0) {
-            return tempVarTable[i].type;
-		}
-	}
-    return 0;
-}
+    // Step 4: Print the whole string in one area
 
-char * getTempVarKind(char * name) {
-    for (int i = 0; i < tempVarIndex; i++){
-        if (strcmp(tempVarTable[i].name, name) == 0) {
-            return tempVarTable[i].kind;
-		}
-	}
-    return 0;
+    // Step 4A: Determine filetype
+    FILE * printFile = getFileType(fileType);
+    FILE * helperFile = getHelperFileType(fileType);
+
+    // Step 4B: Declare the new array variable
+    char * scopeType = "local"; // Declare scope variable
+    fprintf(helperFile, "\t\t(%s $%s i32)\n", scopeType, printVar);
+
+    // Step 4C: Generate WAT code for creating the new array
+    fprintf(printFile, "\t\t(%s.set $%s (call $create_array (i32.const %d)))\n", scopeType, printVar, strlen(strVal));
+
+    // Step 4D: Set each element from the string into the new array using a for-loop
+    for (int currArrIndex = 0; currArrIndex < strSize; currArrIndex++) {
+        fprintf(printFile, "\t\t(call $set_element (%s.get $%s) (i32.const %d) (i32.const %s))\n", scopeType, printVar, indexEntry + currArrIndex, convertToASCII(printStrArr[currArrIndex]));
+    }
+
+    // Step 4E: Print each element in the new string array using a for-loop
+    for (int currArrIndex = 0; currArrIndex < strSize; currArrIndex++) {
+        fprintf(printFile, "\t\t(call $writeconsoleString (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, printVar, indexEntry + currArrIndex);
+    }
+
 }
 
 // Standard function to generate the main section and text section
@@ -225,7 +296,7 @@ void generateText() {
     int inParams = 0;
 
     // Current operation variable
-    char * currOp= "";
+    char * currOp = "";
 
     // Global return type variable for a given function
     char * returnType = malloc(100*sizeof(char));
@@ -460,25 +531,46 @@ void generateText() {
                     if (!isGlobal) { // If its within a function, write to WATcode
                         if (strncmp(varType, "int", 3) == 0) {
                             fprintf(LOCALcode, "\t\t(call $writeconsoleInt\n");
+                            fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
+                            fprintf(LOCALcode, "\t\t)\n");
                         } else if (strncmp(varType, "float", 3) == 0) {
                             fprintf(LOCALcode, "\t\t(call $writeconsoleFloat\n");
+                            fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
+                            fprintf(LOCALcode, "\t\t)\n");
                         } else if (strncmp(varType, "string", 3) == 0) {
-                            fprintf(LOCALcode, "\t\t(call $writeconsoleString\n");
+                            // Concatenate the rest of the tokens into one string variable to get the whole string
+                            char * strVar = malloc(sizeof(char)*256);
+                            for (int i = 1; i < lenIndex+1; i++) {
+                                strcat(strVar, strArr[i]);
+                                strcat(strVar, " ");
+                            }
+
+                            // Generate WAT Code for the whole string
+                            generatePrintStringWAT(strVar, "LOCALcode");
                         }
-                        fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
-                        fprintf(LOCALcode, "\t\t)\n");
+
                     }
                     // Else, write to the MAINcode file
                     else {
                         if (strncmp(varType, "int", 3) == 0) {
                             fprintf(MAINcode, "\t\t(call $writeconsoleInt\n");
+                            fprintf(MAINcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
+                            fprintf(MAINcode, "\t\t)\n");
                         } else if (strncmp(varType, "float", 3) == 0) {
                             fprintf(MAINcode, "\t\t(call $writeconsoleFloat\n");
+                            fprintf(MAINcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
+                            fprintf(MAINcode, "\t\t)\n");
                         } else if (strncmp(varType, "string", 3) == 0) {
-                            fprintf(MAINcode, "\t\t(call $writeconsoleString\n");
+                            // Concatenate the rest of the tokens into one string variable to get the whole string
+                            char * strVar = malloc(sizeof(char)*256);
+                            for (int i = 1; i < lenIndex+1; i++) {
+                                strcat(strVar, strArr[i]);
+                                strcat(strVar, " ");
+                            }
+
+                            // Generate WAT Code for the whole string
+                            generatePrintStringWAT(strVar, "MAINcode");
                         }
-                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
-                        fprintf(MAINcode, "\t\t)\n");
                     }
 
                 } else { // Else, the write statement uses a variable
@@ -1391,10 +1483,6 @@ void generateMain() {
     generateMainVars();
 
     // Read all WAT code that was inserted into the main file
-    // while (fgets(tempGlobal, 10000, MAINcode) != NULL) {
-    //     fprintf(WATcode, "%s", tempGlobal);
-    // }
-
     while (ch != EOF) {
         ch = fgetc(MAINcode);
         if (ch == EOF) {
@@ -1428,7 +1516,7 @@ void generateWATcode() {
     init(&stringSizes);
 
     initAssemblyFile();
-    generateModule();
+    generateStartModule();
     generateText();
     generateMain();
     completeFile();

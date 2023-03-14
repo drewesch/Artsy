@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ircode.h"
+#include "helper.h"
 #include "semantic.h"
 #include "symbolTable.h"
 #include "AST.h"
@@ -95,6 +96,7 @@ char* getVarConstant(char var[50]){
 
 // Function to add a variable to the unused variable table
 void addUnusedVar(char var[50]) {
+    printf("add var: %s\n", var);
     strncpy(uvTable[uvIndex].var, var, 50);
     uvTable[uvIndex].boolVal = 0;
     uvIndex++;
@@ -102,9 +104,10 @@ void addUnusedVar(char var[50]) {
 
 // Function to update variable declarations if the variable is unused - part of the optimization process
 void updateUnusedVar(char var[50]) {
-    // printf("uvindex = %d\n", uvIndex);
+    printf("update var: %s\n", var);
 	for(int i=0; i<uvIndex; i++){
         if (strcmp(uvTable[i].var, var) == 0) {
+            printf("yes! updated!\n");
             uvTable[i].boolVal = 1;
             return;
 		}
@@ -121,25 +124,6 @@ int isUsedVar(char var[50]) {
 		}
 	}
     return 0;
-}
-
-char * escapeCharType(char c) {
-    if (c == '\"') {
-        return "ESC_DOUBLE";  
-    }
-    if (c == '\'') {
-        return "ESC_SINGLE";  
-    }
-    if (c == '\\') {
-        return "ESC_BACK";  
-    }
-    if (c == 'n') {
-        return "ESC_NEWLINE";  
-    }
-    if (c == 't') {
-        return "ESC_TAB";  
-    }
-    return "NONE";
 }
 
 // For unoptimized IRcode
@@ -397,12 +381,18 @@ void emitWritePrimaryOptimized(char * value) {
 }
 
 // Unoptimized IRcode operation for the write keyword
-void emitWriteId(char * id){
-    // Update the code if it is unused
-    // printf("update write id: %s\n", updateArrayId(id));
+void emitWriteId(char * id) {
+    // Update variable in the unused variable table
     updateUnusedVar(updateArrayId(id));
 
     fprintf(IRcode, "output %s\n", id);
+}
+
+// Optimized IRCode operation for writing 
+void emitWriteIdOptimized(char * id){
+    // Print output keyword with the associated ID
+    // Unused variables are already removed prior to this step, so it is redundant to include it here
+    fprintf(IRcodeOptimized, "output %s\n", id);
 }
 
 void emitWriteLn(){
@@ -411,13 +401,6 @@ void emitWriteLn(){
 
 void emitWriteLnOptimized(){
     fprintf(IRcodeOptimized, "addline\n");
-}
-
-// Optimized IRCode operation for writing 
-void emitWriteIdOptimized(char * id){
-    // Print output keyword with the associated ID
-    // Unused variables are already removed prior to this step, so it is redundant to include it here
-    fprintf(IRcodeOptimized, "output %s\n", id);
 }
 
 // Outputs the variable and type for variable declaration (unoptimized)
@@ -434,7 +417,7 @@ void emitTypeDeclaration(char * type, char * id){
         if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
     }
     // If the flag is still true, add the new id to the unused variable table
-    if(flag) {
+    if (flag) {
         addUnusedVar(id);
     }
 
@@ -529,7 +512,7 @@ void emitEntry(char * id) {
     }
 
     // If the flag is still true, add the new id to the unused variable table
-    if(flag) {
+    if (flag) {
         addUnusedVar(id);
     }
 
@@ -783,6 +766,7 @@ char* ASTTraversal(struct AST* root) {
             if(strcmp(root->RHS, "int") == 0
             || strcmp(root->RHS, "float") == 0
             || strcmp(root->RHS, "string") == 0) {
+                updateUnusedVar(root->right->RHS);
                 emitWritePrimary(root->right->RHS);
             } else if (strncmp(getPrimaryType(root->RHS), "var", 3) == 0) {
                 emitWriteId(root->RHS);

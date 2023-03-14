@@ -3,8 +3,8 @@
 #include <stdlib.h> 
 #include <string.h>
 #include <time.h>
-#include "ircode.h"
 #include "parser.h"
+#include "ircode.h"
 #include "webgen.h"
 
 // Starts the whole program

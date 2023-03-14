@@ -1,2 +1,7 @@
 #### Optimized IR Code ####
-output "test"
+output "The answer is:\t"
+output 1723
+addline
+output "Or a similar float value is:\t\'"
+output 1773.450073
+output "\'"

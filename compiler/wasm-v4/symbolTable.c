@@ -1,3 +1,4 @@
+#include "helper.h"
 #include "symbolTable.h"
 
 // Single Scope declaration

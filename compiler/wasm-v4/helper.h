@@ -1,0 +1,16 @@
+#ifndef HELPER_H 
+#define HELPER_H
+#include "AST.h"
+
+// Header file for all helper functions
+char * getPrimaryType(char * phrase);
+int isAlpha(char * phrase);
+int isInt(char * phrase);
+int isFloat(char * phrase);
+int isVar(char * phrase);
+char * escapeCharType(char c);
+char * getWATType(char * phrase);
+int getMoveAmount(char * phrase);
+char * convertToASCII(char * phrase);
+
+#endif

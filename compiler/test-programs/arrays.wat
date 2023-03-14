@@ -1,6 +1,5 @@
 (module
 	;; WAT Setup Declarations
-	(import "env" "jsprint" (func $jsprint (param i32)))
 	(import "env" "newline" (func $newline))
 	(import "env" "writeconsoleInt" (func $writeconsoleInt (param i32)))
 	(import "env" "writeconsoleFloat" (func $writeconsoleFloat (param f32)))
@@ -32,7 +31,7 @@
     (global $globarrPtr (mut i32) (i32.const 0))
     (data (i32.const 100) "Hello, \tworld!")
     (func $main
-        (local $arrPtr i32)
+        (local $_arrPtr i32)
         (local $arrPtr2 i32)
         (local $getValTest1 i32)
         (local $getValTest2 i32)
@@ -43,20 +42,20 @@
             )
 		)
 
-        (local.set $arrPtr
+        (local.set $_arrPtr
 		    (call $create_array
                 (i32.const 10)
             )
 		)
         
         (call $set_element
-            (local.get $arrPtr)
+            (local.get $_arrPtr)
             (i32.const 0)
             (i32.const 65)
         )
 
         (call $set_element
-            (local.get $arrPtr)
+            (local.get $_arrPtr)
             (i32.const 1)
             (i32.const 66)
         )
@@ -75,7 +74,7 @@
 
         (local.set $getValTest1
 		    (call $get_element
-                (local.get $arrPtr)
+                (local.get $_arrPtr)
                 (i32.const 1)
             )
 		)

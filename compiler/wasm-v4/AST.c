@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include "AST.h"
 #include "symbolTable.h"
+#include "helper.h"
 
 // Generate an AST Node with just a RHS
 struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * childNode) {
@@ -145,7 +146,7 @@ int containsNonVars(struct AST * root) {
 	if (root == NULL) {
 		return 0;
 	}
-	if (isNotVar(root->nodeType) == 1) {
+	if (isVar(root->nodeType) == 0) {
 		return 1;
 	}
 

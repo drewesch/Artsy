@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "helper.h"
 #include "symbolTable.h"
 #include "AST.h"
 #include "ircode.h"
