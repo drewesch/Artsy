@@ -1,4 +1,5 @@
 # Print Program
+print "Test program";
 addline;
 
 declare x as int;

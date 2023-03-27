@@ -1,10 +1,89 @@
 #### IR Code ####
-output "The answer is:\t"
-subop int
-T0 = 1823 - 100
-output T0
+type int aNumber
+type float secondNumber
+type string someLetter array 100
+type string message array 50
+type float justAverage
+entry float average
+param float a
+param float b
+param float c
+type float avg
+subop float
+T0 = a + c
+T1 = T0 / 3.0
+avg = T1
+return avg
+exit
+entry float unreachableaction
+param float x
+param float y
+type float result
+subop float
+T2 = x + x
+result = T2
+return result
+exit
+entry int displayMessage
+message[0] = "I"
+message[1] = " "
+message[2] = "c"
+message[3] = "a"
+message[4] = "n"
+message[5] = " "
+message[6] = "p"
+message[7] = "r"
+message[8] = "i"
+message[9] = "n"
+message[10] = "t"
+message[11] = ":"
+output message
 addline
-output "Or a similar float value is:\t\'"
-T1 = 1182.3 * 1.5
-output T1
-output "\'"
+return 0
+exit
+entry float ambitiousAction
+param float a
+param float b
+param float c
+type float result
+subop float
+T3 = call average args a b c
+T4 = call average args a b c
+T5 = T3 + T4
+T6 = T5 / 2.0
+result = T6
+return result
+exit
+subop float
+T7 = call average args 12.5 13.7 25.8
+justAverage = T7
+subop int
+T8 = call displayMessage args
+aNumber = T8
+output justAverage
+addline
+subop float
+T9 = justAverage * justAverage
+justAverage = T9
+subop float
+T10 = call average args justAverage 0.0 0.0
+justAverage = T10
+subop int
+T11 = call displayMessage args
+aNumber = T11
+addline
+subop int
+T12 = call displayMessage args
+aNumber = T12
+subop int
+T13 = aNumber / aNumber
+aNumber = T13
+output aNumber
+addline
+subop float
+T14 = call ambitiousAction args 1.0 2.0 3.0
+justAverage = T14
+subop int
+T15 = call displayMessage args
+aNumber = T15
+output justAverage

@@ -9,6 +9,21 @@ action testMessage() {
     addline;
     print launchMessage;
     addline;
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    print "YAY!";
+    addline;
 }
 
 # Create launchMessage
@@ -18,7 +33,9 @@ addline;
 
 # Test void action
 testMessage();
+testMessage();
 
 # Confirm exit
 let launchMessage = "Ending Program";
+print "YAY!";
 print launchMessage;
