@@ -266,7 +266,6 @@ MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 }
 
 
-
 "("		{
 	// Paren recognition, will be used later as a token for scopes
 	chars++;
@@ -304,7 +303,7 @@ MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 	chars++;
 	printf("%s : LESSTHAN\n", yytext);
 	yylval.string = strdup(yytext); 
-	return COMPARSIONOPERATOR;
+	return COMPARISONOPERATOR;
 }
 
 ">"		{
@@ -312,7 +311,7 @@ MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 	chars++;
 	printf("%s : GREATERTHAN\n", yytext);
 	yylval.string = strdup(yytext); 
-	return COMPARSIONOPERATOR;
+	return COMPARISONOPERATOR;
 }
 
 "=="		{
@@ -320,7 +319,7 @@ MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 	chars++;
 	printf("%s : DOUBLEEQUAL\n", yytext);
 	yylval.string = strdup(yytext); 
-	return COMPARSIONOPERATOR;
+	return COMPARISONOPERATOR;
 }
 
 "!="		{
@@ -328,7 +327,7 @@ MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 	chars++;
 	printf("%s : NOTEQUAL\n", yytext);
 	yylval.string = strdup(yytext); 
-	return COMPARSIONOPERATOR;
+	return COMPARISONOPERATOR;
 }
 	
 ">="		{
@@ -336,7 +335,7 @@ MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 	chars++;
 	printf("%s : GREATERTHAN OR EQUAL\n", yytext);
 	yylval.string = strdup(yytext); 
-	return COMPARSIONOPERATOR;
+	return COMPARISONOPERATOR;
 }
 
 
@@ -345,48 +344,12 @@ MULTI_LINE_COMMENT 	\/\#([^\#]|\#+[^\#\/])*\#\/
 	chars++;
 	printf("%s : LESSTHAN OR EQUAL\n", yytext);
 	yylval.string = strdup(yytext); 
-	return COMPARSIONOPERATOR;
+	return COMPARISONOPERATOR;
 }
-
-
-"!"		{
-	// Bracket recognition, will be used later as a token for scopes
-	chars++;
-	printf("%s : NOT\n", yytext);
-	yylval.string = strdup(yytext); 
-	return LOGICALOPERATOR;
-}
-
-"not"		{
-	// Bracket recognition, will be used later as a token for scopes
-	chars++;
-	printf("%s : NOT\n", yytext);
-	yylval.string = strdup(yytext); 
-	return LOGICALOPERATOR;
-}
-
-
-"&&"		{
-	// Bracket recognition, will be used later as a token for scopes
-	chars++;
-	printf("%s : AND\n", yytext);
-	yylval.string = strdup(yytext); 
-	return LOGICALOPERATOR;
-}
-
 "and"		{
 	// Bracket recognition, will be used later as a token for scopes
 	chars++;
 	printf("%s : AND\n", yytext);
-	yylval.string = strdup(yytext); 
-	return LOGICALOPERATOR;
-}
-
-
-"||"		{
-	// Bracket recognition, will be used later as a token for scopes
-	chars++;
-	printf("%s : OR\n", yytext);
 	yylval.string = strdup(yytext); 
 	return LOGICALOPERATOR;
 }

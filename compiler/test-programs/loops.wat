@@ -1,8 +1,8 @@
 (module
 	;; WAT Setup Declarations
-	(import "env" "writeconsoleInt" (func $writeconsoleInt (param i32)))
-	(import "env" "writeconsoleFloat" (func $writeconsoleFloat (param f32)))
-	(import "env" "writeconsoleString" (func $writeconsoleString (param i32)))
+	(import "env" "printInt" (func $printInt (param i32)))
+	(import "env" "printFloat" (func $printFloat (param f32)))
+	(import "env" "printString" (func $printString (param i32)))
 	(import "env" "newline" (func $newline))
     (memory $0 10)
 	(export "pagememory" (memory $0))
@@ -44,17 +44,21 @@
 		)
 
         ;; Loop and print every number until the start var equals the end var
-        (loop $loop
+        (block (loop
             (br_if 1 (i32.gt_s (local.get $start) (local.get $end)))
-            (call $writeconsoleInt
+            (call $printInt
                 (local.get $start)
             )
             (call $newline)
             (local.set $start
                 (i32.add (local.get $start) (i32.const 1))
             )
-            (br $loop)
+            (br 0)
+        ))
+        (call $printFloat
+            (f32.const 1278.31)
         )
+        (call $newline)
 
     )
     (start $main)

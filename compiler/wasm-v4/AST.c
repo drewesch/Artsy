@@ -16,7 +16,7 @@ struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * c
 	strcpy(astSingleChildNode->RHS, RHS);
 
 	// Set a pointer to the RHS
-	astSingleChildNode -> right = childNode;
+	astSingleChildNode->right = childNode;
 
 	// Return the node to the parser
 	return astSingleChildNode;
@@ -34,7 +34,7 @@ struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50],
 	// Only utilize RHS if it isn't NULL
 	if (RHS != NULL) {
 		strcpy(astDoubleChildNode->RHS, RHS);
-		astDoubleChildNode -> right = rightChildNode;
+		astDoubleChildNode->right = rightChildNode;
 	}
 
 
@@ -109,7 +109,7 @@ char * getExprOp(struct AST * root) {
 
 		// Return operation type
 		return op;
-	} else if (strncmp(root -> nodeType, "Comparsion", 10) == 0) {
+	} else if (strncmp(root->nodeType, "Comparison", 10) == 0) {
 		return "flag";
 	} else if (strncmp(root->LHS, "", 1) != 0) {
 		return getExprOp(root->left);

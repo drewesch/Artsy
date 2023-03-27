@@ -29,6 +29,7 @@ FILE * IRcode; // Optimized IRcode file
 // Standard program variables
 #define MAX_LINE_LENGTH 10000
 char varDelimiter[] = "[], ";
+char * currScope;
 
 // File functions
 
@@ -36,7 +37,8 @@ char varDelimiter[] = "[], ";
 // Required before generating any WAT code
 void initAssemblyFile() {
     printf("\n----Generating WebAssembly Text File----\n\n"); // Creates a WAT file with a generic header that needs to be in every file
-    IRcode = fopen("IRcodeOptimized.ir", "r"); 
+    // IRcode = fopen("IRcodeOptimized.ir", "r");
+    IRcode = fopen("IRcode.ir", "r");
     WATcode = fopen("WATcode.wat", "w"); 
     MAINcode = fopen("MAINcode.wat", "w"); 
     VARScode = fopen("VARScode.wat", "w"); 
@@ -188,7 +190,13 @@ char * getTempVarKind(char * name) {
 
 // Helper function to find scopeType
 char * getScopeType(char * varName) {
-    return found(varName, "global", 0) ? "global" : "local";
+    // Goal: Remove any "[]" characters from the string, create a new variable as a token
+    char * varToken = malloc(100*sizeof(char));
+    strcpy(varToken, varName);
+    varToken = strtok(varToken, varDelimiter);
+
+    // Return based on whether it is found in global or not
+    return found(varToken, "global", 0) ? "global" : "local";
 }
 
 // WAT CODE PRINT MODULES
@@ -213,9 +221,52 @@ void generateStartModule() {
 }
 
 // Function module for handling addline statements
-void generateAddLineWAT(char * fileType) {
-    FILE * printFile = getFileType(fileType);
+void generateAddLineWAT(FILE * printFile) {
     fprintf(printFile, "\t\t(call $newline)\n");
+}
+
+// Function module for printing get statements for all variable types in WAT
+void generateGetStatementWAT(FILE * printFile, char * varName) {
+    // Step 1: Get the primary typem, the length, and the scope type of the variable name
+    char * primaryType = getPrimaryType(varName);
+    int len = strlen(varName);
+    char * scopeType = getScopeType(varName);
+
+    // Step 2a: Print a const get statement if it's not a variable
+    if (strncmp(primaryType, "var", 3) != 0) {
+        // Get WAT Type
+        char * WATType = getWATType(getPrimaryType(varName));
+
+        // Print the statement
+        fprintf(printFile, " (%s.const %s)", WATType, varName);
+    }
+
+    // Step 2b: Print an array index get statement if it's a variable with a "[]"
+    else if (varName[len - 1] == ']') {
+        // Goal: Return the get_element statement
+        
+        // Get the array variable and the index number
+        char * arrName = calloc(100, sizeof(char));
+        char * arrIndex = calloc(100, sizeof(char));
+
+        // Assign variable name
+        strcpy(arrName, varName);
+        arrName = strtok(arrName, varDelimiter);
+
+        // Assign array index variable
+        strcpy(arrIndex, varName);
+        arrIndex = strtok(arrIndex, varDelimiter);
+        arrIndex = strtok(NULL, varDelimiter);
+        sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + arrIndex);
+
+        // Print array index return statement
+        fprintf(printFile, " (call $get_element (%s.get $%s) (i32.const %s))\n", scopeType, arrName, arrIndex);   
+    }
+    
+    // Step 2c: Print a standard scope.get statment using the variable name
+    else {
+        fprintf(printFile, " (%s.get $%s)", scopeType, varName); 
+    }
 }
 
 // Function module for handling parameter statements
@@ -233,40 +284,14 @@ void generateResultWAT(FILE * printFile, char * returnType) {
 }
 
 void generateReturnWAT(char * varName, char * scopeType) {
-    int len = strlen(varName);
+    // Create starting return statement in WAT
+    fprintf(LOCALcode, "\t\t(return");
 
-    // Return statement for non-variables
-    if (strncmp(getPrimaryType(varName), "var", 3) != 0) {
-        // Get WAT Type for printing to the console
-        char * WATType = getWATType(getPrimaryType(varName));
-        fprintf(LOCALcode, "\t\t(return (%s.const %s))", WATType, varName);
-    }
-    // Return statement for array indexes
-    else if (varName[len - 1] == ']') {
-        // Goal: Return the get_element statement
-        
-        // Get the array variable and the index number
-        char * arrName = malloc(100*sizeof(char));
-        char * arrIndex = malloc(100*sizeof(char));
+    // Generate the Get Statement in WAT
+    generateGetStatementWAT(LOCALcode, varName);
 
-        // Assign variable name
-        strcpy(arrName, varName);
-        arrName = strtok(arrName, varDelimiter);
-
-        // Assign array index variable
-        strcpy(arrIndex, varName);
-        arrIndex = strtok(arrIndex, varDelimiter);
-        arrIndex = strtok(NULL, varDelimiter);
-        sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + arrIndex);
-
-        // Print array index return statement
-        fprintf(LOCALcode, "\t\t(return (call $get_element (%s.get $%s) (i32.const %s)))\n", scopeType, arrName, arrIndex);
-    }
-    // Return statement for variables
-    else {
-        // Print standard variable return code
-        fprintf(LOCALcode, "\t\t(return (local.get $%s))", varName); 
-    }     
+    // Generate the return ending statement in WAT
+    fprintf(LOCALcode, ")\n");    
 }
 
 void generateFunctionEndWAT(char * currScope) {
@@ -280,6 +305,8 @@ void setStringElementWAT(FILE * printFile, char * scopeType, char * arrName, int
 
 // Function module for handling printing solo string in Artsy code
 void generatePrintStringWAT(char * strVal, char * fileType) {
+    printf("strVal: %s\n", strVal);
+
     // Step 1: Generate a unique print variable name
     char * printVar = malloc(sizeof(char)*100);
     snprintf(printVar, 100, "_printstr_%d", currPrintStrings);
@@ -345,6 +372,38 @@ void generatePrintStringWAT(char * strVal, char * fileType) {
 
 }
 
+void generateComparisonWAT(FILE * printFile, char * leftTerm, char * compareType, char * rightTerm) {
+    // Step 1: Determine WAT Type
+    char * compareWATType = calloc(10, sizeof(char));
+    if (found(leftTerm, currScope, 1)) {
+        compareWATType = getWATType(getItemType(leftTerm, currScope, 1));
+    } else {
+        compareWATType = getWATType(getPrimaryType(leftTerm));
+    }
+
+    // Step 2: Determine the WAT operation type from the compareType variable
+    char * compareOpWAT = getCompareWATType(compareType, compareWATType);
+
+    // Step 3a: Print the starting statement in WAT
+    fprintf(printFile, " (%s.%s", compareWATType, compareOpWAT);
+
+    // Step 3b: Print out the WAT format for both the terms
+    generateGetStatementWAT(printFile, leftTerm);
+    generateGetStatementWAT(printFile, rightTerm);
+
+    // Step 3c: Finish the comparison statement in WAT
+    fprintf(printFile, ")");
+}
+
+void generateWhileStartWAT(FILE * printFile) {
+    fprintf(printFile, "\t\t(block (loop\n\t\t(br_if 1");
+}
+
+// Function module for handling exiting from While Loops
+void generateWhileExitWAT(FILE * printFile) {
+    fprintf(printFile, "\t\t(br 0)\n\t\t))");
+}
+
 // Standard function to generate the main section and text section
 // Required before generating any WAT statements
 void generateText() {
@@ -357,13 +416,14 @@ void generateText() {
     int inParams = 0;
 
     // Current operation variable
-    char * currOp = malloc(100*sizeof(char));
+    char * currOp = calloc(100, sizeof(char));
 
     // Global return type variable for a given function
-    char * returnType = malloc(100*sizeof(char));
+    char * returnType = calloc(100, sizeof(char));
 
     // Current scope variable
-    char * currScope = "global";
+    currScope = malloc(100*sizeof(char));
+    currScope = "global";
 
     // Loop through each line in the code and generate WAT for each valid statement
     while (fgets(line, MAX_LINE_LENGTH, IRcode) != NULL) {
@@ -430,6 +490,7 @@ void generateText() {
                 inParams = 0;
                 generateResultWAT(WATcode, returnType);
             }
+            printf("test: %s\n", currOp);
 
             // Set current operation
             strcpy(currOp, strArr[1]);
@@ -449,7 +510,7 @@ void generateText() {
         // Case for addline statement
         else if (strncmp(strArr[0], "addline", 7) == 0) {
             // Call print line module
-            generateAddLineWAT(isGlobal ? "MAINcode" : "LOCALcode");
+            generateAddLineWAT(isGlobal ? MAINcode : LOCALcode);
         }
 
         // Case for parameter declarations in functions
@@ -474,19 +535,11 @@ void generateText() {
                 generateResultWAT(WATcode, returnType);
             }
 
-            // Get variable name
-            char * fullVar = strArr[1];
-
-            // Get array token for array index callbacks
-            char * varName = malloc(100*sizeof(char));
-            strcpy(varName, fullVar);
-            varName = strtok(varName, varDelimiter);
-
             // Get variable scopeType
-            char * scopeType = getScopeType(varName);
+            char * scopeType = getScopeType(strArr[1]);
             
             // Print function ending code
-            generateReturnWAT(fullVar, scopeType);
+            generateReturnWAT(strArr[1], scopeType);
         }
 
         // Case for output statements
@@ -514,8 +567,8 @@ void generateText() {
                         fprintf(LOCALcode, "\t\t)\n");
                     } else if (strncmp(varType, "string", 3) == 0) {
                         // Concatenate the rest of the tokens into one string variable to get the whole string
-                        char * strVar = malloc(sizeof(char)*256);
-                        for (int i = 1; i < lenIndex+1; i++) {
+                        char * strVar = calloc(maxArrSize, sizeof(char));
+                        for (int i = 1; i < lenIndex + 1; i++) {
                             strcat(strVar, strArr[i]);
                             strcat(strVar, " ");
                         }
@@ -537,8 +590,8 @@ void generateText() {
                         fprintf(MAINcode, "\t\t)\n");
                     } else if (strncmp(varType, "string", 3) == 0) {
                         // Concatenate the rest of the tokens into one string variable to get the whole string
-                        char * strVar = malloc(sizeof(char)*256);
-                        for (int i = 1; i < lenIndex+1; i++) {
+                        char * strVar = calloc(maxArrSize, sizeof(char));
+                        for (int i = 1; i < lenIndex + 1; i++) {
                             strcat(strVar, strArr[i]);
                             strcat(strVar, " ");
                         }
@@ -733,6 +786,25 @@ void generateText() {
             }
         }
 
+        // Case for While Statements
+        else if (strncmp(strArr[0], "while", 5) == 0) {
+            FILE* printFile = isGlobal ? MAINcode : LOCALcode;
+            generateWhileStartWAT(printFile);
+
+            // Determine if uses a single statement
+            if (lenIndex == 3) {
+                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3]);
+            }
+
+            // End While Condition Line
+            fprintf(printFile, ")\n");
+        }
+
+        // Case for While Statements
+        else if (strncmp(strArr[0], "end", 3) == 0 && strncmp(strArr[1], "while", 5) == 0 ) {
+            generateWhileExitWAT(isGlobal ? MAINcode : LOCALcode);
+        }
+
         // Case for Void Function Calls
         else if (strncmp(strArr[0], "call", 4) == 0) {
             // Set function return type
@@ -746,7 +818,7 @@ void generateText() {
 
             // Output function call lines
             // If there are no arguments after the "args" token, generate the call on a single line
-            if (strArr[3] == NULL || strncmp(strArr[3], "", 1) == 0) {
+            if (strArr[3] == NULL || strncmp(strArr[3], "\0", 1) == 0) {
                 if (isGlobal) {
                     fprintf(MAINcode, "\t\t(call $%s)\n", funcVar);
                 } else {
@@ -766,7 +838,7 @@ void generateText() {
                 int index = 3;
                 while (strArr[index] != NULL) {
                     // Double check and break if it's the end of sequence
-                    if (strncmp(strArr[index], "", 1) == 0) {
+                    if (strncmp(strArr[index], "\0", 1) == 0) {
                         break;
                     }
 
@@ -816,7 +888,7 @@ void generateText() {
         // STR1 = Assigned Variable, STR2 = "=", STR3 = Primary Variable
 
         // Assignment Operation
-        else if (strArr[3] == NULL || strncmp(strArr[3], "", 1) == 0 || strncmp(strArr[3], "\"", 1) == 0) {
+        else if (strArr[3] == NULL || strncmp(strArr[3], "\0", 1) == 0 || strncmp(strArr[3], "\"", 1) == 0) {
             // Set function return type
             if (inParams) {
                 inParams = 0;
@@ -841,7 +913,7 @@ void generateText() {
             }
 
             // If a current operation has not been assigned, get the current operation from the assignment statement
-            if (strncmp(currOp, "", 1) == 0 || currOp == NULL) {
+            if (strncmp(currOp, "\0", 1) == 0 || currOp == NULL) {
                 currOp = getPrimaryType(primaryVar);
             }
 
@@ -1004,7 +1076,7 @@ void generateText() {
             }
             
             // Reset currOp variable
-            currOp = "";
+            currOp = calloc(100, sizeof(char));
         }
 
         // Case for Standard Function Calls
@@ -1080,7 +1152,7 @@ void generateText() {
                 int index = 5;
                 while (strArr[index] != NULL) {
                     // Double check and break if it's the end of sequence
-                    if (strncmp(strArr[index], "", 1) == 0) {
+                    if (strncmp(strArr[index], "\0", 1) == 0) {
                         break;
                     }
 
@@ -1131,7 +1203,7 @@ void generateText() {
             }
             
             // Reset currOp variable
-            currOp = "";
+            currOp = calloc(100, sizeof(char));
         }
 
         // c. Basic Operations

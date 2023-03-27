@@ -38,7 +38,7 @@ int blockNumber;
 %token <string> FLOAT
 %token <string> STRING
 %token <string> LOGICALOPERATOR
-%token <string> COMPARSIONOPERATOR
+%token <string> COMPARISONOPERATOR
 %token <char> COMMA
 %token <char> SEMICOLON
 %token <char> EQ
@@ -72,7 +72,7 @@ int blockNumber;
 %printer { fprintf(yyoutput, "%d", $$); } NUMBER; */
 
 %left LOGICALOPERATOR 
-%left COMPARSIONOPERATOR
+%left COMPARISONOPERATOR
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
 %left MODULO
@@ -277,10 +277,10 @@ Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 		// Generate write declarations as a statement in the parser
 		$$ = AST_SingleChildNode("write", $2, $2);
 
-		printf("Write: %s", $2->nodeType);
+		printf("Write: %s\n", $2->nodeType);
 
 		// If the primary type is a variable, check if the variable is in the symbol table
-		if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
+		if (!strcmp($2->nodeType, "int") && !strcmp($2->nodeType, "float") && !strcmp($2->nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
 			printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
 			exit(1);
 		}
@@ -522,7 +522,7 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					
 					// Generate AST Nodes (doubly linked)
 					$$ = AST_DoublyChildNodes("+", $1, $3, $1, $3);
-					printf("EXPR PLUS EXPR: %s \n------------------------------------------------------------------\n", $3 ->nodeType);
+					printf("EXPR PLUS EXPR: %s \n------------------------------------------------------------------\n", $3->nodeType);
 				}
 	| Expr MINUS Expr { printf("\n RECOGNIZED RULE: MINUS statement\n");
 					// Semantic checks
@@ -531,13 +531,15 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 					CheckOperationType(getExprOp($1), getExprOp($3));
 					
 					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("-",$1,$3, $1, $3);
+					$$ = AST_DoublyChildNodes("-", $1, $3, $1, $3);
 				}
 	| Expr MULTIPLY Expr { printf("\n RECOGNIZED RULE: MULTIPLY statement\n");
 					// Semantic checks
 					
 					// Check to see if the LHS matches the RHS
 					CheckOperationType(getExprOp($1), getExprOp($3));
+
+					printf("Node: *, Term 1: %s, Term 2: %s\n", $1->RHS, $3->RHS);
 					
 					// Generate AST Nodes (doubly linked)
 					$$ = AST_DoublyChildNodes("*", $1, $3, $1, $3);
@@ -596,13 +598,16 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 				// Generate AST Nodes (doubly linked)
 				$$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
 			}
-	| Expr COMPARSIONOPERATOR Expr {
+	| Expr COMPARISONOPERATOR Expr {
 		printf("\n RECOGNIZED RULE: Comparison statement\n");
-		CheckComparisonType($1, $3, scopeStack, stackPointer);
 		struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
-		$$ = AST_SingleChildNode("Comparsion", tempNode, tempNode);
+		$$ = AST_SingleChildNode("Comparison", tempNode, tempNode);
 	}
-	| Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical", $1, $3, $1, $3);}			
+	| Expr LOGICALOPERATOR Expr {
+		printf("\n RECOGNIZED RULE: Logical statement\n");
+		struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
+		$$ = AST_SingleChildNode("Logical", tempNode, tempNode);
+	}			
 	| LEFTPAREN Expr RIGHTPAREN {$$ = $2;}
 	| FunctionCall {$$ = $1;}
 	| TRUE {$$ = AST_SingleChildNode("flag", $1, $1);}

@@ -47,8 +47,8 @@ struct Entry* getParamList(char * id, struct AST* paramlist, char scopeStack[50]
 		return list;
 	}
 	else if(strcmp(paramlist->nodeType, "ParaDecl comma ParaDeclListTail") == 0) {
-		list = getParamList(id, paramlist -> left, scopeStack, stackPointer);
-		list->paramlist = getParamList(id, paramlist -> right, scopeStack, stackPointer);
+		list = getParamList(id, paramlist->left, scopeStack, stackPointer);
+		list->paramlist = getParamList(id, paramlist->right, scopeStack, stackPointer);
 	}
 
 	return list;
@@ -104,8 +104,8 @@ void showSymTable(){
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				printf("%5d %15s  %7s  %7s %6d %15s \n",tempList -> itemID, tempList -> itemName, tempList -> itemKind, tempList ->itemType, tempList  -> arrayLength, tempList ->scope);
-				tempList = tempList -> paramlist;
+				printf("%5d %15s  %7s  %7s %6d %15s \n",tempList->itemID, tempList->itemName, tempList->itemKind, tempList->itemType, tempList->arrayLength, tempList->scope);
+				tempList = tempList->paramlist;
 			}
 		}
 	}
@@ -122,18 +122,18 @@ int found(char itemName[50], char scopeStack[50][50], int stackPointer){
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				int str1 = strcmp(tempList -> itemName, itemName);
+				int str1 = strcmp(tempList->itemName, itemName);
 				// If these strings are the same, return true
 				if( str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
-						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						int str2 = strcmp(tempList->scope, scopeStack[j]);
 						if(str2 == 0) {
 							//printf("Found: %s\n-----------------------", itemName);
 							return 1; // found the ID in the table
 						}
 					}
 				}
-				tempList = tempList -> paramlist;
+				tempList = tempList->paramlist;
 			}
 		}
 		
@@ -162,19 +162,19 @@ void updateItemArrayLength(char itemName[50], char scopeStack[50][50], int stack
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				int str1 = strcmp(tempList -> itemName, itemName);
+				int str1 = strcmp(tempList->itemName, itemName);
 
 				// If these strings are the same, update length
 				if(str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
-						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						int str2 = strcmp(tempList->scope, scopeStack[j]);
 						if(str2 == 0) {
 							symTabItems[i].arrayLength = newLen;
 							return;
 						}
 					}
 				}
-				tempList = tempList -> paramlist;
+				tempList = tempList->paramlist;
 			}
 		}
 		
@@ -204,17 +204,17 @@ struct Entry* getItem(char itemName[50], char scopeStack[50][50], int stackPoint
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				int str1 = strcmp(tempList -> itemName, itemName);
+				int str1 = strcmp(tempList->itemName, itemName);
 				// If these strings are the same, return true
 				if( str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
-						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						int str2 = strcmp(tempList->scope, scopeStack[j]);
 						if(str2 == 0) {
 							return &symTabItems[i]; // found the ID in the table
 						}
 					}
 				}
-				tempList = tempList -> paramlist;
+				tempList = tempList->paramlist;
 			}
 		}
 		
@@ -242,18 +242,18 @@ int getItemID(char itemName[50], char scopeStack[50][50], int stackPointer) {
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				int str1 = strcmp(tempList -> itemName, itemName);
+				int str1 = strcmp(tempList->itemName, itemName);
 
 				// If these strings are the same, return true
 				if(str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
-						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						int str2 = strcmp(tempList->scope, scopeStack[j]);
 						if (str2 == 0) {
 							return symTabItems[i].itemID;
 						}
 					}
 				}
-				tempList = tempList -> paramlist;
+				tempList = tempList->paramlist;
 			}
 		}
 		
@@ -283,18 +283,18 @@ char* getItemKind(char itemName[50], char scopeStack[50][50], int stackPointer) 
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				int str1 = strcmp(tempList -> itemName, itemName);
+				int str1 = strcmp(tempList->itemName, itemName);
 
 				// If these strings are the same, return true
 				if( str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
-						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						int str2 = strcmp(tempList->scope, scopeStack[j]);
 						if(str2 == 0) {
 							return tempList->itemKind;
 						}
 					}
 				}
-				tempList = tempList -> paramlist;
+				tempList = tempList->paramlist;
 			}
 		}
 		
@@ -324,18 +324,18 @@ char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer) 
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				int str1 = strcmp(tempList -> itemName, itemName);
+				int str1 = strcmp(tempList->itemName, itemName);
 
 				// If these strings are the same, return true
 				if( str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
-						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						int str2 = strcmp(tempList->scope, scopeStack[j]);
 						if(str2 == 0) {
 							return tempList->itemType;
 						}
 					}
 				}
-				tempList = tempList -> paramlist;
+				tempList = tempList->paramlist;
 			}
 		}
 		
@@ -365,18 +365,18 @@ int getArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer)
 		if(symTabItems[i].paramlist) {
 			struct Entry* tempList = symTabItems[i].paramlist;
 			while(tempList) {
-				int str1 = strcmp(tempList -> itemName, itemName);
+				int str1 = strcmp(tempList->itemName, itemName);
 
 				// If these strings are the same, return true
 				if( str1 == 0){
 					for(int j = stackPointer; j >= 0; j--) {
-						int str2 = strcmp(tempList -> scope, scopeStack[j]);
+						int str2 = strcmp(tempList->scope, scopeStack[j]);
 						if(str2 == 0) {
 							return tempList->arrayLength;
 						}
 					}
 				}
-				tempList = tempList -> paramlist;
+				tempList = tempList->paramlist;
 			}
 		}
 		
@@ -420,7 +420,7 @@ int countParams(int itemID) {
 	// For each loop, add one parameter to the counter
 	while(tempList) {
 		totalParams++;
-		tempList = tempList -> paramlist;
+		tempList = tempList->paramlist;
 	}
 	
 	// Return total count
@@ -446,7 +446,7 @@ char * getParamType(int itemID, int numParams, int searchIndex) {
 			strcpy(paramType, tempList->itemType);
 			return paramType;
 		}
-		tempList = tempList -> paramlist;
+		tempList = tempList->paramlist;
 	}
 	// If it is not found, return none
 	return "none";

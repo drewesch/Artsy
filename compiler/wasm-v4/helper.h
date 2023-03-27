@@ -10,6 +10,7 @@ int isFloat(char * phrase);
 int isVar(char * phrase);
 char * escapeCharType(char c);
 char * getWATType(char * phrase);
+char * getCompareWATType(char * symbol, char * WATType);
 int getMoveAmount(char * phrase);
 char * convertToASCII(char * phrase);
 

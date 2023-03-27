@@ -139,19 +139,47 @@ char * escapeCharType(char c) {
 
 // Helper function that maps IRcode to the corresponding WebAssembly type
 char * getWATType(char * phrase) {
-    char * watType = "";
+    char * watType = calloc(10, sizeof(char));
 
     if (strncmp(phrase, "float", 5) == 0) {
-        watType = "f32";
-        return watType;
+        strcpy(watType, "f32");
     } else if (strncmp(phrase, "int", 3) == 0 || strncmp(phrase, "string", 6) == 0) {
-        watType = "i32";
-        return watType;
+        strcpy(watType, "i32");
     } else {
         // Uses a void or undefined keyword
-        watType = "void";
-        return watType;
+        strcpy(watType, "void");
     }
+    return watType;
+}
+
+char * getCompareWATType(char * symbol, char * WATType) {
+    char * compareType = calloc(10, sizeof(char));
+
+    if (strncmp(symbol, "<", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "gt_s");
+    } else if (strncmp(symbol, "<", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "gt");
+    } else if (strncmp(symbol, "<=", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "ge_s");
+    } else if (strncmp(symbol, "<=", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "ge");
+    } else if (strncmp(symbol, ">", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "lt_s");
+    } else if (strncmp(symbol, ">", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "lt");
+    } else if (strncmp(symbol, ">=", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "le_s");
+    } else if (strncmp(symbol, ">=", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "le");
+    } else if (strncmp(symbol, "==", 1) == 0) {
+        strcpy(compareType, "eq");
+    } else if (strncmp(symbol, "!=", 1) == 0) {
+        strcpy(compareType, "ne");
+    } else {
+        // Uses a void or undefined keyword
+        strcpy(compareType, "void");
+    }
+    return compareType;
 }
 
 // Helper function that returns the number of characters to move after finding the corresponding WebAssembly type

@@ -128,7 +128,7 @@ enum yysymbol_kind_t
   YYSYMBOL_FLOAT = 6,                      /* FLOAT  */
   YYSYMBOL_STRING = 7,                     /* STRING  */
   YYSYMBOL_LOGICALOPERATOR = 8,            /* LOGICALOPERATOR  */
-  YYSYMBOL_COMPARSIONOPERATOR = 9,         /* COMPARSIONOPERATOR  */
+  YYSYMBOL_COMPARISONOPERATOR = 9,         /* COMPARISONOPERATOR  */
   YYSYMBOL_COMMA = 10,                     /* COMMA  */
   YYSYMBOL_SEMICOLON = 11,                 /* SEMICOLON  */
   YYSYMBOL_EQ = 12,                        /* EQ  */
@@ -586,8 +586,8 @@ static const yytype_int16 yyrline[] =
      276,   289,   293,   297,   311,   312,   313,   316,   322,   323,
      324,   326,   331,   343,   351,   364,   374,   386,   396,   407,
      418,   419,   420,   421,   427,   428,   437,   438,   441,   446,
-     447,   452,   457,   465,   490,   517,   527,   536,   545,   582,
-     591,   599,   605,   606,   607,   608,   609,   613
+     447,   452,   457,   465,   490,   517,   527,   536,   547,   584,
+     593,   601,   606,   611,   612,   613,   614,   618
 };
 #endif
 
@@ -604,7 +604,7 @@ static const char *yysymbol_name (yysymbol_kind_t yysymbol) YY_ATTRIBUTE_UNUSED;
 static const char *const yytname[] =
 {
   "\"end of file\"", "error", "\"invalid token\"", "TYPE", "ID",
-  "INTEGER", "FLOAT", "STRING", "LOGICALOPERATOR", "COMPARSIONOPERATOR",
+  "INTEGER", "FLOAT", "STRING", "LOGICALOPERATOR", "COMPARISONOPERATOR",
   "COMMA", "SEMICOLON", "EQ", "LEFTBRACKET", "RIGHTBRACKET", "LEFTPAREN",
   "RIGHTPAREN", "LEFTSQUARE", "RIGHTSQUARE", "NUMBER", "LET", "DECLARE",
   "AS", "PRINT", "ADDLINE", "REPORT", "IF", "ELIF", "ELSE", "WHILE",
@@ -1562,10 +1562,10 @@ yyreduce:
 		// Generate write declarations as a statement in the parser
 		(yyval.ast) = AST_SingleChildNode("write", (yyvsp[-1].ast), (yyvsp[-1].ast));
 
-		printf("Write: %s", (yyvsp[-1].ast)->nodeType);
+		printf("Write: %s\n", (yyvsp[-1].ast)->nodeType);
 
 		// If the primary type is a variable, check if the variable is in the symbol table
-		if (!strcmp((yyvsp[-1].ast) -> nodeType, "int") && !strcmp((yyvsp[-1].ast) -> nodeType, "float") && !strcmp((yyvsp[-1].ast) -> nodeType, "string") && strncmp(getPrimaryType((yyvsp[-1].ast)), "var", 3) == 0 && !found((yyvsp[-1].ast), scopeStack, stackPointer)) {
+		if (!strcmp((yyvsp[-1].ast)->nodeType, "int") && !strcmp((yyvsp[-1].ast)->nodeType, "float") && !strcmp((yyvsp[-1].ast)->nodeType, "string") && strncmp(getPrimaryType((yyvsp[-1].ast)), "var", 3) == 0 && !found((yyvsp[-1].ast), scopeStack, stackPointer)) {
 			printf("SEMANTIC ERROR: Variable %s does not exist.\n", (yyvsp[-1].ast));
 			exit(1);
 		}
@@ -1949,7 +1949,7 @@ yyreduce:
 					
 					// Generate AST Nodes (doubly linked)
 					(yyval.ast) = AST_DoublyChildNodes("+", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
-					printf("EXPR PLUS EXPR: %s \n------------------------------------------------------------------\n", (yyvsp[0].ast) ->nodeType);
+					printf("EXPR PLUS EXPR: %s \n------------------------------------------------------------------\n", (yyvsp[0].ast)->nodeType);
 				}
 #line 1955 "parser.tab.c"
     break;
@@ -1963,7 +1963,7 @@ yyreduce:
 					CheckOperationType(getExprOp((yyvsp[-2].ast)), getExprOp((yyvsp[0].ast)));
 					
 					// Generate AST Nodes (doubly linked)
-					(yyval.ast) = AST_DoublyChildNodes("-",(yyvsp[-2].ast),(yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
+					(yyval.ast) = AST_DoublyChildNodes("-", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
 				}
 #line 1969 "parser.tab.c"
     break;
@@ -1975,15 +1975,17 @@ yyreduce:
 					
 					// Check to see if the LHS matches the RHS
 					CheckOperationType(getExprOp((yyvsp[-2].ast)), getExprOp((yyvsp[0].ast)));
+
+					printf("Node: *, Term 1: %s, Term 2: %s\n", (yyvsp[-2].ast)->RHS, (yyvsp[0].ast)->RHS);
 					
 					// Generate AST Nodes (doubly linked)
 					(yyval.ast) = AST_DoublyChildNodes("*", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
 				}
-#line 1983 "parser.tab.c"
+#line 1985 "parser.tab.c"
     break;
 
   case 68: /* Expr: Expr DIVIDE Expr  */
-#line 545 "parser.y"
+#line 547 "parser.y"
                            { printf("\n RECOGNIZED RULE: DIVIDE statement\n");
 					// Semantic checks
 					
@@ -2021,11 +2023,11 @@ yyreduce:
 					}
 
 				}
-#line 2025 "parser.tab.c"
+#line 2027 "parser.tab.c"
     break;
 
   case 69: /* Expr: Expr EXPONENT Expr  */
-#line 582 "parser.y"
+#line 584 "parser.y"
                              { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
 				
@@ -2035,11 +2037,11 @@ yyreduce:
 				// Generate AST Nodes (doubly linked)
 				(yyval.ast) = AST_DoublyChildNodes("^", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
 			}
-#line 2039 "parser.tab.c"
+#line 2041 "parser.tab.c"
     break;
 
   case 70: /* Expr: Expr COMMA Expr  */
-#line 591 "parser.y"
+#line 593 "parser.y"
                           { printf("\n RECOGNIZED RULE: BinOp statement\n");
 				// Semantic checks
 				
@@ -2048,52 +2050,55 @@ yyreduce:
 				// Generate AST Nodes (doubly linked)
 				(yyval.ast) = AST_DoublyChildNodes("EXP ", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
 			}
-#line 2052 "parser.tab.c"
+#line 2054 "parser.tab.c"
     break;
 
-  case 71: /* Expr: Expr COMPARSIONOPERATOR Expr  */
-#line 599 "parser.y"
+  case 71: /* Expr: Expr COMPARISONOPERATOR Expr  */
+#line 601 "parser.y"
                                        {
 		printf("\n RECOGNIZED RULE: Comparison statement\n");
-		CheckComparisonType((yyvsp[-2].ast), (yyvsp[0].ast), scopeStack, stackPointer);
 		struct AST * tempNode = AST_DoublyChildNodes((yyvsp[-1].string), (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
-		(yyval.ast) = AST_SingleChildNode("Comparsion", tempNode, tempNode);
+		(yyval.ast) = AST_SingleChildNode("Comparison", tempNode, tempNode);
 	}
-#line 2063 "parser.tab.c"
+#line 2064 "parser.tab.c"
     break;
 
   case 72: /* Expr: Expr LOGICALOPERATOR Expr  */
-#line 605 "parser.y"
-                                    {(yyval.ast) = AST_DoublyChildNodes("Logical", (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));}
-#line 2069 "parser.tab.c"
+#line 606 "parser.y"
+                                    {
+		printf("\n RECOGNIZED RULE: Logical statement\n");
+		struct AST * tempNode = AST_DoublyChildNodes((yyvsp[-1].string), (yyvsp[-2].ast), (yyvsp[0].ast), (yyvsp[-2].ast), (yyvsp[0].ast));
+		(yyval.ast) = AST_SingleChildNode("Logical", tempNode, tempNode);
+	}
+#line 2074 "parser.tab.c"
     break;
 
   case 73: /* Expr: LEFTPAREN Expr RIGHTPAREN  */
-#line 606 "parser.y"
+#line 611 "parser.y"
                                     {(yyval.ast) = (yyvsp[-1].ast);}
-#line 2075 "parser.tab.c"
+#line 2080 "parser.tab.c"
     break;
 
   case 74: /* Expr: FunctionCall  */
-#line 607 "parser.y"
+#line 612 "parser.y"
                        {(yyval.ast) = (yyvsp[0].ast);}
-#line 2081 "parser.tab.c"
+#line 2086 "parser.tab.c"
     break;
 
   case 75: /* Expr: TRUE  */
-#line 608 "parser.y"
+#line 613 "parser.y"
                {(yyval.ast) = AST_SingleChildNode("flag", (yyvsp[0].string), (yyvsp[0].string));}
-#line 2087 "parser.tab.c"
+#line 2092 "parser.tab.c"
     break;
 
   case 76: /* Expr: FALSE  */
-#line 609 "parser.y"
+#line 614 "parser.y"
                 {(yyval.ast) = AST_SingleChildNode("flag",(yyvsp[0].string), (yyvsp[0].string));}
-#line 2093 "parser.tab.c"
+#line 2098 "parser.tab.c"
     break;
 
   case 77: /* FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN  */
-#line 613 "parser.y"
+#line 618 "parser.y"
                                                {
 	printf("\nRECOGNIZED RULE: FunctionCall\n");
 	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", (yyvsp[-1].ast), (yyvsp[-1].ast));
@@ -2124,11 +2129,11 @@ yyreduce:
         }
     }
 }
-#line 2128 "parser.tab.c"
+#line 2133 "parser.tab.c"
     break;
 
 
-#line 2132 "parser.tab.c"
+#line 2137 "parser.tab.c"
 
       default: break;
     }
@@ -2321,7 +2326,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 645 "parser.y"
+#line 650 "parser.y"
 
 
 int parser_main(FILE*inputfile)

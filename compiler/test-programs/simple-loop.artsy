@@ -1,0 +1,21 @@
+# Declare variables
+declare x as int;
+declare y as int;
+
+# Assign values
+let x = -1;
+let y = 30;
+
+/#
+While Test!!!
+
+Prints all numbers of x from -1 to 40 onto a new line
+
+#/
+
+while (x < y and x < 30 or y > 30 or y < 10 and x < 100) {
+	print "Line #"; # Print start statement
+	print x * x; # Print expression
+	addline;
+	let x = x + 1; # Increase iterator variable
+}

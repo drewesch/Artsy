@@ -14,107 +14,53 @@
 	(export "set_element" (func $set_element))
 
 	;; Artsy Program in WAT
-	(global $aNumber (mut i32) (i32.const 0))
-	(global $message (mut i32) (i32.const 0))
-	(global $justAverage (mut f32) (f32.const 0.0))
-	(func $average (param $a f32) (param $b f32) (param $c f32) (result f32)
-		(local $avg f32)
-		(local $T0 f32)
-		(local $T1 f32)
+	(global $x (mut i32) (i32.const 0))
+	(global $y (mut i32) (i32.const 0))
+	;; Start Main Function
+	(func $main
+		(local $_printstr_0 i32)
+		(local $T0 i32)
+		(local $T1 i32)
+
+		(global.set $x
+			(i32.const -1)
+		)
+		(global.set $y
+			(i32.const 30)
+		)
+		(block (loop
+		(br_if 1)
+		(local.set $_printstr_0 (call $create_array (i32.const 9)))
+		(call $set_element (local.get $_printstr_0) (i32.const 0) (i32.const 76))
+		(call $set_element (local.get $_printstr_0) (i32.const 1) (i32.const 105))
+		(call $set_element (local.get $_printstr_0) (i32.const 2) (i32.const 110))
+		(call $set_element (local.get $_printstr_0) (i32.const 3) (i32.const 101))
+		(call $set_element (local.get $_printstr_0) (i32.const 4) (i32.const 32))
+		(call $set_element (local.get $_printstr_0) (i32.const 5) (i32.const 35))
+		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 0)))
+		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 1)))
+		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 2)))
+		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 3)))
+		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 4)))
+		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 5)))
 		(local.set $T0
-			(f32.add
-				(local.get $a)
-				(local.get $c)
+			(i32.mul
+				(global.get $x)
+				(global.get $x)
 			)
 		)
+		(call $printInt (local.get $T0))
+		(call $newline)
 		(local.set $T1
-			(f32.div
-				(local.get $T0)
-				(f32.const 3.0)
+			(i32.add
+				(global.get $x)
+				(i32.const 1)
 			)
 		)
-		(local.set $avg
+		(global.set $x
 			(local.get $T1)
 		)
-		(return (local.get $avg))		
-	)
-	(export "average" (func $average))
-	(func $displayMessage (result i32)
-		(call $set_element
-			(global.get $message)
-			(i32.const 0)
-			(i32.const 73)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 1)
-			(i32.const 32)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 2)
-			(i32.const 99)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 3)
-			(i32.const 97)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 4)
-			(i32.const 110)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 5)
-			(i32.const 32)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 6)
-			(i32.const 112)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 7)
-			(i32.const 114)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 8)
-			(i32.const 105)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 9)
-			(i32.const 110)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 10)
-			(i32.const 116)
-		)
-		(call $set_element
-			(global.get $message)
-			(i32.const 11)
-			(i32.const 58)
-		)
-		(call $printString (call $get_element (global.get $message) (i32.const 0)))
-		(call $printString (call $get_element (global.get $message) (i32.const 1)))
-		(call $printString (call $get_element (global.get $message) (i32.const 2)))
-		(call $printString (call $get_element (global.get $message) (i32.const 3)))
-		(call $printString (call $get_element (global.get $message) (i32.const 4)))
-		(call $printString (call $get_element (global.get $message) (i32.const 5)))
-		(call $printString (call $get_element (global.get $message) (i32.const 6)))
-		(call $printString (call $get_element (global.get $message) (i32.const 7)))
-		(call $printString (call $get_element (global.get $message) (i32.const 8)))
-		(call $printString (call $get_element (global.get $message) (i32.const 9)))
-		(call $printString (call $get_element (global.get $message) (i32.const 10)))
-		(call $printString (call $get_element (global.get $message) (i32.const 11)))
-		(call $printString (call $get_element (global.get $message) (i32.const 12)))
-		(call $printString (call $get_element (global.get $message) (i32.const 13)))
-		(call $printString (call $get_element (global.get $message) (i32.const 14)))
-		(call $printString (call $get_element (global.get $message) (i32.const 15)))
-		(call $printString (call $get_element (global.get $message) (i32.const 16)))
-		(call $printString (call $get_element (global.get $message) (i32
+		(br 0)
+		))	)
+	(start $main)
+)
