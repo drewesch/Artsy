@@ -1,14 +1,26 @@
 #### IR Code ####
 type int x
 type int y
-x = -1
-y = 30
-while x < y and x < 30 or y > 30 or y < 10 and x < 100
-output "Line #"
+x = 1
 subop int
-T0 = x * x
-output T0
-addline
-T1 = x + 1
+T0 = 30 + x
+y = T0
+while x < y
+output "Line #"
+type int z
+z = 1
+subop int
+T1 = x + 10
 x = T1
-end while
+output x
+output "\t"
+subop int
+T2 = y + z
+output T2
+addline
+T3 = x + 1
+x = T3
+endwhile
+subop int
+T4 = x + x
+output T4

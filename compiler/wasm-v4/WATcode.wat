@@ -16,20 +16,24 @@
 	;; Artsy Program in WAT
 	(global $x (mut i32) (i32.const 0))
 	(global $y (mut i32) (i32.const 0))
+	(global $z (mut i32) (i32.const 0))
 	;; Start Main Function
 	(func $main
 		(local $_printstr_0 i32)
 		(local $T0 i32)
+		(local $_printstr_1 i32)
 		(local $T1 i32)
+		(local $T2 i32)
+		(local $T3 i32)
 
 		(global.set $x
-			(i32.const -1)
+			(i32.const 1)
 		)
 		(global.set $y
-			(i32.const 30)
+			(i32.const 31)
 		)
 		(block (loop
-		(br_if 1)
+		(br_if 1 (i32.gt_s (global.get $x) (global.get $y)))
 		(local.set $_printstr_0 (call $create_array (i32.const 9)))
 		(call $set_element (local.get $_printstr_0) (i32.const 0) (i32.const 76))
 		(call $set_element (local.get $_printstr_0) (i32.const 1) (i32.const 105))
@@ -43,24 +47,47 @@
 		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 3)))
 		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 4)))
 		(call $printString (call $get_element (local.get $_printstr_0) (i32.const 5)))
+		(local.set $z
+			(i32.const 1)
+		)
 		(local.set $T0
-			(i32.mul
+			(i32.add
 				(global.get $x)
-				(global.get $x)
+				(i32.const 10)
 			)
 		)
-		(call $printInt (local.get $T0))
-		(call $newline)
+		(global.set $x
+			(local.get $T0)
+		)
+		(call $printInt (global.get $x))
+		(local.set $_printstr_1 (call $create_array (i32.const 5)))
+		(call $set_element (local.get $_printstr_1) (i32.const 6) (i32.const 9))
+		(call $printString (call $get_element (local.get $_printstr_1) (i32.const 6)))
 		(local.set $T1
+			(i32.add
+				(global.get $y)
+				(local.get $z)
+			)
+		)
+		(call $printInt (local.get $T1))
+		(call $newline)
+		(local.set $T2
 			(i32.add
 				(global.get $x)
 				(i32.const 1)
 			)
 		)
 		(global.set $x
-			(local.get $T1)
+			(local.get $T2)
 		)
 		(br 0)
-		))	)
+		))		(local.set $T3
+			(i32.add
+				(global.get $x)
+				(global.get $x)
+			)
+		)
+		(call $printInt (local.get $T3))
+	)
 	(start $main)
 )

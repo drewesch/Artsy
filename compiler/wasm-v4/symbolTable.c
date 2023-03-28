@@ -23,7 +23,6 @@ void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLen
 
 		// Increment the symbol table index for this scope
 		symTabIndex++;
-	
 }
 
 struct Entry* getParamList(char * id, struct AST* paramlist, char scopeStack[50][50], int stackPointer) {
@@ -453,6 +452,5 @@ char * getParamType(int itemID, int numParams, int searchIndex) {
 }
 
 char * getFuncParamItemType(char funcName[50], int numParams, int index) {
-	char ** scopeStack = { "global" };
-	return getParamType(getItemID(funcName, scopeStack, 0), numParams, index);
+	return getParamType(getItemID(funcName, "global", 0), numParams, index);
 }

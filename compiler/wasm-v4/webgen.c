@@ -28,8 +28,14 @@ FILE * IRcode; // Optimized IRcode file
 
 // Standard program variables
 #define MAX_LINE_LENGTH 10000
+#define MAX_ARRAY_LENGTH 5000
 char varDelimiter[] = "[], ";
 char * currScope;
+char * prevScope;
+
+// Variables to detect if declared types and params are within a function
+int isMain = 1;
+int inParams = 0;
 
 // File functions
 
@@ -37,8 +43,8 @@ char * currScope;
 // Required before generating any WAT code
 void initAssemblyFile() {
     printf("\n----Generating WebAssembly Text File----\n\n"); // Creates a WAT file with a generic header that needs to be in every file
-    // IRcode = fopen("IRcodeOptimized.ir", "r");
-    IRcode = fopen("IRcode.ir", "r");
+    IRcode = fopen("IRcodeOptimized.ir", "r");
+    // IRcode = fopen("IRcode.ir", "r");
     WATcode = fopen("WATcode.wat", "w"); 
     MAINcode = fopen("MAINcode.wat", "w"); 
     VARScode = fopen("VARScode.wat", "w"); 
@@ -225,9 +231,46 @@ void generateAddLineWAT(FILE * printFile) {
     fprintf(printFile, "\t\t(call $newline)\n");
 }
 
+// Function module for declaring a variable
+void generateVarDeclareStatementWAT(char * fileType, char * varType, char * varName) {
+    // Step 1: Get the WAT Type, current scope, and files
+    char * scopeType = getScopeType(varName);
+    char * WATType = getWATType(getItemType(varName, currScope, 1));
+    char * printFile = getFileType(fileType);
+    char * helperFile = getHelperFileType(fileType);
+
+    // Step 2: Handle standard variable declarations
+    char * placeholder = calloc(100, sizeof(char));
+    if (isMain) {
+        // Find the placeholder value, based on whether its a float or int
+        placeholder = strncmp(WATType, "f32", 3) == 0 ? "0.0" : "0";
+
+        // Output the type to the global section
+        fprintf(WATcode, "\t(global $%s (mut %s) (%s.const %s))\n", varName, WATType, WATType, placeholder);
+    } else {
+        fprintf(helperFile, "\t\t(local $%s %s)\n", varName, WATType);
+    }
+}
+
+void generateArrayDeclareStatementWAT(char * fileType, char * varType, char * varName, char * arrSize) {
+    // Step 1: Get file type
+    char * printFile = getFileType(fileType);
+    
+    // Step 2: Create string variable in hash table
+    int indexEntry = currMaxStringIndex;
+    set(&stringAddresses, varName, indexEntry);
+    set(&stringSizes, varName, atoi(arrSize));
+
+    // Step 3: Update max string index for the next array entry
+    currMaxStringIndex += atoi(arrSize);
+
+    // Step 4: Generate WAT code for creating the new array
+    fprintf(printFile, "\t\t(global.set $%s (call $create_array (i32.const %s)))", varName, arrSize);
+}
+
 // Function module for printing get statements for all variable types in WAT
 void generateGetStatementWAT(FILE * printFile, char * varName) {
-    // Step 1: Get the primary typem, the length, and the scope type of the variable name
+    // Step 1: Get the primary type, the length, and the scope type of the variable name
     char * primaryType = getPrimaryType(varName);
     int len = strlen(varName);
     char * scopeType = getScopeType(varName);
@@ -305,8 +348,6 @@ void setStringElementWAT(FILE * printFile, char * scopeType, char * arrName, int
 
 // Function module for handling printing solo string in Artsy code
 void generatePrintStringWAT(char * strVal, char * fileType) {
-    printf("strVal: %s\n", strVal);
-
     // Step 1: Generate a unique print variable name
     char * printVar = malloc(sizeof(char)*100);
     snprintf(printVar, 100, "_printstr_%d", currPrintStrings);
@@ -411,19 +452,16 @@ void generateText() {
     char line[10000];
     int lineNumber = 1;
 
-    // Variables to detect if declared types and params are within a function
-    int isGlobal = 1;
-    int inParams = 0;
-
     // Current operation variable
     char * currOp = calloc(100, sizeof(char));
 
     // Global return type variable for a given function
     char * returnType = calloc(100, sizeof(char));
 
-    // Current scope variable
-    currScope = malloc(100*sizeof(char));
-    currScope = "global";
+    // Current scope and previous scope variables
+    currScope = calloc(100, sizeof(char));
+    strcpy(currScope, "global");
+    prevScope = calloc(100, sizeof(char));
 
     // Loop through each line in the code and generate WAT for each valid statement
     while (fgets(line, MAX_LINE_LENGTH, IRcode) != NULL) {
@@ -439,8 +477,7 @@ void generateText() {
         // Step 1: Break apart the line into an iterable array of strings
         // Set the varDelimiter for separating terms by word
         char ** strArr;
-        int maxArrSize = 1000;
-        strArr = malloc(maxArrSize * sizeof(char *));
+        strArr = malloc(MAX_ARRAY_LENGTH * sizeof(char *));
         char progDelimiter[] = " ";
         char * token = strtok(line, progDelimiter);
 
@@ -463,10 +500,11 @@ void generateText() {
 
         // Case for ignoring file comments
         if (strncmp(strArr[0], "\n", 1) == 0 || strncmp(strArr[0], "#", 1) == 0) { }
+
         // Case for entering function declarations
         else if (strncmp(strArr[0], "entry", 5) == 0) {
             // Set all types after this to local declarations
-            isGlobal = 0;
+            isMain = 0;
             inParams = 1;
 
             // Get WAT Type for Action
@@ -490,7 +528,6 @@ void generateText() {
                 inParams = 0;
                 generateResultWAT(WATcode, returnType);
             }
-            printf("test: %s\n", currOp);
 
             // Set current operation
             strcpy(currOp, strArr[1]);
@@ -500,7 +537,7 @@ void generateText() {
         else if (strncmp(strArr[0], "endstring", 9) == 0) {
             // Get the variable scopeType, fileType, and arrIndex
             char * scopeType = getScopeType(strArr[1]);
-            FILE* printFile = isGlobal ? MAINcode : LOCALcode;
+            FILE* printFile = isMain ? MAINcode : LOCALcode;
             int arrIndex = atoi(strArr[2]) + get(&stringAddresses, strArr[1]);
 
             // Assign the NULL character to the last value
@@ -510,7 +547,7 @@ void generateText() {
         // Case for addline statement
         else if (strncmp(strArr[0], "addline", 7) == 0) {
             // Call print line module
-            generateAddLineWAT(isGlobal ? MAINcode : LOCALcode);
+            generateAddLineWAT(isMain ? MAINcode : LOCALcode);
         }
 
         // Case for parameter declarations in functions
@@ -521,7 +558,7 @@ void generateText() {
 
         // Case for exiting functions
         else if (strncmp(strArr[0], "exit", 4) == 0) { 
-            isGlobal = 1; // Set flag back to global
+            isMain = 1; // Set flag back to global
             generateLocalOperations(); // Load in everything from the local file
             generateFunctionEndWAT(currScope); // Generate WAT function ending code
             currScope = "global"; // Set scope back to global
@@ -556,7 +593,7 @@ void generateText() {
             // If the write statement does not use a variable
             if (strncmp(varType, "var", 3) != 0) {
                 
-                if (!isGlobal) { // If its within a function, write to WATcode
+                if (!isMain) { // If its within a function, write to WATcode
                     if (strncmp(varType, "int", 3) == 0) {
                         fprintf(LOCALcode, "\t\t(call $printInt\n");
                         fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
@@ -567,7 +604,7 @@ void generateText() {
                         fprintf(LOCALcode, "\t\t)\n");
                     } else if (strncmp(varType, "string", 3) == 0) {
                         // Concatenate the rest of the tokens into one string variable to get the whole string
-                        char * strVar = calloc(maxArrSize, sizeof(char));
+                        char * strVar = calloc(MAX_ARRAY_LENGTH, sizeof(char));
                         for (int i = 1; i < lenIndex + 1; i++) {
                             strcat(strVar, strArr[i]);
                             strcat(strVar, " ");
@@ -590,7 +627,7 @@ void generateText() {
                         fprintf(MAINcode, "\t\t)\n");
                     } else if (strncmp(varType, "string", 3) == 0) {
                         // Concatenate the rest of the tokens into one string variable to get the whole string
-                        char * strVar = calloc(maxArrSize, sizeof(char));
+                        char * strVar = calloc(MAX_ARRAY_LENGTH, sizeof(char));
                         for (int i = 1; i < lenIndex + 1; i++) {
                             strcat(strVar, strArr[i]);
                             strcat(strVar, " ");
@@ -646,7 +683,7 @@ void generateText() {
                     strcpy(writeStr, "\t\t(call $printString");
                 }
 
-                if (!isGlobal) { // If its within a function, write to WATcode
+                if (!isMain) { // If its within a function, write to WATcode
                     // If the type is an array index, get the array index val and write to the console
                     int len = strlen(variable);
                     if (variable[len - 1] == ']' && strncmp(itemKind, "Array", 5) == 0) {
@@ -729,66 +766,23 @@ void generateText() {
             }
 
             // Get the type and variable
-            char * newType = getWATType(strArr[1]);
-            char * variable = strArr[2];
+            char * varType = strArr[1];
+            char * varName = strArr[2];
 
-            // Print declaration to WATcode
-            if (isGlobal) {
-                char * placeholder = "0";
-                if (strncmp(newType, "f32", 3) == 0) {
-                    placeholder = "0.0";
-                }
+            // Generate Declare Statement
+            char * printFile = isMain ? "MAINcode" : "LOCALcode";
+            generateVarDeclareStatementWAT(printFile, varType, varName);
 
-                // Output the type to the global section
-                fprintf(WATcode, "\t(global $%s (mut %s) (%s.const %s))\n", variable, newType, newType, placeholder);
-            } else {
-                // If the code is in the $main function
-                if (strncmp(currScope, "global", 6) == 0) {
-                    fprintf(VARScode, "\t\t(local $%s %s)\n", variable, newType);
-                } else {
-                    // Else, its within a function scope
-                    fprintf(WATcode, "\t\t(local $%s %s)\n", variable, newType);
-                }
-            }
-            
-            // If the type is an array, instantiate the array with the corresponding type
-            if (strncmp(strArr[3], "array", 5) == 0 && strncmp(currScope, "global", 6) == 0) {
-                // Create string variable in hash table
-                int indexEntry = currMaxStringIndex;
-                set(&stringAddresses, variable, indexEntry);
-                set(&stringSizes, variable, atoi(strArr[4]));
-
-                // Update max string index for the next array entry
-                currMaxStringIndex += atoi(strArr[4]);
-
-                // Generate WAT code for creating the new array
-                fprintf(MAINcode, "\t\t(global.set $%s\n", variable);
-                fprintf(MAINcode, "\t\t\t(call $create_array\n");
-                fprintf(MAINcode, "\t\t\t\t(i32.const %s)\n", strArr[4]);
-                fprintf(MAINcode, "\t\t\t)\n");
-                fprintf(MAINcode, "\t\t)\n");
-
-            } else if (strncmp(strArr[3], "array", 5) == 0) {
-                // Create string variable in hash table
-                int indexEntry = currMaxStringIndex;
-                set(&stringAddresses, variable, indexEntry);
-                set(&stringSizes, variable, atoi(strArr[4]));
-
-                // Update max string index for the next array entry
-                currMaxStringIndex += atoi(strArr[4]);
-
-                // Generate WAT code for creating the new array
-                fprintf(LOCALcode, "\t\t(local.set $%s\n", variable);
-                fprintf(LOCALcode, "\t\t\t(call $create_array\n");
-                fprintf(LOCALcode, "\t\t\t\t(i32.const %s)\n", strArr[4]);
-                fprintf(LOCALcode, "\t\t\t)\n");
-                fprintf(LOCALcode, "\t\t)\n");
+            // If the variable is an array, generate the $create_array statement
+            if (strncmp(strArr[3], "array", 5) == 0) {
+                char * arrSize = strArr[4];
+                generateArrayDeclareStatementWAT(printFile, varType, varName, arrSize);
             }
         }
 
         // Case for While Statements
         else if (strncmp(strArr[0], "while", 5) == 0) {
-            FILE* printFile = isGlobal ? MAINcode : LOCALcode;
+            FILE * printFile = isMain ? MAINcode : LOCALcode;
             generateWhileStartWAT(printFile);
 
             // Determine if uses a single statement
@@ -798,11 +792,21 @@ void generateText() {
 
             // End While Condition Line
             fprintf(printFile, ")\n");
+
+            // Set new scope and retain history using previous scope
+            strcpy(prevScope, currScope);
+            strcpy(currScope, "while global 0");
         }
 
         // Case for While Statements
-        else if (strncmp(strArr[0], "end", 3) == 0 && strncmp(strArr[1], "while", 5) == 0 ) {
-            generateWhileExitWAT(isGlobal ? MAINcode : LOCALcode);
+        else if (strncmp(strArr[0], "endwhile", 3) == 0) {
+            generateWhileExitWAT(isMain ? MAINcode : LOCALcode);
+
+            // Switch the previous scope and the current scope
+            char * tempScope = calloc(100, sizeof(char));
+            strcpy(tempScope, currScope);
+            strcpy(currScope, prevScope);
+            strcpy(prevScope, tempScope);
         }
 
         // Case for Void Function Calls
@@ -819,7 +823,7 @@ void generateText() {
             // Output function call lines
             // If there are no arguments after the "args" token, generate the call on a single line
             if (strArr[3] == NULL || strncmp(strArr[3], "\0", 1) == 0) {
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t(call $%s)\n", funcVar);
                 } else {
                     fprintf(LOCALcode, "\t\t(call $%s)\n", funcVar);
@@ -827,7 +831,7 @@ void generateText() {
             }
             // Otherwise, generate the call with the list of parameters
             else {
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t(call $%s\n", funcVar);
                 } else {
                     fprintf(LOCALcode, "\t\t(call $%s\n", funcVar);
@@ -856,7 +860,7 @@ void generateText() {
                             varScopeType = "local";
                         }
 
-                        if (isGlobal) {
+                        if (isMain) {
                             fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", varScopeType, callVar);
                         } else {
                             fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", varScopeType, callVar);
@@ -865,7 +869,7 @@ void generateText() {
                     } else {
                         char * opType = getWATType(getPrimaryType(strArr[index]));
 
-                        if (isGlobal) {
+                        if (isMain) {
                             fprintf(MAINcode, "\t\t\t(%s.const %s)\n", opType, callVar);
                         } else {
                             fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", opType, callVar);
@@ -875,7 +879,7 @@ void generateText() {
                 }
 
                 // End the call statement with parameters
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t\t)\n");
                 } else {
                     fprintf(LOCALcode, "\t\t\t)\n");
@@ -923,7 +927,7 @@ void generateText() {
             // Output the assignVar call line
             // If the assigned variable is an array index
             int lenArr0 = strlen(assignVar);
-            if (assignVar[lenArr0 - 1] == ']' && isGlobal) {
+            if (assignVar[lenArr0 - 1] == ']' && isMain) {
                 // Declare a size variable
                 char * size = strtok(strArr[0], "[], ");
 
@@ -976,7 +980,7 @@ void generateText() {
                 fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", scopeType, assignVar);
                 fprintf(LOCALcode, "\t\t\t(i32.const %s)\n", arrIndex);
 
-            } else if (isGlobal) { // If it's a temp variable in global, print to MAINcode
+            } else if (isMain) { // If it's a temp variable in global, print to MAINcode
                 fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
             }
             // Else, print to WATcode
@@ -1001,7 +1005,7 @@ void generateText() {
                 }
 
                 // If var is an array index callout, generate a call to the appropriate index
-                if (primaryVar[lenArr2 - 1] == ']' && isGlobal) {
+                if (primaryVar[lenArr2 - 1] == ']' && isMain) {
                     // If it's array call in global, print to MAIN code
                     // Get the array variable and the index number
                     char * arrayName = malloc(100*sizeof(char));
@@ -1039,7 +1043,7 @@ void generateText() {
                     fprintf(LOCALcode, "\t\t\t\t(i32.const %s)\n", arrIndex);
                     fprintf(LOCALcode, "\t\t\t)\n");
 
-                } else if (isGlobal) { // If it's a temp variable in global, print to MAINcode
+                } else if (isMain) { // If it's a temp variable in global, print to MAINcode
                     fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", varScopeType, primaryVar);
                 }
                 // Else, print to WATcode
@@ -1059,7 +1063,7 @@ void generateText() {
                     primaryVar = "32";
                 }
                 
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t\t(%s.const %s)\n", opType, primaryVar);
                 } else {
                     fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", opType, primaryVar);
@@ -1067,7 +1071,7 @@ void generateText() {
             }
 
             // End assignment statement
-            if (isGlobal) { // If it's a temp variable in global, print to MAINcode
+            if (isMain) { // If it's a temp variable in global, print to MAINcode
                 fprintf(MAINcode, "\t\t)\n");
             }
             // Else, print to WATcode
@@ -1115,7 +1119,7 @@ void generateText() {
                 addTempVarItem(assignVar, currOp, "Var");
 
                 // Insert into either global or local scope
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(VARScode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
                 } else {
                     fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
@@ -1123,7 +1127,7 @@ void generateText() {
             }
 
             // Output the assignVar call line
-            if (isGlobal) {
+            if (isMain) {
                 fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
             } else {
                 fprintf(LOCALcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
@@ -1132,7 +1136,7 @@ void generateText() {
             // Output function call lines
             // If there are no arguments after the "args" token, generate the call on a single line
             if (strArr[5] == NULL) {
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t\t(call $%s)\n", funcVar);
                 } else {
                     fprintf(LOCALcode, "\t\t\t(call $%s)\n", funcVar);
@@ -1140,7 +1144,7 @@ void generateText() {
             }
             // Otherwise, generate the call with the list of parameters
             else {
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t\t(call $%s\n", funcVar);
                 } else {
                     fprintf(LOCALcode, "\t\t\t(call $%s\n", funcVar);
@@ -1169,7 +1173,7 @@ void generateText() {
                             varScopeType = "local";
                         }
 
-                        if (isGlobal) {
+                        if (isMain) {
                             fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, callVar);
                         } else {
                             fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, callVar);
@@ -1178,7 +1182,7 @@ void generateText() {
                     } else {
                         opType = getWATType(getPrimaryType(strArr[index]));
 
-                        if (isGlobal) {
+                        if (isMain) {
                             fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, callVar);
                         } else {
                             fprintf(LOCALcode, "\t\t\t\t(%s.const %s)\n", opType, callVar);
@@ -1188,7 +1192,7 @@ void generateText() {
                 }
 
                 // End the call statement with parameters
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t\t)\n");
                 } else {
                     fprintf(LOCALcode, "\t\t\t)\n");
@@ -1196,7 +1200,7 @@ void generateText() {
             }
 
             // End assignment statement
-            if (isGlobal) {
+            if (isMain) {
                 fprintf(MAINcode, "\t\t)\n");
             } else {
                 fprintf(LOCALcode, "\t\t)\n");
@@ -1239,7 +1243,7 @@ void generateText() {
                 addTempVarItem(assignVar, currOp, "Var");
 
                 // Insert into either global or local scope
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(VARScode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
                 } else {
                     fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
@@ -1248,7 +1252,7 @@ void generateText() {
             }
 
             // Output the variable set line
-            if (isGlobal) {
+            if (isMain) {
                 fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
             } else {
                 fprintf(LOCALcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
@@ -1276,7 +1280,7 @@ void generateText() {
             }
 
             // Start the operation call
-            if (isGlobal) {
+            if (isMain) {
                 fprintf(MAINcode, "\t\t\t(%s.%s%s\n", opType, opCall, specialOp);
             } else {
                 fprintf(LOCALcode, "\t\t\t(%s.%s%s\n", opType, opCall, specialOp);
@@ -1301,7 +1305,7 @@ void generateText() {
                 }
 
                 // If var1 is an array index callout, generate a call to the appropriate index
-                if (var1[lenVar1 - 1] == ']' && isGlobal) {
+                if (var1[lenVar1 - 1] == ']' && isMain) {
                     // If it's in global, print to MAIN code
                     // Get the array variable and the index number
                     char * arrayName = malloc(100*sizeof(char));
@@ -1339,13 +1343,13 @@ void generateText() {
                     fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
                     fprintf(LOCALcode, "\t\t\t\t)\n");
 
-                } else if (isGlobal) {
+                } else if (isMain) {
                     fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var1);
                 } else {
                     fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var1);
                 }
             } else {
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, var1);   
                 } else {
                     fprintf(LOCALcode, "\t\t\t\t(%s.const %s)\n", opType, var1);
@@ -1371,7 +1375,7 @@ void generateText() {
                 }
 
                 // If var2 is an array index callout, generate a call to the appropriate index
-                if (var2[lenVar2 - 1] == ']' && isGlobal) {
+                if (var2[lenVar2 - 1] == ']' && isMain) {
                     // If it's in global, print to MAIN code
                     // Get the array variable and the index number
                     char * arrayName = malloc(100*sizeof(char));
@@ -1409,13 +1413,13 @@ void generateText() {
                     fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
                     fprintf(LOCALcode, "\t\t\t\t)\n");
 
-                } else if (isGlobal) {
+                } else if (isMain) {
                     fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var2);
                 } else {
                     fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var2);
                 }
             } else {
-                if (isGlobal) {
+                if (isMain) {
                     fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, var2);
                 } else {
                     fprintf(LOCALcode, "\t\t\t\t(%s.const %s)\n", opType, var2);
@@ -1423,7 +1427,7 @@ void generateText() {
             }
 
             // End the operation call
-            if (isGlobal) {
+            if (isMain) {
                 fprintf(MAINcode, "\t\t\t)\n");
                 fprintf(MAINcode, "\t\t)\n");
             } else {

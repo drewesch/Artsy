@@ -1,15 +1,24 @@
 #### Optimized IR Code ####
-output "Test program\nthis"
-addline
 type int x
-x = 60
 type int y
-y = 30
-output x
-addline
-output "Look!!!\tThis is tabbed!"
+x = 1
+y = 31
+while x < y
+output "Line #"
 type int z
-z = 290230
-output -21510.560547
+z = 1
+subop int
+T0 = x + 10
+x = T0
+output x
+output "\t"
+subop int
+T1 = y + z
+output T1
 addline
-output 522414000
+T2 = x + 1
+x = T2
+endwhile
+subop int
+T3 = x + x
+output T3
