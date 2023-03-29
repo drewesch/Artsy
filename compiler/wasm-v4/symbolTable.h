@@ -16,6 +16,7 @@ struct Entry
 	char itemType[8];  // Is it int, char, etc.?
 	int arrayLength;
 	char scope[50];     // global, or the name of the function
+	int stackPointer;
 	char used;
 	struct Entry *paramlist;
 };
@@ -28,7 +29,7 @@ extern int symTabIndex;
 // Symbol table functions for adding items and accessing specific data types
 void symTabAccess(void);
 
-void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLength, char scope[50]);
+void addItem(char itemName[50], char itemKind[8], char itemType[8], int arrayLength, char scope[50], int stackPointer);
 
 void showSymTable();
 
@@ -47,6 +48,10 @@ char* getItemKind(char itemName[50], char scopeStack[50][50], int stackPointer);
 char* getItemType(char itemName[50], char scopeStack[50][50], int stackPointer);
 
 int getArrayLength(char itemName[50], char scopeStack[50][50], int stackPointer);
+
+char* getItemScope(char itemName[50], char scopeStack[50][50], int stackPointer);
+
+int getItemStackPointer(char itemName[50], char scopeStack[50][50], int stackPointer);
 
 int compareTypes(char item1[50], char item2[50], char scope[50]);
 

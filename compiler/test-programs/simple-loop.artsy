@@ -14,14 +14,25 @@ Prints all numbers of x from -1 to 40 onto a new line
 
 # x < y and x < 30 or y > 30 or y < 10 and x < 100
 
-while (x < y) {
+while (x < y and x < 30 or y > 30 or y < 10 and x < 100) {
 	print "Line #"; # Print start statement
 	declare z as int;
 	let z = 1;
 	let x = x + 10;
 	print x; # Print expression
-	print "\t";
-	print y + z; # Print expression
+	print ":";
+
+	# Nested While Loop Test
+	while (z < 3) {
+		declare b as int;
+		let b = 1;
+		print "\t";
+		print z + b;
+		print ", ";
+		let z = z + 1;
+	}
+
+	print y + z * x * z / 2 + 3; # Print expression
 	addline;
 	let x = x + 1; # Increase iterator variable
 }

@@ -18,6 +18,10 @@
 FILE * IRcode;
 FILE * IRcodeOptimized;
 
+// Standard program variables
+#define MAX_LINE_LENGTH 10000
+#define MAX_ARRAY_LENGTH 5000
+
 // Constant declarations for generating variables and statements in the IRcode
 int lastIndex = 0;
 int lastArrayTempIndex = 0;
@@ -39,8 +43,10 @@ int inWhileLoop = 0;
 // Bool for checking if type is a parameter
 int isParam = 0;
 
-// Variable to detect current scope
-char * currIRScope = "global";
+// Variable for current scope and previous scope
+char * currScope;
+char ** prevScopes;
+int totalIRScopes = 1;
 
 // Variables to detect suboperation starts
 int startSubOp = 0;
@@ -156,7 +162,8 @@ char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
         char * opType = calloc(100, sizeof(char));
         
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            opType = getItemType(token1, currIRScope, 1);
+            char * tempScope = findVarScope(token1, prevScopes, totalIRScopes);
+            opType = getItemType(token1, tempScope, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -191,7 +198,8 @@ char* emitBinaryOperationUnoptimized(char op[2], const char* id1, const char* id
         char * opType = calloc(100, sizeof(char));
 
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            opType = getItemType(token1, currIRScope, 1);
+            char * tempScope = findVarScope(token1, prevScopes, totalIRScopes);
+            opType = getItemType(token1, tempScope, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -268,7 +276,8 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
         char * opType = calloc(100, sizeof(char));
 
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            opType = getItemType(token1, currIRScope, 1);
+            char * tempScope = findVarScope(token1, prevScopes, totalIRScopes);
+            opType = getItemType(token1, tempScope, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -290,7 +299,7 @@ void emitAssignment(char * id1, char * id2){
     // If the statement is a combined string, separate it as a set of array index assignments
     if (strncmp(getPrimaryType(id2), "string", 6) == 0) {
         // Update the symbol table with the new array length
-        char ** scopeStack = currIRScope;
+        char ** scopeStack = currScope;
 
         // Get the number of escape characters
         // Used in calculating the new array length
@@ -529,17 +538,15 @@ void emitEntry(char * id) {
     }
 
     // Get type and update current scope
-    char ** scopeStack = { "global", currIRScope };
-    char * type = getItemType(id, scopeStack, 1);
-    currIRScope = id;
+    char * type = getItemType(id, "global", 1);
+    strcpy(currScope, id);
 
     fprintf(IRcode, "entry %s %s\n", type, id);
 }
 
 void emitEntryOptimized(char * id) {    
-    char ** scopeStack = { "global", currIRScope };
-    char * type = getItemType(id, scopeStack, 1);
-    currIRScope = id;
+    char * type = getItemType(id, "global", 1);
+    strcpy(currScope, id);
 
     fprintf(IRcodeOptimized, "entry %s %s\n", type, id);
 }
@@ -562,7 +569,7 @@ void emitReturnOptimized(char * id) {
 }
 
 void emitExit(FILE * printFile) {
-    currIRScope = "global";
+    strcpy(currScope, "global");
     fprintf(printFile, "exit\n");
 }
 
@@ -614,8 +621,7 @@ char * emitFunctionCall(char *id) {
     char * opType = calloc(100, sizeof(char));
     if (!startSubOp) {        
         if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-            char ** scopeStack = { "global", currIRScope };
-            strcpy(opType, getItemType(id, scopeStack, 1));
+            strcpy(opType, getItemType(id, "global", 1));
         } else {
             strcpy(opType, getPrimaryType(id));
         }
@@ -660,8 +666,7 @@ char * emitFunctionCallOptimized(char *id) {
     char * opType;
     if (!startSubOpOptimized) {
         if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-            char ** scopeStack = { "global", currIRScope };
-            opType = getItemType(id, scopeStack, 1);
+            opType = getItemType(id, "global", 1);
         } else {
             opType = getPrimaryType(id);
         }
@@ -779,9 +784,19 @@ char* ASTTraversal(struct AST* root) {
 
             // Traverse to the left to generate logical and conditional statements
             ASTTraversal(root->left);
+
+            // Reset Logical Statement Variables
             isLogical = 0;
             currLogicalStatements = 0;
             totalLogicalStatements = 0;
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "while %s %d", getItemScope("while", currScope, 1), getItemStackPointer("while", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
             fprintf(IRcode, "\n");
 
             // Traverse to the right to generate block code
@@ -789,6 +804,10 @@ char* ASTTraversal(struct AST* root) {
 
             // End the While statement
             emitWhileEndStatement(IRcode);
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            totalIRScopes--;
         }
 
         if(strcmp(root->nodeType, "If") == 0) {
@@ -816,10 +835,17 @@ char* ASTTraversal(struct AST* root) {
             emitElseEndStatement(IRcode);
 
         }
-        if(strcmp(root->nodeType, "and") == 0
-            || strcmp(root->nodeType, "or") == 0) {
-                ASTTraversal(root->left);
-                ASTTraversal(root->right);
+        if(strcmp(root->nodeType, "and") == 0) {
+            fprintf(IRcode, " and");
+            ASTTraversal(root->left);
+            ASTTraversal(root->right);
+            fprintf(IRcode, " closeop");
+        }
+        if(strcmp(root->nodeType, "or") == 0) {
+            fprintf(IRcode, " or");
+            ASTTraversal(root->left);
+            ASTTraversal(root->right);
+            fprintf(IRcode, " closeop");
         }
         if(strcmp(root->nodeType, "write") == 0) {
             if(strcmp(root->RHS, "int") == 0
@@ -1074,9 +1100,19 @@ char* ASTTraversalOptimized(struct AST* root) {
 
             // Traverse to the left to generate logical and conditional statements
             ASTTraversalOptimized(root->left);
+
+            // Reset Logical Statement Variables
             isLogical = 0;
             currLogicalStatements = 0;
             totalLogicalStatements = 0;
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "while %s %d", getItemScope("while", currScope, 1), getItemStackPointer("while", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
             fprintf(IRcodeOptimized, "\n");
 
             // Traverse to the right to generate block code
@@ -1084,6 +1120,10 @@ char* ASTTraversalOptimized(struct AST* root) {
 
             // End the While statement
             emitWhileEndStatement(IRcodeOptimized);
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            totalIRScopes--;
         }
 
         if(strcmp(root->nodeType, "If") == 0) {
@@ -1321,7 +1361,14 @@ char* ASTTraversalOptimized(struct AST* root) {
 }
 
 // Main functions for IRcode generation
-void generateIRCode(){
+void generateIRCode() {
+    // Set Scope Memory
+    currScope = calloc(1000, sizeof(char));
+    strcpy(currScope, "global");
+    prevScopes = malloc(MAX_ARRAY_LENGTH * sizeof(char*));
+    for (int i = 0; i < MAX_ARRAY_LENGTH; i++) { prevScopes[i] = malloc(100 * sizeof(char)); }
+
+    // Start AST Traversal
     printf("\n\n----Generate IRCode----\n\n");
     initIRcodeFile();
     ASTTraversal(ast);
@@ -1333,6 +1380,10 @@ void generateIRCodeOptimized() {
     // Reset temp variable number
     lastIndex = 0;
 
+    // Set Scope Memory
+    strcpy(currScope, "global");
+
+    // Start Optimized AST Traversal
     printf("\n\n----Perform Code Optimizations----\n\n");
     initIRcodeFileOptimized();
     ASTTraversalOptimized(ast);

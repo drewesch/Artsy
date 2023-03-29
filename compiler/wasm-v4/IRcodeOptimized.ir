@@ -3,7 +3,7 @@ type int x
 type int y
 x = 1
 y = 31
-while x < y
+while x < y and x < 30 or y > 30 or y < 10 and x < 100
 output "Line #"
 type int z
 z = 1
@@ -11,14 +11,31 @@ subop int
 T0 = x + 10
 x = T0
 output x
+output ":"
+while z < 3
+type int b
+b = 1
 output "\t"
 subop int
-T1 = y + z
+T1 = z + b
 output T1
-addline
-T2 = x + 1
-x = T2
+output ", "
+T2 = z + 1
+z = T2
 endwhile
 subop int
-T3 = x + x
-output T3
+T3 = z * x
+T4 = z * z
+T5 = z * x
+T6 = z * z
+T7 = T4 / 2
+T8 = y + T7
+T9 = y + 3
+output T9
+addline
+T10 = x + 1
+x = T10
+endwhile
+subop int
+T11 = x + x
+output T11

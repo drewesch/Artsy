@@ -131,7 +131,7 @@ VarDecl:
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Var", $4, 0, scopeStack[stackPointer]);
+			addItem($2, "Var", $4, 0, scopeStack[stackPointer], stackPointer);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -154,7 +154,7 @@ VarDecl:
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Array", $4, atoi($6), scopeStack[stackPointer]);
+			addItem($2, "Array", $4, atoi($6), scopeStack[stackPointer], stackPointer);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -180,11 +180,10 @@ ActionDeclListTail: ActionDecl {$$ = $1;}
 ActionHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		printf("RECOGNIZED RULE: Standard Action\n");
 
-		symTabAccess();
-		int inSymTab = found($3, scopeStack, stackPointer);
-
 		// Check if the function variable has already been declared
 		// If it has, throw an error
+		symTabAccess();
+		int inSymTab = found($3, scopeStack, stackPointer);
 		if (inSymTab == 0){
 			addFunction($2, $3, $5, scopeStack, stackPointer); //id
 		}
@@ -331,8 +330,16 @@ Loop: WhileL {
 
 WhileHead: WHILE LEFTPAREN Expr RIGHTPAREN {
 	$$ = AST_SingleChildNode($3, $3, $3);
+
+	// Add the while loop to the symbol table
+	symTabAccess();
+	addLogic("while", "While", scopeStack[stackPointer], stackPointer);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "while", scopeStack[stackPointer], blockNumber);
+
 	stackPointer += 1;
 	blockNumber += 1;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
@@ -351,6 +358,13 @@ WhileL: WhileHead Block {
 
 IfHead: IF LEFTPAREN Expr RIGHTPAREN {
 	$$ = AST_SingleChildNode($3, $3, $3);
+
+	// Add the if-statement to the symbol table
+	symTabAccess();
+	addLogic("if", "If", scopeStack[stackPointer], stackPointer);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "if", scopeStack[stackPointer], blockNumber);
 	stackPointer += 1;
@@ -374,6 +388,13 @@ If: IfHead Block {
 
 ElifHead: ELIF LEFTPAREN Expr RIGHTPAREN {
 	$$ = AST_SingleChildNode($3, $3, $3);
+
+	// Add the elif-statement to the symbol table
+	symTabAccess();
+	addLogic("elif", "Elif", scopeStack[stackPointer], stackPointer);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "elif", scopeStack[stackPointer], blockNumber);
 	stackPointer += 1;
@@ -395,6 +416,12 @@ Elif:  ElifHead Block {
 ;
 
 ElseHead: ELSE {
+	// Add the else-statement to the symbol table
+	symTabAccess();
+	addLogic("else", "Else", scopeStack[stackPointer], stackPointer);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "else", scopeStack[stackPointer], blockNumber);
 	stackPointer += 1;
