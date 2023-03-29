@@ -1,41 +1,48 @@
 #### Optimized IR Code ####
 type int x
-type int y
-x = 1
-y = 31
-while x < y and x < 30 or y > 30 or y < 10 and x < 100
-output "Line #"
 type int z
-z = 1
-subop int
-T0 = x + 10
-x = T0
-output x
-output ":"
-while z < 3
-type int b
-b = 1
-output "\t"
-subop int
-T1 = z + b
-output T1
-output ", "
-T2 = z + 1
-z = T2
-endwhile
-subop int
-T3 = z * x
-T4 = z * z
-T5 = z * x
-T6 = z * z
-T7 = T4 / 2
-T8 = y + T7
-T9 = y + 3
-output T9
+x = 1
+z = 2
+while x < 4
+if x > 1
+output "Logic condition 1!"
 addline
-T10 = x + 1
-x = T10
-endwhile
+z = 5
+output z
+addline
 subop int
-T11 = x + x
-output T11
+T0 = x + 1
+x = T0
+endif
+elif x == 1
+output "Logic condition 2!"
+addline
+z = 6
+output z
+addline
+subop int
+T1 = x + 1
+x = T1
+endelif
+elif x == 2
+output "Logic condition 3!"
+addline
+z = 7
+output z
+addline
+subop int
+T2 = x + 1
+x = T2
+endelif
+else
+output "Logic condition 4!"
+addline
+z = 8
+output z
+addline
+subop int
+T3 = x + 1
+x = T3
+endelse
+endlogic
+endwhile

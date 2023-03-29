@@ -1,43 +1,55 @@
 #### IR Code ####
+type flag n
+type int a
+type int b
 type int x
-type int y
+type int z
 x = 1
 subop int
-T0 = 30 + x
-y = T0
-while and x < y and x < 30 or y > 30 or y < 10 and x < 100 closeop
-output "Line #"
-type int z
-z = 1
-subop int
-T1 = x + 10
-x = T1
-output x
-output ":"
-while z < 3
-type int b
-b = 1
-output "\t"
-subop int
-T2 = z + b
-output T2
-output ", "
-T3 = z + 1
-z = T3
-endwhile
-subop int
-T4 = z * x
-T5 = T4 * z
-T6 = z * x
-T7 = T6 * z
-T8 = T7 / 2
-T9 = y + T8
-T10 = T9 + 3
-output T10
+T0 = 1 + x
+z = T0
+a = 5
+b = 3
+while x < 4
+if x > 1
+output "Logic condition 1!"
 addline
-T11 = x + 1
-x = T11
-endwhile
+z = 5
+output z
+addline
 subop int
-T12 = x + x
-output T12
+T1 = x + 1
+x = T1
+endif
+elif x == 1
+output "Logic condition 2!"
+addline
+z = 6
+output z
+addline
+subop int
+T2 = x + 1
+x = T2
+endelif
+elif x == 2
+output "Logic condition 3!"
+addline
+z = 7
+output z
+addline
+subop int
+T3 = x + 1
+x = T3
+endelif
+else
+output "Logic condition 4!"
+addline
+z = 8
+output z
+addline
+subop int
+T4 = x + 1
+x = T4
+endelse
+endlogic
+endwhile

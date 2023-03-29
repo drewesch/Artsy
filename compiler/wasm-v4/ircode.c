@@ -589,8 +589,16 @@ void emitIfEndStatement(FILE * printFile) {
     fprintf(printFile, "endif\n");
 }
 
+void emitElifConditionStatement(FILE * printFile) {
+    fprintf(printFile, "elif");
+}
+
 void emitElifEndStatement(FILE * printFile) {
     fprintf(printFile, "endelif\n");
+}
+
+void emitElseConditionStatement(FILE * printFile) {
+    fprintf(printFile, "else");
 }
 
 void emitElseEndStatement(FILE * printFile) {
@@ -603,6 +611,10 @@ void emitWhileConditionStatement(FILE * printFile) {
 
 void emitWhileEndStatement(FILE * printFile) {
     fprintf(printFile, "endwhile\n");
+}
+
+void emitLogicEndStatement(FILE * printFile) {
+    fprintf(printFile, "endlogic\n");
 }
 
 char * emitFunctionCall(char *id) {
@@ -700,10 +712,10 @@ char * emitFunctionCallOptimized(char *id) {
 char* ASTTraversal(struct AST* root) {
     if(root != NULL) {
         printf("root->nodeType: %s\n", root->nodeType);
-        // if(root->LHS != NULL)
-        // printf("root->LHS: %s\n", root->LHS);
-        // if(root->RHS != NULL)
-        // printf("root->RHS: %s\n", root->RHS);
+        if(root->LHS != NULL)
+        printf("root->LHS: %s\n", root->LHS);
+        if(root->RHS != NULL)
+        printf("root->RHS: %s\n", root->RHS);
         fflush(stdout);
         char rightVar[50];
         char leftVar[50];
@@ -812,40 +824,117 @@ char* ASTTraversal(struct AST* root) {
 
         if(strcmp(root->nodeType, "If") == 0) {
             emitIfConditionStatement(IRcode);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left
             ASTTraversal(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "if %s %d", getItemScope("if", currScope, 1), getItemStackPointer("if", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcode, "\n");
+
+            // Traverse to the right to generate block code
             ASTTraversal(root->right);
+
+            // End if statement
             emitIfEndStatement(IRcode);
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            totalIRScopes--;
         }
 
         if (strcmp(root->nodeType, "Elif") == 0) {
-            emitIfConditionStatement(IRcode);
+            emitElifConditionStatement(IRcode);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left
             ASTTraversal(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "elif %s %d", getItemScope("elif", currScope, 1), getItemStackPointer("elif", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcode, "\n");
+
+            // Traverse to the right to generate block code
             ASTTraversal(root->right);
+
+            // End elif statement
             emitElifEndStatement(IRcode);
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            totalIRScopes--;
         }
 
         if(strcmp(root->nodeType, "IfStmtTail else end") == 0) {
+            // Return an empty string 
             if(strcmp(root->right, "") == 0) {
+                // Generate Logic Ending Statement if there's no else statement
+                emitLogicEndStatement(IRcode);
                 return "";
             }
+
+            // If there is an Else statement, traverse right, then print logic ending statement
             ASTTraversal(root->right);
+            emitLogicEndStatement(IRcode);
         }
         if(strcmp(root->nodeType, "Else") == 0) {
-            ASTTraversal(root->right);
-            emitElseEndStatement(IRcode);
+            emitElseConditionStatement(IRcode);
 
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "else %s %d", getItemScope("else", currScope, 1), getItemStackPointer("else", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcode, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversal(root->right);
+
+            // End else statement
+            emitElseEndStatement(IRcode);
         }
         if(strcmp(root->nodeType, "and") == 0) {
-            fprintf(IRcode, " and");
             ASTTraversal(root->left);
             ASTTraversal(root->right);
-            fprintf(IRcode, " closeop");
         }
         if(strcmp(root->nodeType, "or") == 0) {
-            fprintf(IRcode, " or");
             ASTTraversal(root->left);
             ASTTraversal(root->right);
-            fprintf(IRcode, " closeop");
         }
         if(strcmp(root->nodeType, "write") == 0) {
             if(strcmp(root->RHS, "int") == 0
@@ -1027,10 +1116,10 @@ char* ASTTraversal(struct AST* root) {
 char* ASTTraversalOptimized(struct AST* root) {
     if(root != NULL) {
         printf("root->nodeType: %s\n", root->nodeType);
-        if(root->LHS != NULL)
-        printf("root->LHS: %s\n", root->LHS);
-        if(root->RHS != NULL)
-        printf("root->RHS: %s\n", root->RHS);
+        // if(root->LHS != NULL)
+        // printf("root->LHS: %s\n", root->LHS);
+        // if(root->RHS != NULL)
+        // printf("root->RHS: %s\n", root->RHS);
         fflush(stdout);
 
         char rightVar[50];
@@ -1082,7 +1171,9 @@ char* ASTTraversalOptimized(struct AST* root) {
             || strcmp(root->nodeType, "vardec") == 0
             || strcmp(root->nodeType, "ActionDecl ActionDeclListTail") == 0
             || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
-            || strcmp(root->nodeType, "statements") == 0) { 
+            || strcmp(root->nodeType, "statements") == 0
+            || strcmp(root->nodeType, "IfStmtTail continue") == 0
+            || strcmp(root->nodeType, "IfStmt") == 0) { 
             ASTTraversalOptimized(root->left);
             ASTTraversalOptimized(root->right);
         }
@@ -1120,6 +1211,7 @@ char* ASTTraversalOptimized(struct AST* root) {
 
             // End the While statement
             emitWhileEndStatement(IRcodeOptimized);
+            inWhileLoop = 0;
             
             // Set current scope as previous scope
             strcpy(currScope, prevScopes[totalIRScopes-2]);
@@ -1127,29 +1219,117 @@ char* ASTTraversalOptimized(struct AST* root) {
         }
 
         if(strcmp(root->nodeType, "If") == 0) {
+            // Start If Statement Condition
             emitIfConditionStatement(IRcodeOptimized);
-            ASTTraversal(root->left);
-            ASTTraversal(root->right);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left to generate logical and conditional statements
+            ASTTraversalOptimized(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "if %s %d", getItemScope("if", currScope, 1), getItemStackPointer("if", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcodeOptimized, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversalOptimized(root->right);
+
+            // End the If statement
             emitIfEndStatement(IRcodeOptimized);
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            totalIRScopes--;
         }
 
         if (strcmp(root->nodeType, "Elif") == 0) {
-            emitIfConditionStatement(IRcodeOptimized);
-            ASTTraversal(root->left);
-            ASTTraversal(root->right);
+            // Start Elif Statement Condition
+            emitElifConditionStatement(IRcodeOptimized);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left to generate logical and conditional statements
+            ASTTraversalOptimized(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "elif %s %d", getItemScope("elif", currScope, 1), getItemStackPointer("elif", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcodeOptimized, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversalOptimized(root->right);
+
+            // End the Elif statement
             emitElifEndStatement(IRcodeOptimized);
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            totalIRScopes--;
         }
 
         if(strcmp(root->nodeType, "IfStmtTail else end") == 0) {
+            // Return an empty string 
             if(strcmp(root->right, "") == 0) {
+                // Generate Logic Ending Statement if there's no else statement
+                emitLogicEndStatement(IRcodeOptimized);
                 return "";
             }
+
+            // If there is an Else statement, traverse right, then print logic ending statement
             ASTTraversalOptimized(root->right);
+            emitLogicEndStatement(IRcodeOptimized);
         }
         if(strcmp(root->nodeType, "Else") == 0) {
-            ASTTraversalOptimized(root->right);
-            emitElseEndStatement(IRcodeOptimized);
+            // Start Else Statement Condition
+            emitElseConditionStatement(IRcodeOptimized);
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "else %s %d", getItemScope("else", currScope, 1), getItemStackPointer("else", currScope, 1));
+            strcpy(prevScopes[totalIRScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
 
+            fprintf(IRcodeOptimized, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversalOptimized(root->right);
+
+            // End the Elif statement
+            emitElseEndStatement(IRcodeOptimized);
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            totalIRScopes--;
         }
         if(strcmp(root->nodeType, "and") == 0
             || strcmp(root->nodeType, "or") == 0) {
@@ -1326,8 +1506,6 @@ char* ASTTraversalOptimized(struct AST* root) {
                     strcpy(rightVar, ASTTraversalOptimized(root->right));
                 }
 
-                printf("LEFTVAR: %s, RIGHTVAR: %s\n", leftVar, rightVar);
-
                 // Traverse to the left FIRST if there's an expression; avoids last missing expression problem
                 if (strcmp(root->LHS, "+") == 0
                     || strcmp(root->LHS, "-") == 0
@@ -1367,6 +1545,7 @@ void generateIRCode() {
     strcpy(currScope, "global");
     prevScopes = malloc(MAX_ARRAY_LENGTH * sizeof(char*));
     for (int i = 0; i < MAX_ARRAY_LENGTH; i++) { prevScopes[i] = malloc(100 * sizeof(char)); }
+    strcpy(prevScopes[0], "global");
 
     // Start AST Traversal
     printf("\n\n----Generate IRCode----\n\n");

@@ -41,6 +41,9 @@ int inMain = 1;
 int inParams = 0;
 int inLogic = 0;
 
+// Variable to track total ifs
+int totalIfs = 0;
+
 
 // File functions
 
@@ -419,10 +422,12 @@ void generatePrintStringWAT(char * strVal, char * fileType) {
 }
 
 void generateComparisonWAT(FILE * printFile, char * leftTerm, char * compareType, char * rightTerm) {
-    // Step 1: Determine WAT Type
+    // Step 1: Determine Item Scope and WAT Type
     char * compareWATType = calloc(10, sizeof(char));
-    if (found(leftTerm, currScope, 1)) {
-        compareWATType = getWATType(getItemType(leftTerm, currScope, 1));
+    
+    if (strncmp(getPrimaryType(leftTerm), "var", 3) == 0) {
+        char * itemScope = findVarScope(leftTerm, prevScopes, totalWebScopes);
+        compareWATType = getWATType(getItemType(leftTerm, itemScope, 1));
     } else {
         compareWATType = getWATType(getPrimaryType(leftTerm));
     }
@@ -441,6 +446,7 @@ void generateComparisonWAT(FILE * printFile, char * leftTerm, char * compareType
     fprintf(printFile, ")");
 }
 
+// Function module for handling starting while loops
 void generateWhileStartWAT(FILE * printFile) {
     fprintf(printFile, "\t\t(block (loop\n\t\t(br_if 1");
 }
@@ -448,6 +454,29 @@ void generateWhileStartWAT(FILE * printFile) {
 // Function module for handling exiting from While Loops
 void generateWhileExitWAT(FILE * printFile) {
     fprintf(printFile, "\t\t(br 0)\n\t\t))");
+}
+
+// Function module for starting if statements
+void generateIfStartWAT(FILE * printFile, char * ifType) {
+    if (strncmp(ifType, "elif", 4) == 0) {
+        fprintf(printFile, "\t\t(else (if");
+    } else if (strncmp(ifType, "then", 4) == 0) {
+        fprintf(printFile, "\n\t\t(then");
+    } else {
+        fprintf(printFile, "\t\t(%s", ifType);
+    }
+}
+
+// Function module for exiting if statements
+void generateIfExitWAT(FILE * printFile, char * ifType) {
+    if (strncmp(ifType, "then", 4) == 0) {
+        fprintf(printFile, "\t\t)");
+    } else if (strncmp(ifType, "elif", 4) == 0) {
+        fprintf(printFile, "\t\t))");
+    }
+    else {
+        fprintf(printFile, "\t\t)\n");
+    }
 }
 
 // Standard function to generate the main section and text section
@@ -468,6 +497,7 @@ void generateText() {
     strcpy(currScope, "global");
     prevScopes = malloc(MAX_ARRAY_LENGTH * sizeof(char*));
     for (int i = 0; i < MAX_ARRAY_LENGTH; i++) { prevScopes[i] = malloc(100 * sizeof(char)); }
+    strcpy(prevScopes[0], "global");
 
     // Loop through each line in the code and generate WAT for each valid statement
     while (fgets(line, MAX_LINE_LENGTH, IRcode) != NULL) {
@@ -796,8 +826,6 @@ void generateText() {
                 generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3]);
             }
 
-            
-
             // End While Condition Line
             fprintf(printFile, ")\n");
 
@@ -812,9 +840,74 @@ void generateText() {
             inLogic = 1;
         }
 
-        // Case for While Statements
-        else if (strncmp(strArr[0], "endwhile", 3) == 0) {
-            generateWhileExitWAT(inMain ? MAINcode : LOCALcode);
+        // Case for If Statements
+        else if (strncmp(strArr[0], "if", 2) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+            generateIfStartWAT(printFile, "if");
+
+            // Determine if uses a single statement
+            if (lenIndex == 3) {
+                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3]);
+            }
+
+            // Generate Then Line
+            generateIfStartWAT(printFile, "then");
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "if %s %d", getItemScope("if", currScope, 1), getItemStackPointer("if", currScope, 1));
+            strcpy(prevScopes[totalWebScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalWebScopes++;
+
+            // Set scope to be in a logical statement
+            inLogic = 1;
+        }
+
+        // Case for Elif Statements
+        else if (strncmp(strArr[0], "elif", 4) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+            generateIfStartWAT(printFile, "elif");
+
+            // Determine if uses a single statement
+            if (lenIndex == 3) {
+                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3]);
+            }
+
+            // Generate Then Line
+            generateIfStartWAT(printFile, "then");
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "elif %s %d", getItemScope("elif", currScope, 1), getItemStackPointer("elif", currScope, 1));
+            strcpy(prevScopes[totalWebScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalWebScopes++;
+
+            // Set scope to be in a logical statement
+            inLogic = 1;
+        }
+
+        // Case for Exit Statements
+        else if (strncmp(strArr[0], "else", 4) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+            generateIfStartWAT(printFile, "else");
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "else %s %d", getItemScope("else", currScope, 1), getItemStackPointer("else", currScope, 1));
+            strcpy(prevScopes[totalWebScopes-1], currScope);
+            strcpy(currScope, newScope);
+            totalWebScopes++;
+
+            // Set scope to be in a logical statement
+            inLogic = 1;
+        }
+
+        // Case for Ending While Statements
+        else if (strncmp(strArr[0], "endwhile", 8) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+            generateWhileExitWAT(printFile);
 
             // Set current scope as previous scope
             strcpy(currScope, prevScopes[totalWebScopes-2]);
@@ -824,6 +917,65 @@ void generateText() {
             if (strncmp(currScope, "while", 5) != 0 && strncmp(currScope, "if", 2) != 0 && strncmp(currScope, "elif", 4) != 0 && strncmp(currScope, "else", 4) != 0) {
                 inLogic = 0;
             }
+        }
+
+        // Case for Ending If Statements
+        else if (strncmp(strArr[0], "endif", 5) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+            generateIfExitWAT(printFile, "then");
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalWebScopes-2]);
+            totalWebScopes--;
+
+            // If the previous scope is not another logic statement, change logical scope boolean
+            if (strncmp(currScope, "while", 5) != 0 && strncmp(currScope, "if", 2) != 0 && strncmp(currScope, "elif", 4) != 0 && strncmp(currScope, "else", 4) != 0) {
+                inLogic = 0;
+            }
+        }
+
+        // Case for Ending Elif Statements
+        else if (strncmp(strArr[0], "endelif", 7) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+            generateIfExitWAT(printFile, "then");
+            
+            // Increment ifs variable
+            totalIfs++;
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalWebScopes-2]);
+            totalWebScopes--;
+
+            // If the previous scope is not another logic statement, change logical scope boolean
+            if (strncmp(currScope, "while", 5) != 0 && strncmp(currScope, "if", 2) != 0 && strncmp(currScope, "elif", 4) != 0 && strncmp(currScope, "else", 4) != 0) {
+                inLogic = 0;
+            }
+        }
+
+        // Case for Ending Else Statements
+        else if (strncmp(strArr[0], "endelse", 7) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+
+            // Print all elif endings and reset iterator variable
+            for (int i = 0; i < totalIfs; i++) { generateIfExitWAT(printFile, "elif"); }
+            totalIfs = 0;
+
+            generateIfExitWAT(printFile, "else");
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalWebScopes-2]);
+            totalWebScopes--;
+
+            // If the previous scope is not another logic statement, change logical scope boolean
+            if (strncmp(currScope, "while", 5) != 0 && strncmp(currScope, "if", 2) != 0 && strncmp(currScope, "elif", 4) != 0 && strncmp(currScope, "else", 4) != 0) {
+                inLogic = 0;
+            }
+        }
+
+        // Case for Ending Flow Statements
+        else if (strncmp(strArr[0], "endlogic", 8) == 0) {
+            FILE * printFile = inMain ? MAINcode : LOCALcode;
+            generateIfExitWAT(printFile, "logic");
         }
 
         // Case for Void Function Calls

@@ -190,7 +190,6 @@ int countEscapeChars(char * phrase) {
 // Helper function to find which scope a variable is part of, if nested within multiple scopes
 char * findVarScope(char * varName, char ** scopeList, int scopeListLength) {
     for (int i = 0; i < scopeListLength; i++) {
-        printf("This Scope: %s\n", scopeList[i]);
         if (found(varName, scopeList[i], 1)) {
             return getItemScope(varName, scopeList[i], 1);
         }
