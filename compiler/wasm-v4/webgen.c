@@ -227,7 +227,7 @@ void generateStartModule() {
     fprintf(WATcode, "\t(export \"pagememory\" (memory $0))\n");
     fprintf(WATcode, "\t(func $create_array (param $size i32) (result i32) (local $ptr i32) (set_local $ptr (i32.const 0)) (block (loop $loop (br_if $loop (i32.eq (get_local $size) (i32.const 0))) (set_local $ptr (i32.add (get_local $ptr) (i32.const 4))) (set_local $size (i32.sub (get_local $size) (i32.const 1))))) (get_local $ptr))\n");
     fprintf(WATcode, "\t(export \"create_array\" (func $get_element))\n");
-    fprintf(WATcode, "\t(func $get_element (param $ptr i32) (param $index i32) (result i32)(i32.load (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4)))))\n");
+    fprintf(WATcode, "\t(func $get_element (param $ptr i32) (param $index i32) (result i32) (i32.load (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4)))))\n");
     fprintf(WATcode, "\t(export \"get_element\" (func $get_element))\n");
     fprintf(WATcode, "\t(func $set_element (param $ptr i32) (param $index i32) (param $value i32) (i32.store (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4))) (get_local $value)))\n");
     fprintf(WATcode, "\t(export \"set_element\" (func $set_element))\n\n");
@@ -421,7 +421,7 @@ void generatePrintStringWAT(char * strVal, char * fileType) {
 
 }
 
-void generateComparisonWAT(FILE * printFile, char * leftTerm, char * compareType, char * rightTerm) {
+void generateComparisonWAT(FILE * printFile, char * leftTerm, char * compareType, char * rightTerm, char * logicType) {
     // Step 1: Determine Item Scope and WAT Type
     char * compareWATType = calloc(10, sizeof(char));
     
@@ -433,7 +433,7 @@ void generateComparisonWAT(FILE * printFile, char * leftTerm, char * compareType
     }
 
     // Step 2: Determine the WAT operation type from the compareType variable
-    char * compareOpWAT = getCompareWATType(compareType, compareWATType);
+    char * compareOpWAT = getCompareWATType(compareType, compareWATType, logicType);
 
     // Step 3a: Print the starting statement in WAT
     fprintf(printFile, " (%s.%s", compareWATType, compareOpWAT);
@@ -823,7 +823,7 @@ void generateText() {
 
             // Determine if uses a single statement
             if (lenIndex == 3) {
-                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3]);
+                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3], "while");
             }
 
             // End While Condition Line
@@ -847,7 +847,7 @@ void generateText() {
 
             // Determine if uses a single statement
             if (lenIndex == 3) {
-                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3]);
+                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3], "if");
             }
 
             // Generate Then Line
@@ -871,7 +871,7 @@ void generateText() {
 
             // Determine if uses a single statement
             if (lenIndex == 3) {
-                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3]);
+                generateComparisonWAT(printFile, strArr[1], strArr[2], strArr[3], "elif");
             }
 
             // Generate Then Line
@@ -1226,9 +1226,9 @@ void generateText() {
                     primaryVar = convertToASCII(primaryVar);
                 }
 
-                // Check if primaryVar equals zero (unidentified value)
+                // Check if primaryVar equals zero as a string char (unidentified value)
                 // If so, convert it to a space in ASCII
-                if (strncmp(primaryVar, "0", 1) == 0) {
+                if (strncmp(primaryVar, "0", 1) == 0 && strncmp(getPrimaryType(primaryVar), "string", 6) == 0) {
                     primaryVar = "32";
                 }
                 

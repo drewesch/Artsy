@@ -8,7 +8,7 @@
 	(export "pagememory" (memory $0))
 	(func $create_array (param $size i32) (result i32) (local $ptr i32) (set_local $ptr (i32.const 0)) (block (loop $loop (br_if $loop (i32.eq (get_local $size) (i32.const 0))) (set_local $ptr (i32.add (get_local $ptr) (i32.const 4))) (set_local $size (i32.sub (get_local $size) (i32.const 1))))) (get_local $ptr))
 	(export "create_array" (func $get_element))
-	(func $get_element (param $ptr i32) (param $index i32) (result i32)(i32.load (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4)))))
+	(func $get_element (param $ptr i32) (param $index i32) (result i32) (i32.load (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4)))))
 	(export "get_element" (func $get_element))
 	(func $set_element (param $ptr i32) (param $index i32) (param $value i32) (i32.store (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4))) (get_local $value)))
 	(export "set_element" (func $set_element))
@@ -28,14 +28,14 @@
 		(local $T3 i32)
 
 		(global.set $x
-			(i32.const 1)
+			(i32.const 0)
 		)
 		(global.set $z
-			(i32.const 2)
+			(i32.const 1)
 		)
 		(block (loop
-		(br_if 1 (i32.gt_s (global.get $x) (i32.const 4)))
-		(if (i32.lt_s (global.get $x) (i32.const 1))
+		(br_if 1 (i32.gt_s (global.get $x) (i32.const 5)))
+		(if (i32.gt_s (global.get $x) (i32.const 3))
 		(then		(local.set $_printstr_0 (call $create_array (i32.const 21)))
 		(call $set_element (local.get $_printstr_0) (i32.const 0) (i32.const 76))
 		(call $set_element (local.get $_printstr_0) (i32.const 1) (i32.const 111))
