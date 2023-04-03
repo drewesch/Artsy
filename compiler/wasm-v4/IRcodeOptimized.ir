@@ -1,48 +1,66 @@
 #### Optimized IR Code ####
-type int x
-type int z
-x = 0
-z = 1
-while x < 5
-if x > 3
-output "Logic condition 1!"
-addline
-z = 5
-output z
-addline
+type string message array 50
+type string staticMessage array 100
+type int numArr array 5
+type int random
+numArr[0] = 1
+entry int displayMessage
+message[0] = "I"
+message[1] = " "
+message[2] = "c"
+message[3] = "a"
+message[4] = "n"
+message[5] = " "
+message[6] = "p"
+message[7] = "r"
+message[8] = "i"
+message[9] = "n"
+message[10] = "t"
+message[11] = "!"
+return 0
+exit
 subop int
-T0 = x + 1
-x = T0
-endif
-elif x == 1
-output "Logic condition 2!"
-addline
-z = 6
-output z
-addline
+T0 = call displayMessage args
+random = T0
+staticMessage[0] = "s"
+staticMessage[1] = "t"
+staticMessage[2] = "a"
+staticMessage[3] = "t"
+staticMessage[4] = "i"
+staticMessage[5] = "c"
+staticMessage[6] = " "
+staticMessage[7] = "m"
+staticMessage[8] = "e"
+staticMessage[9] = "s"
+staticMessage[10] = "s"
+staticMessage[11] = "a"
+staticMessage[12] = "g"
+staticMessage[13] = "e"
+staticMessage[14] = " "
+staticMessage[15] = "l"
+staticMessage[16] = "o"
+staticMessage[17] = "l"
+staticMessage[18] = " "
+staticMessage[19] = "h"
+staticMessage[20] = "a"
+staticMessage[21] = "h"
+staticMessage[22] = "a"
+staticMessage[23] = " "
+staticMessage[24] = ":"
+staticMessage[25] = ")"
+endstring staticMessage 26
+numArr[0] = 1
+numArr[1] = numArr[0]
+numArr[2] = 3
+numArr[3] = 4
+numArr[4] = 5
 subop int
-T1 = x + 1
-x = T1
-endelif
-elif x == 2
-output "Logic condition 3!"
+T1 = numArr[0] + numArr[2]
+random = T1
+output numArr[0]
 addline
-z = 7
-output z
+output message
 addline
-subop int
-T2 = x + 1
-x = T2
-endelif
-else
-output "Logic condition 4!"
+output staticMessage
 addline
-z = 8
-output z
-addline
-subop int
-T3 = x + 1
-x = T3
-endelse
-endlogic
-endwhile
+output random

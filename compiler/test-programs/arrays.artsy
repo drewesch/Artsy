@@ -36,7 +36,7 @@ let numArr[4] = 5;
 
 let random = numArr[0] + numArr[2];
 
-print numArr;
+print numArr[0];
 addline;
 print message;
 addline;

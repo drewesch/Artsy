@@ -131,7 +131,7 @@ VarDecl:
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Var", $4, 0, scopeStack[stackPointer], stackPointer);
+			addItem($2, "Var", $4, 0, scopeStack[stackPointer], stackPointer, blockNumber);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -154,7 +154,7 @@ VarDecl:
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Array", $4, atoi($6), scopeStack[stackPointer], stackPointer);
+			addItem($2, "Array", $4, atoi($6), scopeStack[stackPointer], stackPointer, blockNumber);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -185,7 +185,7 @@ ActionHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		symTabAccess();
 		int inSymTab = found($3, scopeStack, stackPointer);
 		if (inSymTab == 0){
-			addFunction($2, $3, $5, scopeStack, stackPointer); //id
+			addAction($2, $3, $5, scopeStack, stackPointer, blockNumber); //id
 		}
 		else {
 			printf("SEMANTIC ERROR: Action %s has already been declared.\n", $3);
@@ -195,7 +195,7 @@ ActionHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		showSymTable();
 		$$ = AST_DoublyChildNodes("action context", $3, $5, $3, $5);
 
-		stackPointer += 1;
+		stackPointer++;
 		memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 		strcpy(scopeStack[stackPointer], $3);
 		memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -210,7 +210,7 @@ ActionHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		// Check if the function variable has already been declared
 		// If it has, throw an error
 		if (inSymTab == 0){
-			addFunction("void", $2, $4, scopeStack, stackPointer); //id
+			addAction("void", $2, $4, scopeStack, stackPointer, blockNumber); //id
 		}
 		else {
 			printf("SEMANTIC ERROR: Action %s has already been declared.\n", $2);
@@ -220,7 +220,7 @@ ActionHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		showSymTable();
 		$$ = AST_DoublyChildNodes("action context", $2, $4, $2, $4);
 
-		stackPointer += 1;
+		stackPointer++;
 		memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 		strcpy(scopeStack[stackPointer], $2);
 		memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -231,7 +231,7 @@ ActionHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 ActionDecl: ActionHeader Block {
 	// Generate AST node as a doubly node
 	$$ = AST_DoublyChildNodes("action", $1, $2, $1, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -333,15 +333,15 @@ WhileHead: WHILE LEFTPAREN Expr RIGHTPAREN {
 
 	// Add the while loop to the symbol table
 	symTabAccess();
-	addLogic("while", "While", scopeStack[stackPointer], stackPointer);
+	addLogic("while", "While", scopeStack[stackPointer], stackPointer, blockNumber);
 	showSymTable();
 
 	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "while", scopeStack[stackPointer], blockNumber);
 
-	stackPointer += 1;
-	blockNumber += 1;
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -350,7 +350,7 @@ WhileHead: WHILE LEFTPAREN Expr RIGHTPAREN {
 
 WhileL: WhileHead Block {
 	$$ = AST_DoublyChildNodes("WhileL", $1, $2, $1, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -361,14 +361,14 @@ IfHead: IF LEFTPAREN Expr RIGHTPAREN {
 
 	// Add the if-statement to the symbol table
 	symTabAccess();
-	addLogic("if", "If", scopeStack[stackPointer], stackPointer);
+	addLogic("if", "If", scopeStack[stackPointer], stackPointer, blockNumber);
 	showSymTable();
 
 	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "if", scopeStack[stackPointer], blockNumber);
-	stackPointer += 1;
-	blockNumber += 1;
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -380,7 +380,7 @@ If: IfHead Block {
 	printf("\n RECOGNIZED RULE: if statement\n");
 
 	$$ = AST_DoublyChildNodes("If", $1, $2, $1, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -391,13 +391,14 @@ ElifHead: ELIF LEFTPAREN Expr RIGHTPAREN {
 
 	// Add the elif-statement to the symbol table
 	symTabAccess();
-	addLogic("elif", "Elif", scopeStack[stackPointer], stackPointer);
+	addLogic("elif", "Elif", scopeStack[stackPointer], stackPointer, blockNumber);
 	showSymTable();
 
 	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "elif", scopeStack[stackPointer], blockNumber);
-	stackPointer += 1;
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -409,7 +410,7 @@ Elif:  ElifHead Block {
 	printf("\n RECOGNIZED RULE: elif statement\n");
 
 	$$ = AST_DoublyChildNodes("Elif", $1, $2, $1, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -418,13 +419,14 @@ Elif:  ElifHead Block {
 ElseHead: ELSE {
 	// Add the else-statement to the symbol table
 	symTabAccess();
-	addLogic("else", "Else", scopeStack[stackPointer], stackPointer);
+	addLogic("else", "Else", scopeStack[stackPointer], stackPointer, blockNumber);
 	showSymTable();
 
 	// Create tempScopeName
 	char tempScopeName[50];
 	sprintf(tempScopeName, "%s %s %d", "else", scopeStack[stackPointer], blockNumber);
-	stackPointer += 1;
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -436,7 +438,7 @@ Else:  ElseHead Block {
 	printf("\n RECOGNIZED RULE: else statement\n");
 
 	$$ = AST_SingleChildNode("Else", $2, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }

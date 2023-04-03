@@ -4,7 +4,7 @@ declare y as int;
 
 # Assign values
 let x = 1;
-let y = 30 + x;
+let y = 30;
 
 /#
 While Test!!!
@@ -13,12 +13,10 @@ Prints all numbers of x from -1 to 40 onto a new line
 #/
 
 # x < y and x < 30 or y > 30 or y < 10 and x < 100
-
-while (x < y and x < 30 or y > 30 or y < 10 and x < 100) {
+while (x < y) {
 	print "Line #"; # Print start statement
 	declare z as int;
 	let z = 1;
-	let x = x + 10;
 	print x; # Print expression
 	print ":";
 
