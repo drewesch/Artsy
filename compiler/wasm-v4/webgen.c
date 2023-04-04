@@ -120,14 +120,26 @@ void init(struct StringHashTable* dict) {
 }
 
 // Function to set an entry in a string hash table
-void set(struct StringHashTable* dict, char* key, int value) {
+void set(struct StringHashTable* dict, char * key, char * scope, int value) {
+    // Get new key
+    char * newKey = malloc(1000 * sizeof(char));
+    strcpy(newKey, key);
+    strcat(newKey, scope);
+
+    // Set hash value
     unsigned int index = hash(key);
     strcpy(dict->table[index].key, key);
     dict->table[index].value = value;
 }
 
 // Function to get an entry from a string hash table
-int get(struct StringHashTable* dict, char* key) {
+int get(struct StringHashTable* dict, char * key, char * scope) {
+    // Get new key
+    char * newKey = malloc(1000 * sizeof(char));
+    strcpy(newKey, key);
+    strcat(newKey, scope);
+
+    // Get hash value
     unsigned int index = hash(key);
     if (strcmp(dict->table[index].key, key) == 0) {
         return dict->table[index].value;
@@ -277,14 +289,18 @@ void generateVarDeclareStatementWAT(FILE * printFile, char * varType, char * var
 void generateArrayDeclareStatementWAT(FILE * printFile, char * varType, char * varName, char * arrSize) {    
     // Step 1: Create string variable in hash table
     int indexEntry = currMaxStringIndex;
-    set(&stringAddresses, varName, indexEntry);
-    set(&stringSizes, varName, atoi(arrSize));
+    char * varScope = findVarScope(varName, prevScopes, totalWebScopes);
+    set(&stringAddresses, varName, varScope, indexEntry);
+    set(&stringSizes, varName, varScope, atoi(arrSize));
 
     // Step 2: Update max string index for the next array entry
     currMaxStringIndex += atoi(arrSize);
 
+    // Step 3: Find the scope type for the array variable
+    char * scopeType = getScopeType(varName);
+
     // Step 3: Generate WAT code for creating the new array
-    fprintf(printFile, "\t\t(global.set $%s (call $create_array (i32.const %s)))", varName, arrSize);
+    fprintf(printFile, "\t\t(%s.set $%s (call $create_array (i32.const %s)))", scopeType, varName, arrSize);
 }
 
 // Function module for printing get statements for all variable types in WAT
@@ -336,7 +352,7 @@ void generateGetStatementWAT(FILE * printFile, char * varName) {
         strcpy(arrEl, varName);
         arrEl = strtok(arrEl, varDelimiter);
         arrEl = strtok(NULL, varDelimiter);
-        sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + atoi(arrEl));
+        sprintf(arrIndex, "%d", get(&stringAddresses, arrName, arrScope) + atoi(arrEl));
 
         // Print array index return statement
         fprintf(printFile, " (call $get_element_%s (%s.get $%s) (i32.const %s))\n", WATType, scopeType, arrName, arrIndex);   
@@ -381,23 +397,45 @@ void generateAssignmentWAT(FILE * printFile, char * assignVar, char * setVar) {
         strcpy(arrEl, assignVar);
         arrEl = strtok(arrEl, varDelimiter);
         arrEl = strtok(NULL, varDelimiter);
-        sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + atoi(arrEl));
-        printf("here: %s\n", WATType);
+        sprintf(arrIndex, "%d", get(&stringAddresses, arrName, arrScope) + atoi(arrEl));
 
         // Print a starting set call for an array index callout
         fprintf(printFile, "\t\t(call $set_element_%s (%s.get $%s) (i32.const %s)", WATType, scopeType, arrName, arrIndex);
+
+        // Generate an array index get call
+        generateGetStatementWAT(printFile, setVar);
+        fprintf(printFile, ")\n");
+    }
+    
+    // Step 4: If its an array assignment, copy all array indexes to the new array using a for-loop
+    else if (strncmp(getItemKind(assignVar, findVarScope(assignVar, prevScopes, totalWebScopes), 1), "Array", 5) == 0 || strncmp(getItemType(assignVar, findVarScope(assignVar, prevScopes, totalWebScopes), 1), "string", 6) == 0) {
+        // Get variable scopes and scope types
+        char * assignmentScope = findVarScope(assignVar, prevScopes, totalWebScopes);
+        char * setVarScope = findVarScope(setVar, prevScopes, totalWebScopes);
+        char * setVarScopeType = getScopeType(setVar);
+
+        // Update assignVar array size
+        set(&stringSizes, assignVar, assignmentScope, get(&stringSizes, setVar, setVarScope));
+
+        // Get the WATType for the operation
+        char * WATType = getWATType(getItemType(assignVar, assignmentScope, 1));
+
+        for (int i = 0; i < get(&stringSizes, assignVar, assignmentScope); i++) {
+            // Print a starting set call for an array index callout
+            fprintf(printFile, "\t\t(call $set_element_%s (%s.get $%s) (i32.const %d)", WATType, scopeType, assignVar, i + get(&stringAddresses, assignVar, assignmentScope));
+            
+            // Generate an array index get call for each element
+            fprintf(printFile, " (call $get_element_%s (%s.get $%s) (i32.const %d))\n", WATType, setVarScopeType, setVar, i + get(&stringAddresses, setVar, setVarScope));
+            fprintf(printFile, ")\n");
+        }
     }
 
-    // Step 4: If its a standard assignment variable, generate a starting set call
+    // Step 5: If its a standard assignment variable, generate standard starting call and get call
     else {
         fprintf(printFile, "\t\t(%s.set $%s\n", scopeType, assignVar);
+        generateGetStatementWAT(printFile, setVar);
+        fprintf(printFile, ")\n");
     }
-
-    // Step 5: Generate the get statement for the setter variable
-    generateGetStatementWAT(printFile, setVar);
-
-    // Step 6: End assignment statement
-    fprintf(printFile, ")\n");
     
     // Step 7: Reset currOp variable
     currOp = calloc(100, sizeof(char));
@@ -480,8 +518,8 @@ void generateSoloStringWAT(FILE * printFile, char * strVal) {
     // Step 3: Add the string to the string hash table
     int indexEntry = currMaxStringIndex;
     int strSize = printStrArrSize;
-    set(&stringAddresses, printVar, indexEntry);
-    set(&stringSizes, printVar, strSize);
+    set(&stringAddresses, printVar, currScope, indexEntry);
+    set(&stringSizes, printVar, currScope, strSize);
     currMaxStringIndex += strSize; // Update max string index for the next array entry
 
     // Step 4: Print the whole string in one area
@@ -535,7 +573,7 @@ void generateOutputStatementWAT(FILE * printFile, char * varName) {
 
     // Else, get the variable type and item kind from the symbol table
     else if (strncmp(primaryType, "var", 3) == 0) {
-        itemScope = findVarScope(varName, prevScopes, totalWebScopes);
+        itemScope = findVarScope(token, prevScopes, totalWebScopes);
         varType = getItemType(token, itemScope, 1);
         itemKind = getItemKind(token, itemScope, 1);
     }
@@ -550,24 +588,36 @@ void generateOutputStatementWAT(FILE * printFile, char * varName) {
         generatePrintModuleWAT(printFile, primaryType);
         generateGetStatementWAT(printFile, varName);
         fprintf(printFile, "\t\t)\n");
+    } 
+    
+    // Step 4: If the type is an array index callout, get the statement and print it
+    else if (varName[len - 1] == ']') {
+        // Start call statement with primary type
+        generatePrintModuleWAT(printFile, varType);
+
+        // Generate the get statement
+        generateGetStatementWAT(printFile, varName);
+
+        // End the output statement
+        fprintf(printFile, ")\n");
     }
 
-    // Step 4: If the type is a full array or a string variable, output all available indexes
+    // Step 5: If the type is a full array or a string variable, output all available indexes
     else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "var", 3) == 0 && strncmp(varType, "string", 6) == 0) {
         // Assign array index variable
-        int arrIndex = get(&stringAddresses, varName);
+        int arrIndex = get(&stringAddresses, varName, itemScope);
 
         // Get the WATType of the array
         char * WATType = getWATType(varType);
         
         // Print out all available indexes using a for-loop
-        for (int newIndex = 0; newIndex < get(&stringSizes, varName); newIndex++) {
+        for (int newIndex = 0; newIndex < get(&stringSizes, varName, itemScope); newIndex++) {
             generatePrintModuleWAT(printFile, varType);
             fprintf(printFile, " (call $get_element_%s (%s.get $%s) (i32.const %d)))\n", WATType, scopeType, varName, arrIndex + newIndex);
         }
     }
 
-    // Step 5: If the type is a standard variable, get the statement and print it
+    // Step 6: If the type is a standard variable, get the statement and print it
     else {
         // Start call statement with primary type
         generatePrintModuleWAT(printFile, varType);
@@ -801,11 +851,14 @@ void generateText() {
             // Get the variable scopeType, scopeName, arrIndex and WATType
             char * scopeType = getScopeType(strArr[1]);
             char * arrScope = findVarScope(strArr[1], prevScopes, totalWebScopes);
-            int arrIndex = atoi(strArr[2]) + get(&stringAddresses, strArr[1]);
+            int arrIndex = atoi(strArr[2]) + get(&stringAddresses, strArr[1], arrScope);
             char * WATType = getWATType(getItemType(strArr[1], arrScope, 1));
 
             // Assign the NULL character to the last value
             setStringElementWAT(printFile, WATType, scopeType, strArr[1], arrIndex, 0);
+
+            // Update string array size
+            set(&stringSizes, strArr[1], arrScope, arrIndex);
         }
 
         // Case for addline statement

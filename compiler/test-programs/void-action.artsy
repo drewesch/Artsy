@@ -28,7 +28,9 @@ action testMessage() {
 
 # Create launchMessage
 let launchMessage = "Launching in 3, 2, 1, lift off!";
-print launchMessage;
+declare launchMessage2 as string;
+let launchMessage2 = launchMessage;
+print launchMessage2;
 addline;
 
 # Test void action

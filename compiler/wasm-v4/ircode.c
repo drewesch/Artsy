@@ -9,11 +9,6 @@
 #include "symbolTable.h"
 #include "AST.h"
 
-// FEATURES TO ADD
-// 1. Assignment Declaration Semantic Check
-//      - By default, all integers and floats in WebAssembly are set to "0" and "0.0" respectively if it's not assigned
-//      - For this language, we could force users to assign a value first before using it an any operation
-
 // Open two files for unoptimized and optimized IRcode
 FILE * IRcode;
 FILE * IRcodeOptimized;
@@ -298,16 +293,14 @@ void emitAssignment(char * id1, char * id2){
     // Print the assignment statement using the two basic IDs
     // If the statement is a combined string, separate it as a set of array index assignments
     if (strncmp(getPrimaryType(id2), "string", 6) == 0) {
-        // Update the symbol table with the new array length
-        char ** scopeStack = currScope;
-
         // Get the number of escape characters
         // Used in calculating the new array length
         int numEscapeCharacters = countEscapeChars(id2);
 
         // If new array length is bigger, update it to that
-        if (strlen(id2)-2-numEscapeCharacters > getArrayLength(id1, scopeStack, 0)) {
-            updateItemArrayLength(id1, scopeStack, 0, strlen(id2)-2);
+        char * arrScope = findVarScope(id1, prevScopes, totalIRScopes);
+        if (strlen(id2)-2-numEscapeCharacters > getArrayLength(id1, arrScope, 1)) {
+            updateItemArrayLength(id1, arrScope, 0, strlen(id2)-2);
         }
 
         // Print each index assignment statement
