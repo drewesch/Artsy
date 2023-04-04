@@ -19,13 +19,12 @@ type int z
 z = 290230
 subop float
 T2 = -923.2 * 23.3343
-T3 = T2 * 23.3343
-output T3
+output T2
 addline
-T4 = testArr + testArr
-T5 = T4 - testArr
-output T5
+T3 = testArr + testArr
+T4 = T3 + testArr
+output T4
 addline
-T6 = x * y
-T7 = T6 * z
-output T7
+T5 = x * y
+T6 = T5 * z
+output T6

@@ -19,8 +19,8 @@ let testArr[1] = -129.2;
 
 declare z as int;
 let z = 290230;
-print -923.2 * 23.3343 * 23.3343;
+print -923.2 * 23.3343;
 addline;
-print testArr[0] + testArr[1] - testArr[0];
+print testArr[0] + testArr[1] + testArr[1];
 addline;
 print x * y * z;

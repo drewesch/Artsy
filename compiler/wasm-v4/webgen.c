@@ -235,11 +235,15 @@ void generateStartModule() {
     fprintf(WATcode, "\t(memory $0 100)\n");
     fprintf(WATcode, "\t(export \"pagememory\" (memory $0))\n");
     fprintf(WATcode, "\t(func $create_array (param $size i32) (result i32) (local $ptr i32) (set_local $ptr (i32.const 0)) (block (loop $loop (br_if $loop (i32.eq (get_local $size) (i32.const 0))) (set_local $ptr (i32.add (get_local $ptr) (i32.const 4))) (set_local $size (i32.sub (get_local $size) (i32.const 1))))) (get_local $ptr))\n");
-    fprintf(WATcode, "\t(export \"create_array\" (func $get_element))\n");
-    fprintf(WATcode, "\t(func $get_element (param $ptr i32) (param $index i32) (result i32) (i32.load (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4)))))\n");
-    fprintf(WATcode, "\t(export \"get_element\" (func $get_element))\n");
-    fprintf(WATcode, "\t(func $set_element (param $ptr i32) (param $index i32) (param $value i32) (i32.store (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4))) (get_local $value)))\n");
-    fprintf(WATcode, "\t(export \"set_element\" (func $set_element))\n\n");
+    fprintf(WATcode, "\t(export \"create_array\" (func $create_array))\n");
+    fprintf(WATcode, "\t(func $get_element_i32 (param $ptr i32) (param $index i32) (result i32) (i32.load (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4)))))\n");
+    fprintf(WATcode, "\t(export \"get_element_i32\" (func $get_element_i32))\n");
+    fprintf(WATcode, "\t(func $set_element_i32 (param $ptr i32) (param $index i32) (param $value i32) (i32.store (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4))) (get_local $value)))\n");
+    fprintf(WATcode, "\t(export \"set_element_i32\" (func $set_element_i32))\n\n");
+    fprintf(WATcode, "\t(func $get_element_f32 (param $ptr i32) (param $index i32) (result f32) (f32.load (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4)))))\n");
+    fprintf(WATcode, "\t(export \"get_element_f32\" (func $get_element_f32))\n");
+    fprintf(WATcode, "\t(func $set_element_f32 (param $ptr i32) (param $index i32) (param $value f32) (f32.store (i32.add (get_local $ptr) (i32.mul (get_local $index) (i32.const 4))) (get_local $value)))\n");
+    fprintf(WATcode, "\t(export \"set_element_f32\" (func $set_element_f32))\n\n");
     fprintf(WATcode, "\t;; Artsy Program in WAT\n");
 }
 
@@ -252,7 +256,8 @@ void generateAddLineWAT(FILE * printFile) {
 void generateVarDeclareStatementWAT(FILE * printFile, char * varType, char * varName) {
     // Step 1: Get the WAT Type, current scope, and files
     char * scopeType = getScopeType(varName);
-    char * WATType = getWATType(getItemType(varName, currScope, 1));
+    char * varScope = findVarScope(varName, prevScopes, totalWebScopes);
+    char * WATType = strncmp(getItemKind(varName, varScope, 1), "Array", 5) == 0 ? getWATType("int") : getWATType(getItemType(varName, currScope, 1));
     char * printFileStr = inMain ? "MAINcode" : "LOCALcode";
     char * helperFile = getHelperFileType(printFileStr);
 
@@ -323,6 +328,10 @@ void generateGetStatementWAT(FILE * printFile, char * varName) {
         strcpy(arrName, varName);
         arrName = strtok(arrName, varDelimiter);
 
+        // Get the array scope and asscoiated WATType
+        char * arrScope = findVarScope(arrName, prevScopes, totalWebScopes);
+        char * WATType = getWATType(getItemType(arrName, arrScope, 1));
+
         // Assign array index variable
         strcpy(arrEl, varName);
         arrEl = strtok(arrEl, varDelimiter);
@@ -330,7 +339,7 @@ void generateGetStatementWAT(FILE * printFile, char * varName) {
         sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + atoi(arrEl));
 
         // Print array index return statement
-        fprintf(printFile, " (call $get_element (%s.get $%s) (i32.const %s))\n", scopeType, arrName, arrIndex);   
+        fprintf(printFile, " (call $get_element_%s (%s.get $%s) (i32.const %s))\n", WATType, scopeType, arrName, arrIndex);   
     }
     
     // Step 2c: Generate a standard scope.get statment using the variable name
@@ -355,22 +364,28 @@ void generateAssignmentWAT(FILE * printFile, char * assignVar, char * setVar) {
         char * arrName = calloc(100, sizeof(char));
         char * arrEl = calloc(100, sizeof(char));
         char * arrIndex = calloc(100, sizeof(char));
+        char * WATType = calloc(100, sizeof(char));
 
         // Assign variable name
         strcpy(arrName, assignVar);
         arrName = strtok(arrName, varDelimiter);
         
-        // Redetermine the scope type with the revised name
+        // Redetermine the scope type and scope name with the revised name
         scopeType = getScopeType(arrName);
+        char * arrScope = findVarScope(arrName, prevScopes, totalWebScopes);
+
+        // Get the WATType of the array
+        WATType = getWATType(getItemType(arrName, arrScope, 1));
 
         // Assign array index variable
         strcpy(arrEl, assignVar);
         arrEl = strtok(arrEl, varDelimiter);
         arrEl = strtok(NULL, varDelimiter);
         sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + atoi(arrEl));
+        printf("here: %s\n", WATType);
 
         // Print a starting set call for an array index callout
-        fprintf(printFile, "\t\t(call $set_element (%s.get $%s) (i32.const %s)", scopeType, arrName, arrIndex);
+        fprintf(printFile, "\t\t(call $set_element_%s (%s.get $%s) (i32.const %s)", WATType, scopeType, arrName, arrIndex);
     }
 
     // Step 4: If its a standard assignment variable, generate a starting set call
@@ -418,8 +433,8 @@ void generateActionEndWAT(char * actionScope) {
 }
 
 // Function module for handling set_element statements in WAT strings
-void setStringElementWAT(FILE * printFile, char * scopeType, char * arrName, int arrIndex, int arrVal) {
-    fprintf(printFile, "\t\t(call $set_element (%s.get $%s) (i32.const %d) (i32.const %d))\n", scopeType, arrName, arrIndex, arrVal);
+void setStringElementWAT(FILE * printFile, char * WATType, char * scopeType, char * arrName, int arrIndex, int arrVal) {
+    fprintf(printFile, "\t\t(call $set_element_%s (%s.get $%s) (i32.const %d) (%s.const %d))\n", WATType, scopeType, arrName, arrIndex, WATType, arrVal);
 }
 
 // Function module for generating print module calls
@@ -482,15 +497,18 @@ void generateSoloStringWAT(FILE * printFile, char * strVal) {
     // Step 4C: Generate WAT code for creating the new array
     fprintf(printFile, "\t\t(%s.set $%s (call $create_array (i32.const %d)))\n", scopeType, printVar, strlen(strVal));
 
-    // Step 4D: Set each element from the string into the new array using a for-loop
+    // Step 4D: Get the WAT type for the solo string
+    char * WATType = getWATType(getPrimaryType(strVal));
+
+    // Step 4E: Set each element from the string into the new array using a for-loop
     for (int currArrIndex = 0; currArrIndex < strSize; currArrIndex++) {
-        setStringElementWAT(printFile, scopeType, printVar, indexEntry + currArrIndex, atoi(convertToASCII(printStrArr[currArrIndex])));
+        setStringElementWAT(printFile, WATType, scopeType, printVar, indexEntry + currArrIndex, atoi(convertToASCII(printStrArr[currArrIndex])));
     }
 
-    // Step 4E: Print each element in the new string array using a for-loop
+    // Step 4F: Print each element in the new string array using a for-loop
     for (int currArrIndex = 0; currArrIndex < strSize; currArrIndex++) {
         generatePrintModuleWAT(printFile, "string");
-        fprintf(printFile, "\t\t (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, printVar, indexEntry + currArrIndex);
+        fprintf(printFile, "\t\t (call $get_element_%s (%s.get $%s) (i32.const %d)))\n", WATType, scopeType, printVar, indexEntry + currArrIndex);
     }
 
 }
@@ -538,11 +556,14 @@ void generateOutputStatementWAT(FILE * printFile, char * varName) {
     else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "var", 3) == 0 && strncmp(varType, "string", 6) == 0) {
         // Assign array index variable
         int arrIndex = get(&stringAddresses, varName);
+
+        // Get the WATType of the array
+        char * WATType = getWATType(varType);
         
         // Print out all available indexes using a for-loop
         for (int newIndex = 0; newIndex < get(&stringSizes, varName); newIndex++) {
             generatePrintModuleWAT(printFile, varType);
-            fprintf(printFile, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, varName, arrIndex + newIndex);
+            fprintf(printFile, " (call $get_element_%s (%s.get $%s) (i32.const %d)))\n", WATType, scopeType, varName, arrIndex + newIndex);
         }
     }
 
@@ -777,12 +798,14 @@ void generateText() {
 
         // Case for end of strings
         else if (strncmp(strArr[0], "endstring", 9) == 0) {
-            // Get the variable scopeType and arrIndex
+            // Get the variable scopeType, scopeName, arrIndex and WATType
             char * scopeType = getScopeType(strArr[1]);
+            char * arrScope = findVarScope(strArr[1], prevScopes, totalWebScopes);
             int arrIndex = atoi(strArr[2]) + get(&stringAddresses, strArr[1]);
+            char * WATType = getWATType(getItemType(strArr[1], arrScope, 1));
 
             // Assign the NULL character to the last value
-            setStringElementWAT(printFile, scopeType, strArr[1], arrIndex, 0);
+            setStringElementWAT(printFile, WATType, scopeType, strArr[1], arrIndex, 0);
         }
 
         // Case for addline statement
@@ -1055,7 +1078,6 @@ void generateText() {
                 // Determine if each one is a variable or not, and assign accordingly
                 int index = 5;
                 while (strArr[index] != NULL && strncmp(strArr[index], "\0", 1) != 0) {
-                    printf("here\n");
                     generateGetStatementWAT(printFile, strArr[index]);
                     index++;
                 }

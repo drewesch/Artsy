@@ -14,11 +14,11 @@ testArr[0] = 3.3
 testArr[1] = -129.2
 type int z
 z = 290230
-output -502672.718750
+output -21542.224609
 addline
 subop float
 T0 = testArr[0] + testArr[1]
-T1 = T0 - testArr[0]
+T1 = T0 + testArr[1]
 output T1
 addline
 output 522414000

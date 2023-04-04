@@ -989,7 +989,7 @@ char* ASTTraversal(struct AST* root) {
             ASTTraversal(root->right);
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if (root->right->LHS != NULL && strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+            if (root->right->LHS != NULL && strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0 && strncmp(root->right->LHS, "int", 3) != 0 && strncmp(root->right->LHS, "float", 5) != 0) {
                 // Write id in array callout format
                 emitWriteArrayId(root->right->LHS, root->right->RHS);
             } else if (strcmp(root->RHS, "int") == 0
@@ -1402,7 +1402,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitTypeArrayDeclarationOptimized(root->LHS, root->RHS, "-1");
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if (root->right->LHS != NULL && strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+            if (root->right->LHS != NULL && strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0 && strncmp(root->right->LHS, "int", 3) != 0 && strncmp(root->right->LHS, "float", 5) != 0) {
                 // Write id in array callout format
                 if (isUsedVar(root->right->LHS)) {
                     emitWriteArrayIdOptimized(root->right->LHS, root->right->RHS);
