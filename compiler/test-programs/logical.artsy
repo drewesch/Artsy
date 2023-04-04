@@ -66,6 +66,9 @@ action testLoop() {
 	}
 }
 
+print "test!";
+addline;
+
 if (a < 3) {
 	declare xy as int;
 	let xy = 19;

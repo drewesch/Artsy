@@ -316,6 +316,9 @@ void emitAssignment(char * id1, char * id2){
             if (id2[i+loopEscapeChars] == '\\') {
                 fprintf(IRcode, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+1+loopEscapeChars]));
                 loopEscapeChars++;
+            // If the character is a space
+            } else if (id2[i+loopEscapeChars] == ' ') {
+                fprintf(IRcode, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+loopEscapeChars]));
             } else {
                 fprintf(IRcode, "%s[%d] = \"%c\"\n", id1, i-1, id2[i+loopEscapeChars]);
             }
@@ -356,10 +359,14 @@ void emitAssignmentOptimized(char * id1, char * id2){
         // Used in calculating the new array length
         int numEscapeCharacters = countEscapeChars(id2);
         int loopEscapeChars = 0; // Tracks total escape chars encountered
+
         for (int i = 1; i < strlen(id2)-1-numEscapeCharacters; i++) {
             if (id2[i+loopEscapeChars] == '\\') {
                 fprintf(IRcodeOptimized, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+1+loopEscapeChars]));
                 loopEscapeChars++;
+            // If the character is a space
+            } else if (id2[i+loopEscapeChars] == ' ') {
+                fprintf(IRcodeOptimized, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+loopEscapeChars]));
             } else {
                 fprintf(IRcodeOptimized, "%s[%d] = \"%c\"\n", id1, i-1, id2[i+loopEscapeChars]);
             }
@@ -376,7 +383,12 @@ void emitAssignmentOptimized(char * id1, char * id2){
 }
 
 // Unoptimized IRcode operation for variable assignment (for array)
-void emitAssignmentForElement(char *id1, char * elementNum, char * id2) {
+void emitAssignmentForElement(char * id1, char * elementNum, char * id2) {
+    // Check if the item uses an escape character or space, switch to new format
+    if (strncmp(getPrimaryType(id2), "string", 6) == 0 && id2[1] == '\\' || id2[1] == ' ') {
+        snprintf(id2, 10, "\"%s\"", escapeCharType(id2[1]));
+    }
+
     // Print the assignment statement using the two basic IDs with an element number
     fprintf(IRcode, "%s[%s] = %s\n", id1, elementNum, id2);
 }
@@ -397,6 +409,11 @@ void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2)
             cvTable[cvIndex].val = (int) strtol(id2, (char **)NULL, 10);
             cvIndex ++;
         }
+    }
+
+    // Check if the item uses an escape character or space, switch to new format
+    if (strncmp(getPrimaryType(id2), "string", 6) == 0 && id2[1] == '\\' || id2[1] == ' ') {
+        snprintf(id2, 10, "\"%s\"", escapeCharType(id2[1]));
     }
 
     // Print the assignment statement using the two basic IDs with an element number
@@ -553,14 +570,24 @@ void emitEntry(char * id) {
 
     // Get type and update current scope
     char * type = getItemType(id, "global", 1);
+    
+    // Set new scope and retain history using previous scope
+    currScope = malloc(1000 * sizeof(char));
     strcpy(currScope, id);
+    strcpy(prevScopes[totalIRScopes], currScope);
+    totalIRScopes++;
 
     fprintf(IRcode, "entry %s %s\n", type, id);
 }
 
 void emitEntryOptimized(char * id) {    
     char * type = getItemType(id, "global", 1);
+
+    // Set new scope and retain history using previous scope
+    currScope = malloc(1000 * sizeof(char));
     strcpy(currScope, id);
+    strcpy(prevScopes[totalIRScopes], currScope);
+    totalIRScopes++;
 
     fprintf(IRcodeOptimized, "entry %s %s\n", type, id);
 }
@@ -583,7 +610,10 @@ void emitReturnOptimized(char * id) {
 }
 
 void emitExit(FILE * printFile) {
-    strcpy(currScope, "global");
+    // Set current scope as previous scope
+    strcpy(currScope, prevScopes[totalIRScopes-1]);
+    totalIRScopes--;
+
     fprintf(printFile, "exit\n");
 }
 
@@ -726,10 +756,10 @@ char * emitFunctionCallOptimized(char *id) {
 char* ASTTraversal(struct AST* root) {
     if(root != NULL) {
         printf("root->nodeType: %s\n", root->nodeType);
-        if(root->LHS != NULL)
-        printf("root->LHS: %s\n", root->LHS);
-        if(root->RHS != NULL)
-        printf("root->RHS: %s\n", root->RHS);
+        // if(root->LHS != NULL)
+        // printf("root->LHS: %s\n", root->LHS);
+        // if(root->RHS != NULL)
+        // printf("root->RHS: %s\n", root->RHS);
         fflush(stdout);
         char rightVar[50];
         char leftVar[50];
@@ -818,8 +848,8 @@ char* ASTTraversal(struct AST* root) {
 
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -832,7 +862,8 @@ char* ASTTraversal(struct AST* root) {
             emitWhileEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
             totalIRScopes--;
         }
 
@@ -856,8 +887,8 @@ char* ASTTraversal(struct AST* root) {
             
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", findVarScope("if", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -870,7 +901,8 @@ char* ASTTraversal(struct AST* root) {
             emitIfEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
             totalIRScopes--;
         }
 
@@ -894,8 +926,8 @@ char* ASTTraversal(struct AST* root) {
 
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", findVarScope("elif", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -908,7 +940,8 @@ char* ASTTraversal(struct AST* root) {
             emitElifEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
             totalIRScopes--;
         }
 
@@ -929,8 +962,8 @@ char* ASTTraversal(struct AST* root) {
 
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", findVarScope("else", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -943,7 +976,8 @@ char* ASTTraversal(struct AST* root) {
             emitElseEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes] = malloc(100 * sizeof(char));
             totalIRScopes--;
         }
         if(strcmp(root->nodeType, "and") == 0) {
@@ -1221,8 +1255,8 @@ char* ASTTraversalOptimized(struct AST* root) {
             
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1236,7 +1270,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             inWhileLoop = 0;
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
             totalIRScopes--;
         }
 
@@ -1261,8 +1295,8 @@ char* ASTTraversalOptimized(struct AST* root) {
             
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", findVarScope("if", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1275,7 +1309,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitIfEndStatement(IRcodeOptimized);
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
             totalIRScopes--;
         }
 
@@ -1300,8 +1334,8 @@ char* ASTTraversalOptimized(struct AST* root) {
             
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", findVarScope("elif", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1314,7 +1348,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitElifEndStatement(IRcodeOptimized);
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
             totalIRScopes--;
         }
 
@@ -1336,8 +1370,8 @@ char* ASTTraversalOptimized(struct AST* root) {
             
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", currScope, 1));
-            strcpy(prevScopes[totalIRScopes-1], currScope);
+            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", findVarScope("else", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1350,7 +1384,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitElseEndStatement(IRcodeOptimized);
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-2]);
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
             totalIRScopes--;
             printf("currScope: %s\n", currScope);
         }

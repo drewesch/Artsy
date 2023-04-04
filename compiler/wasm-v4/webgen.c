@@ -30,6 +30,8 @@ FILE * IRcode; // Optimized IRcode file
 #define MAX_LINE_LENGTH 10000
 #define MAX_ARRAY_LENGTH 5000
 char varDelimiter[] = "[], ";
+char * returnType;
+char * currOp;
 
 // Scope Variables
 char * currScope;
@@ -212,6 +214,14 @@ char * getScopeType(char * varName) {
     return found(varToken, "global", 0) ? "global" : "local";
 }
 
+// Helper function to switch context from within parameters to within a scope
+void checkParamContext() {
+    if (inParams) {
+        inParams = 0;
+        generateResultWAT(WATcode, returnType);
+    }
+}
+
 // WAT CODE PRINT MODULES
 
 // Function to generate the initial set of lines required for proper WebAssembly output
@@ -239,44 +249,37 @@ void generateAddLineWAT(FILE * printFile) {
 }
 
 // Function module for declaring a variable
-void generateVarDeclareStatementWAT(char * fileType, char * varType, char * varName) {
+void generateVarDeclareStatementWAT(FILE * printFile, char * varType, char * varName) {
     // Step 1: Get the WAT Type, current scope, and files
     char * scopeType = getScopeType(varName);
     char * WATType = getWATType(getItemType(varName, currScope, 1));
-    char * printFile = getFileType(fileType);
-    char * helperFile = getHelperFileType(fileType);
+    char * printFileStr = inMain ? "MAINcode" : "LOCALcode";
+    char * helperFile = getHelperFileType(printFileStr);
 
     // Step 2: Handle standard variable declarations
-    char * placeholder = calloc(100, sizeof(char));
     if (inMain && inLogic == 0) {
         // Find the placeholder value, based on whether its a float or int
-        placeholder = strncmp(WATType, "f32", 3) == 0 ? "0.0" : "0";
+        char * placeholderVar = calloc(100, sizeof(char));
+        placeholderVar = strncmp(WATType, "f32", 3) == 0 ? "0.0" : "0";
 
         // Output the type to the global section
-        fprintf(WATcode, "\t(global $%s (mut %s) (%s.const %s))\n", varName, WATType, WATType, placeholder);
+        fprintf(WATcode, "\t(global $%s (mut %s) (%s.const %s))\n", varName, WATType, WATType, placeholderVar);
     } else {
         fprintf(helperFile, "\t\t(local $%s %s)\n", varName, WATType);
     }
 }
 
-void generateArrayDeclareStatementWAT(char * fileType, char * varType, char * varName, char * arrSize) {
-    // Step 1: Get file type
-    char * printFile = getFileType(fileType);
-    
-    // Step 2: Create string variable in hash table
+void generateArrayDeclareStatementWAT(FILE * printFile, char * varType, char * varName, char * arrSize) {    
+    // Step 1: Create string variable in hash table
     int indexEntry = currMaxStringIndex;
     set(&stringAddresses, varName, indexEntry);
     set(&stringSizes, varName, atoi(arrSize));
 
-    // Step 3: Update max string index for the next array entry
+    // Step 2: Update max string index for the next array entry
     currMaxStringIndex += atoi(arrSize);
 
-    // Step 4: Generate WAT code for creating the new array
+    // Step 3: Generate WAT code for creating the new array
     fprintf(printFile, "\t\t(global.set $%s (call $create_array (i32.const %s)))", varName, arrSize);
-}
-
-void generateSetStatementWAT(FILE * printFile, char * varName) {
-    // TK add here
 }
 
 // Function module for printing get statements for all variable types in WAT
@@ -286,21 +289,34 @@ void generateGetStatementWAT(FILE * printFile, char * varName) {
     int len = strlen(varName);
     char * scopeType = getScopeType(varName);
 
-    // Step 2a: Print a const get statement if it's not a variable
+    // Step 2a: Print a const get statement if its a primary
     if (strncmp(primaryType, "var", 3) != 0) {
         // Get WAT Type
-        char * WATType = getWATType(getPrimaryType(varName));
+        char * WATType = getWATType(primaryType);
+
+        // Check if primaryVar references a char
+        // If it does, convert it to an ASCII value
+        if (strncmp(getPrimaryType(varName), "string", 6) == 0) {
+            varName = convertToASCII(varName);
+        }
+
+        // Check if primaryVar equals zero as a string char (unidentified value)
+        // If so, convert it to a space in ASCII
+        if (strncmp(varName, "0", 1) == 0 && strncmp(primaryType, "string", 6) == 0) {
+            varName = "32";
+        }
 
         // Print the statement
         fprintf(printFile, " (%s.const %s)", WATType, varName);
     }
 
-    // Step 2b: Print an array index get statement if it's a variable with a "[]"
+    // Step 2b: Generate an array index get statement if it's a variable with a "[]"
     else if (varName[len - 1] == ']') {
         // Goal: Return the get_element statement
         
         // Get the array variable and the index number
         char * arrName = calloc(100, sizeof(char));
+        char * arrEl = calloc(100, sizeof(char));
         char * arrIndex = calloc(100, sizeof(char));
 
         // Assign variable name
@@ -308,22 +324,68 @@ void generateGetStatementWAT(FILE * printFile, char * varName) {
         arrName = strtok(arrName, varDelimiter);
 
         // Assign array index variable
-        strcpy(arrIndex, varName);
-        arrIndex = strtok(arrIndex, varDelimiter);
-        arrIndex = strtok(NULL, varDelimiter);
-        sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + arrIndex);
+        strcpy(arrEl, varName);
+        arrEl = strtok(arrEl, varDelimiter);
+        arrEl = strtok(NULL, varDelimiter);
+        sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + atoi(arrEl));
 
         // Print array index return statement
         fprintf(printFile, " (call $get_element (%s.get $%s) (i32.const %s))\n", scopeType, arrName, arrIndex);   
     }
-
-    // Step 2d: Print the whole array if the item's kind is an array
     
-    
-    // Step 2c: Print a standard scope.get statment using the variable name
+    // Step 2c: Generate a standard scope.get statment using the variable name
     else {
-        fprintf(printFile, " (%s.get $%s)", scopeType, varName); 
+        fprintf(printFile, "\t\t(%s.get $%s)", scopeType, varName); 
     }
+}
+
+void generateAssignmentWAT(FILE * printFile, char * assignVar, char * setVar) {
+    // Step 1: Get the scope type and assignment variable length
+    char * scopeType = getScopeType(assignVar);
+    int len = strlen(assignVar);
+
+    // Step 2: If a current operation is not assigned, get the current operation from the assignment statement
+    if (strncmp(currOp, "\0", 1) == 0 || currOp == NULL) {
+        currOp = getPrimaryType(setVar);
+    }
+
+    // Step 3: If the assignment variable is an array index callout variable, generate a unique starting set call
+    if (assignVar[len - 1] == ']') {
+        // Get the array variable and the index number
+        char * arrName = calloc(100, sizeof(char));
+        char * arrEl = calloc(100, sizeof(char));
+        char * arrIndex = calloc(100, sizeof(char));
+
+        // Assign variable name
+        strcpy(arrName, assignVar);
+        arrName = strtok(arrName, varDelimiter);
+        
+        // Redetermine the scope type with the revised name
+        scopeType = getScopeType(arrName);
+
+        // Assign array index variable
+        strcpy(arrEl, assignVar);
+        arrEl = strtok(arrEl, varDelimiter);
+        arrEl = strtok(NULL, varDelimiter);
+        sprintf(arrIndex, "%d", get(&stringAddresses, arrName) + atoi(arrEl));
+
+        // Print a starting set call for an array index callout
+        fprintf(printFile, "\t\t(call $set_element (%s.get $%s) (i32.const %s)", scopeType, arrName, arrIndex);
+    }
+
+    // Step 4: If its a standard assignment variable, generate a starting set call
+    else {
+        fprintf(printFile, "\t\t(%s.set $%s\n", scopeType, assignVar);
+    }
+
+    // Step 5: Generate the get statement for the setter variable
+    generateGetStatementWAT(printFile, setVar);
+
+    // Step 6: End assignment statement
+    fprintf(printFile, ")\n");
+    
+    // Step 7: Reset currOp variable
+    currOp = calloc(100, sizeof(char));
 }
 
 // Function module for handling parameter statements
@@ -351,8 +413,8 @@ void generateReturnWAT(char * varName, char * scopeType) {
     fprintf(LOCALcode, ")\n");    
 }
 
-void generateActionEndWAT(char * currScope) {
-    fprintf(WATcode, "\t)\n\t(export \"%s\" (func $%s))\n", currScope, currScope);
+void generateActionEndWAT(char * actionScope) {
+    fprintf(WATcode, "\t)\n\t(export \"%s\" (func $%s))\n", actionScope, actionScope);
 }
 
 // Function module for handling set_element statements in WAT strings
@@ -362,11 +424,11 @@ void setStringElementWAT(FILE * printFile, char * scopeType, char * arrName, int
 
 // Function module for generating print module calls
 void generatePrintModuleWAT(FILE * printFile, char * printType) {
-    fprintf(printFile, "\t\t(call $print_%s)", printType);
+    fprintf(printFile, "\t\t(call $print_%s", printType);
 }
 
 // Function module for handling printing solo string in Artsy code
-void generateSoloStringWAT(char * strVal, char * fileType) {
+void generateSoloStringWAT(FILE * printFile, char * strVal) {
     // Step 1: Generate a unique print variable name
     char * printVar = malloc(sizeof(char)*100);
     snprintf(printVar, 100, "_printstr_%d", currprint_strings);
@@ -374,7 +436,7 @@ void generateSoloStringWAT(char * strVal, char * fileType) {
 
     // Step 2: Convert the strVal to a usable format that supports escape characters
     int numEscapeCharacters = countEscapeChars(strVal);
-    int printStrArrSize = strlen(strVal)-3-numEscapeCharacters; // Iterator variable to keep track of size
+    int printStrArrSize = strlen(strVal)-2-numEscapeCharacters; // Iterator variable to keep track of size
     char ** printStrArr = (char **) malloc(printStrArrSize * 10 * sizeof(char)); // Create string array variable
 
     // Allocate memory for each string
@@ -409,9 +471,9 @@ void generateSoloStringWAT(char * strVal, char * fileType) {
 
     // Step 4: Print the whole string in one area
 
-    // Step 4A: Determine filetype
-    FILE * printFile = getFileType(fileType);
-    FILE * helperFile = getHelperFileType(fileType);
+    // Step 4A: Determine helper file type
+    char * printFileStr = inMain ? "MAINcode" : "LOCALcode";
+    FILE * helperFile = getHelperFileType(printFileStr);
 
     // Step 4B: Declare the new array variable
     char * scopeType = "local"; // Declare scope variable
@@ -434,47 +496,58 @@ void generateSoloStringWAT(char * strVal, char * fileType) {
 }
 
 void generateOutputStatementWAT(FILE * printFile, char * varName) {
-    // Step 1: Get the primary type, the length, the scope type of the variable name, and the print file string
+    // Step 1a: Get the primary type, the length, and the scope type of the variable name
     char * primaryType = getPrimaryType(varName);
     int len = strlen(varName);
     char * scopeType = getScopeType(varName);
-    char * printFileStr = inMain ? "MAINcode" : "LOCALcode";
+
+    // Step 1b: Declare scope, type, and item kind variables if it is a variable
+    char * itemScope;
+    char * varType;
+    char * itemKind;
+    char * token = calloc(100, sizeof(char));
+    strcpy(token, varName);
+    token = strtok(token, varDelimiter);
+
+    // If the variable is a temporary assigned table, use the type & kind from the TempVar table
+    if (strncmp(primaryType, "var", 3) == 0 && isTempVar(token)) {
+        varType = getTempVarType(token);
+        itemKind = getTempVarKind(token);
+    }
+
+    // Else, get the variable type and item kind from the symbol table
+    else if (strncmp(primaryType, "var", 3) == 0) {
+        itemScope = findVarScope(varName, prevScopes, totalWebScopes);
+        varType = getItemType(token, itemScope, 1);
+        itemKind = getItemKind(token, itemScope, 1);
+    }
 
     // Step 2: If the output statement uses a solo string, print the string
     if (strncmp(primaryType, "string", 6) == 0) {
-        generateSoloStringWAT(varName, printFileStr);
+        generateSoloStringWAT(printFile, varName);
     }
 
-    // Step 3: If the output uses a primary type,  
+    // Step 3: If the output uses a primary type, print the primary
     else if (strncmp(primaryType, "var", 3) != 0) {
         generatePrintModuleWAT(printFile, primaryType);
         generateGetStatementWAT(printFile, varName);
         fprintf(printFile, "\t\t)\n");
-    } 
+    }
 
-    // Else, the write statement uses a variable
+    // Step 4: If the type is a full array or a string variable, output all available indexes
+    else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "var", 3) == 0 && strncmp(varType, "string", 6) == 0) {
+        // Assign array index variable
+        int arrIndex = get(&stringAddresses, varName);
+        
+        // Print out all available indexes using a for-loop
+        for (int newIndex = 0; newIndex < get(&stringSizes, varName); newIndex++) {
+            generatePrintModuleWAT(printFile, varType);
+            fprintf(printFile, " (call $get_element (%s.get $%s) (i32.const %d)))\n", scopeType, varName, arrIndex + newIndex);
+        }
+    }
+
+    // Step 5: If the type is a standard variable, get the statement and print it
     else {
-        // Get primary type and item kind of the output
-        char * token;
-        char * varType;
-        char * itemKind;
-        char * itemScope = findVarScope(varName, prevScopes, totalWebScopes);
-        token = strtok(varName, varDelimiter);
-
-        // Case 1: It uses a temporary variable
-        if (isTempVar(token)) {
-            primaryType = getTempVarType(token);
-            itemKind = getTempVarKind(token);
-        }
-        // Case 2: It's a regular variable
-        else {
-            primaryType = getItemType(token, itemScope, 1);
-            itemKind = getItemKind(token, itemScope, 1);
-        }
-
-        // Declare a write string variable
-        char * writeStr = malloc(200*sizeof(char));
-
         // Start call statement with primary type
         generatePrintModuleWAT(printFile, varType);
 
@@ -483,44 +556,71 @@ void generateOutputStatementWAT(FILE * printFile, char * varName) {
 
         // End the output statement
         fprintf(printFile, ")\n");
-
-        if (!inMain) { // If its within a function, write to WATcode
-            // If the type is an array index, get the array index val and write to the console
-            int len = strlen(variable);
-            if (variable[len - 1] == ']' && strncmp(itemKind, "Array", 5) == 0) {
-                // Get the array variable and the index number
-                char * arrayName = malloc(100*sizeof(char));
-                char * arrIndex = malloc(100*sizeof(char));
-
-                // Assign variable name
-                strcpy(arrayName, token);
-
-                // Assign array index variable
-                token = strtok(NULL, varDelimiter);
-                sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(token));
-
-                // Print get_element call
-                fprintf(LOCALcode, "%s (call $get_element (%s.get $%s) (i32.const %s)))\n", writeStr, scopeType, arrayName, arrIndex);
-
-            } else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "string", 6) == 0) {
-                // Else if the type is a full array, end the current statement and write out all available indexes
-
-                // Get the array variable and the index number
-                int arrIndex = 0;
-
-                // Assign array index variable
-                arrIndex = get(&stringAddresses, variable);
-                
-                // Print out all available indexes using a for-loop
-                for (int newIndex = 0; newIndex < get(&stringSizes, variable); newIndex++) {
-                    fprintf(LOCALcode, "%s (call $get_element (%s.get $%s) (i32.const %d)))\n", writeStr, scopeType, variable, arrIndex + newIndex);
-                }
-            } else {
-                // Else, print out the standard variable call
-                fprintf(LOCALcode, "%s (%s.get $%s))\n", writeStr, scopeType, variable);
-            }
-        }
     }
+}
+
+void generateActionCallStartWAT(FILE * printFile, char * assignVar, char * actionVar) {
+    // Step 1: Get the file type, helper file type, scope type, and the operation type
+    char * printFileStr = inMain ? "MAINcode" : "LOCALcode";
+    FILE * helperFile = getHelperFileType(printFileStr);
+    char * scopeType = getScopeType(assignVar);
+    char * opType = getWATType(currOp);
+
+    // Step 2: Print a temporary variable declaration line with the WAT type
+    // Save the temporary variable to the table
+    addTempVarItem(assignVar, currOp, "Var");
+    fprintf(helperFile, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
+
+    // Step 3: Output the assignVar call line
+    fprintf(printFile, "\t\t(%s.set $%s", scopeType, assignVar);
+
+    // Step 4: Generate starting action call line
+    fprintf(printFile, " (call $%s\n", actionVar);
+}
+
+void generateOperationWAT(FILE * printFile, char * assignVar, char * leftVar, char * opChar, char * rightVar) {
+    // Step 1: Get the file type, helper file type, scope type, and the operation type
+    char * printFileStr = inMain ? "MAINcode" : "LOCALcode";
+    FILE * helperFile = getHelperFileType(printFileStr);
+    char * scopeType = getScopeType(assignVar);
+    char * opType = getWATType(currOp);
+
+    // Step 2: Generate a temporary variable declaration line and add to the TempVar table
+    addTempVarItem(assignVar, currOp, "Var");
+    fprintf(helperFile, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
+
+
+    // Step 3: Output the assignment variable set line
+    fprintf(printFile, "\t\t(%s.set $%s\n", scopeType, assignVar);
+
+    // Step 4a: Determine operation call for WAT
+    // "+" = "add", "-" = sub, "*" = mul, and "/" = "div" or "div_s" 
+    char * opCall = calloc(10, sizeof(char));
+
+    if (strncmp(opChar, "+", 1) == 0) {
+        strcpy(opCall, "add");
+    } else if (strncmp(opChar, "-", 1) == 0) {
+        strcpy(opCall, "sub");
+    } else if (strncmp(opChar, "*", 1) == 0) {
+        strcpy(opCall, "mul");
+    } else if (strncmp(opChar, "/", 1) == 0) {
+        strcpy(opCall, "div");
+    }
+
+    // Step 4b: If the operation is an integer and uses division, specify "div_s"
+    if (strncmp(opCall, "div", 3) == 0 && strncmp(opType, "i32", 3) == 0) {
+        strncat(opCall, "_s", 2);
+    }
+
+    // Step 5: Start the operation call line
+    fprintf(printFile, "\t\t(%s.%s", opType, opCall);
+
+    // Step 6: Declare the get statements for the left and right variable
+    generateGetStatementWAT(printFile, leftVar);
+    generateGetStatementWAT(printFile, rightVar);
+
+    // Step 7: End the operation call
+    fprintf(printFile, "\t\t))\n");
 }
 
 void generateComparisonWAT(FILE * printFile, char * leftTerm, char * compareType, char * rightTerm, char * logicType) {
@@ -589,16 +689,16 @@ void generateText() {
     int lineNumber = 1;
 
     // Current operation variable
-    char * currOp = calloc(100, sizeof(char));
+    currOp = calloc(100, sizeof(char));
 
     // Global return type variable for a given function
-    char * returnType = calloc(100, sizeof(char));
+    returnType = calloc(100, sizeof(char));
 
     // Print file variable
     FILE * printFile = MAINcode;
 
     // Current scope and previous scope variables
-    currScope = calloc(100, sizeof(char));
+    currScope = calloc(1000, sizeof(char));
     strcpy(currScope, "global");
     prevScopes = malloc(MAX_ARRAY_LENGTH * sizeof(char*));
     for (int i = 0; i < MAX_ARRAY_LENGTH; i++) { prevScopes[i] = malloc(100 * sizeof(char)); }
@@ -656,9 +756,11 @@ void generateText() {
             // Set global return type variable, which is specific to this function
             returnType = newType;
 
-            // Set new scope
-            currScope = malloc(strlen(strArr[2])*sizeof(char));
+            // Set new scope and retain history using previous scope
+            currScope = malloc(1000 * sizeof(char));
             strcpy(currScope, strArr[2]);
+            strcpy(prevScopes[totalWebScopes], currScope);
+            totalWebScopes++;
 
             // Start function declaration
             fprintf(WATcode, "\t(func $%s ", strArr[2]);
@@ -666,11 +768,8 @@ void generateText() {
 
         // Case for handling suboperation states
         else if (strncmp(strArr[0], "subop", 5) == 0) {
-            // Set function return type
-            if (inParams) {
-                inParams = 0;
-                generateResultWAT(WATcode, returnType);
-            }
+            // Switch param context
+            checkParamContext();
 
             // Set current operation
             strcpy(currOp, strArr[1]);
@@ -703,16 +802,16 @@ void generateText() {
             inMain = 1; // Set flag back to global
             generateLocalOperations(); // Load in everything from the local file
             generateActionEndWAT(currScope); // Generate WAT function ending code
-            currScope = "global"; // Set scope back to global
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalWebScopes-2]);
+            totalWebScopes--;
         }
 
         // Case for return statements in functions
         else if (strncmp(strArr[0], "return", 6) == 0) {
-            // Set function return type
-            if (inParams) {
-                inParams = 0;
-                generateResultWAT(WATcode, returnType);
-            }
+            // Switch param context
+            checkParamContext();
 
             // Get variable scopeType
             char * scopeType = getScopeType(strArr[1]);
@@ -723,220 +822,47 @@ void generateText() {
 
         // Case for output statements
         else if (strncmp(strArr[0], "output", 6) == 0) {
-            // Set function return type
-            if (inParams) {
-                inParams = 0;
-                generateResultWAT(WATcode, returnType);
-            }
+            // Switch param context
+            checkParamContext();
 
             // Concatenate the rest of the tokens into one variable to get the whole string
             char * strVar = calloc(MAX_ARRAY_LENGTH, sizeof(char));
             for (int i = 1; i < lenIndex + 1; i++) {
                 strcat(strVar, strArr[i]);
-                strcat(strVar, " ");
-            }
-
-            generateOutputStatementWAT(printFile, strVar)
-
-            // If the write statement does not use a variable
-            if (strncmp(varType, "var", 3) != 0) {
-                
-                if (!inMain) { // If its within a function, write to WATcode
-                    if (strncmp(varType, "int", 3) == 0) {
-                        fprintf(LOCALcode, "\t\t(call $print_int\n");
-                        fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
-                        fprintf(LOCALcode, "\t\t)\n");
-                    } else if (strncmp(varType, "float", 3) == 0) {
-                        fprintf(LOCALcode, "\t\t(call $print_float\n");
-                        fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
-                        fprintf(LOCALcode, "\t\t)\n");
-                    } else if (strncmp(varType, "string", 3) == 0) {
-                        // Concatenate the rest of the tokens into one string variable to get the whole string
-                        char * strVar = calloc(MAX_ARRAY_LENGTH, sizeof(char));
-                        for (int i = 1; i < lenIndex + 1; i++) {
-                            strcat(strVar, strArr[i]);
-                            strcat(strVar, " ");
-                        }
-
-                        // Generate WAT Code for the whole string
-                        generateSoloStringWAT(strVar, "LOCALcode");
-                    }
-
-                }
-                // Else, write to the MAINcode file
-                else {
-                    if (strncmp(varType, "int", 3) == 0) {
-                        fprintf(MAINcode, "\t\t(call $print_int\n");
-                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
-                        fprintf(MAINcode, "\t\t)\n");
-                    } else if (strncmp(varType, "float", 3) == 0) {
-                        fprintf(MAINcode, "\t\t(call $print_float\n");
-                        fprintf(MAINcode, "\t\t\t(%s.const %s)\n", getWATType(varType), variable);
-                        fprintf(MAINcode, "\t\t)\n");
-                    } else if (strncmp(varType, "string", 3) == 0) {
-                        // Concatenate the rest of the tokens into one string variable to get the whole string
-                        char * strVar = calloc(MAX_ARRAY_LENGTH, sizeof(char));
-                        for (int i = 1; i < lenIndex + 1; i++) {
-                            strcat(strVar, strArr[i]);
-                            strcat(strVar, " ");
-                        }
-
-                        // Generate WAT Code for the whole string
-                        generateSoloStringWAT(strVar, "MAINcode");
-                    }
-                }
-
-            } else { // Else, the write statement uses a variable
-                // Determine if the variable is global or variable
-                char * scopeType = "global";
-                char ** scopeStack = { "global", currScope };
-                int scopePointer = 0;
-
-                if (!found(variable, scopeStack, scopePointer)) {
-                    scopePointer = 1;
-                    scopeType = "local";
-                }
-
-                // Get primary type and item kind of the output
-                char * token;
-                char * primaryType;
-                char * itemKind;
-                token = strtok(variable, varDelimiter);
-
-                // Case 1: It uses a temporary variable
-                if (isTempVar(token)) {
-                    primaryType = getTempVarType(token);
-                    itemKind = getTempVarKind(token);
-                }
-                // Case 2: It's a regular variable in the global scope
-                else if (strncmp(scopeType, "global", 6) == 0) {
-                    primaryType = getItemType(token, "global", 1);
-                    itemKind = getItemKind(token, "global", 1);
-                }
-                // Case 3: It's a regular variable in the local scope
-                else {
-                    primaryType = getItemType(token, currScope, scopePointer);
-                    itemKind = getItemKind(token, currScope, scopePointer);
-                }
-
-                // Declare a write string variable
-                char * writeStr = malloc(200*sizeof(char));
-
-                // Start call statement with primary type
-                if (strncmp(primaryType, "int", 3) == 0) {
-                    strcpy(writeStr, "\t\t(call $print_int");
-                } else if (strncmp(primaryType, "float", 3) == 0) {
-                    strcpy(writeStr, "\t\t(call $print_float");
-                } else if (strncmp(primaryType, "string", 6) == 0) {
-                    strcpy(writeStr, "\t\t(call $print_string");
-                }
-
-                if (!inMain) { // If its within a function, write to WATcode
-                    // If the type is an array index, get the array index val and write to the console
-                    int len = strlen(variable);
-                    if (variable[len - 1] == ']' && strncmp(itemKind, "Array", 5) == 0) {
-                        // Get the array variable and the index number
-                        char * arrayName = malloc(100*sizeof(char));
-                        char * arrIndex = malloc(100*sizeof(char));
-
-                        // Assign variable name
-                        strcpy(arrayName, token);
-
-                        // Assign array index variable
-                        token = strtok(NULL, varDelimiter);
-                        sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(token));
-
-                        // Print get_element call
-                        fprintf(LOCALcode, "%s (call $get_element (%s.get $%s) (i32.const %s)))\n", writeStr, scopeType, arrayName, arrIndex);
-
-                    } else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "string", 6) == 0) {
-                        // Else if the type is a full array, end the current statement and write out all available indexes
-
-                        // Get the array variable and the index number
-                        int arrIndex = 0;
-
-                        // Assign array index variable
-                        arrIndex = get(&stringAddresses, variable);
-                        
-                        // Print out all available indexes using a for-loop
-                        for (int newIndex = 0; newIndex < get(&stringSizes, variable); newIndex++) {
-                            fprintf(LOCALcode, "%s (call $get_element (%s.get $%s) (i32.const %d)))\n", writeStr, scopeType, variable, arrIndex + newIndex);
-                        }
-                    } else {
-                        // Else, print out the standard variable call
-                        fprintf(LOCALcode, "%s (%s.get $%s))\n", writeStr, scopeType, variable);
-                    }
-                }
-                // Else, write to the MAINcode file
-                else {
-                    // If the type is an array index, get the array index val and write to the console
-                    int len = strlen(variable);
-                    if (variable[len - 1] == ']' && strncmp(itemKind, "Array", 5) == 0) {
-                        // Get the array variable and the index number
-                        char * arrayName = malloc(100*sizeof(char));
-                        char * arrIndex = malloc(100*sizeof(char));
-
-                        // Assign variable name
-                        strcpy(arrayName, token);
-
-                        // Assign array index variable
-                        token = strtok(NULL, varDelimiter);
-                        sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(token));
-
-                        fprintf(MAINcode, "%s (call $get_element (%s.get $%s) (i32.const %s)))\n", writeStr, scopeType, arrayName, arrIndex);
-                    } else if (strncmp(itemKind, "Array", 5) == 0 || strncmp(primaryType, "string", 6) == 0) {
-                        // Else if the type is a full array, end the current statement and write out all available indexes
-
-                        // Get the array variable and the index number
-                        int arrIndex = 0;
-
-                        // Assign array index variable
-                        arrIndex = get(&stringAddresses, variable);
-                        
-                        // Print out all available indexes using a for-loop
-                        for (int newIndex = 0; newIndex < get(&stringSizes, variable); newIndex++) {
-                            fprintf(MAINcode, "%s (call $get_element (%s.get $%s) (i32.const %d)))\n", writeStr, scopeType, variable, arrIndex + newIndex);
-                        }
-                    } else {
-                        // Else, print out the standard variable call
-                        fprintf(MAINcode, "%s (%s.get $%s))\n", writeStr, scopeType, variable);
-                    }
+                if (i != lenIndex) {
+                    strcat(strVar, " ");
                 }
             }
+
+            // Generate the output statement
+            generateOutputStatementWAT(printFile, strVar);
         }
 
         // Case for type declarations
         else if (strncmp(strArr[0], "type", 4) == 0) {
-            // Set function return type
-            if (inParams) {
-                inParams = 0;
-                generateResultWAT(WATcode, returnType);
-            }
-
-            // Get the type and variable
-            char * varType = strArr[1];
-            char * varName = strArr[2];
+            // Switch param context
+            checkParamContext();
 
             // Generate Declare Statement
-            char * printFileStr = inMain ? "MAINcode" : "LOCALcode";
-            generateVarDeclareStatementWAT(printFileStr, varType, varName);
+            generateVarDeclareStatementWAT(printFile, strArr[1], strArr[2]);
 
             // If the variable is an array, generate the $create_array statement
             if (strncmp(strArr[3], "array", 5) == 0) {
-                char * arrSize = strArr[4];
-                generateArrayDeclareStatementWAT(printFileStr, varType, varName, arrSize);
+                generateArrayDeclareStatementWAT(printFile, strArr[1], strArr[2], strArr[4]);
             }
         }
 
         // Case for While Statements
         else if (strncmp(strArr[0], "while", 5) == 0) {
+            // Generate starting statement
             generateWhileStartWAT(printFile);
 
             // Set new scope and retain history using previous scope
-            char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", currScope, 1));
-            strcpy(prevScopes[totalWebScopes-1], currScope);
+            char * newScope = malloc(1000 * sizeof(char));
+            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalWebScopes), 1));
+            currScope = malloc(1000 * sizeof(char));
             strcpy(currScope, newScope);
+            strcpy(prevScopes[totalWebScopes], currScope);
             totalWebScopes++;
 
             // Determine if uses a single statement
@@ -956,10 +882,11 @@ void generateText() {
             generateIfStartWAT(printFile, "if");
 
             // Set new scope and retain history using previous scope
-            char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", currScope, 1));
-            strcpy(prevScopes[totalWebScopes-1], currScope);
+            char * newScope = malloc(1000 * sizeof(char));
+            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", findVarScope("if", prevScopes, totalWebScopes), 1));
+            currScope = malloc(1000 * sizeof(char));
             strcpy(currScope, newScope);
+            strcpy(prevScopes[totalWebScopes], currScope);
             totalWebScopes++;
 
             // Determine if uses a single statement
@@ -980,9 +907,10 @@ void generateText() {
 
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", currScope, 1));
-            strcpy(prevScopes[totalWebScopes-1], currScope);
+            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", findVarScope("elif", prevScopes, totalWebScopes), 1));
+            currScope = malloc(1000 * sizeof(char));
             strcpy(currScope, newScope);
+            strcpy(prevScopes[totalWebScopes], currScope);
             totalWebScopes++;
 
             // Determine if uses a single statement
@@ -1003,9 +931,10 @@ void generateText() {
 
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
-            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", currScope, 1));
-            strcpy(prevScopes[totalWebScopes-1], currScope);
+            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", findVarScope("else", prevScopes, totalWebScopes), 1));
+            currScope = malloc(1000 * sizeof(char));
             strcpy(currScope, newScope);
+            strcpy(prevScopes[totalWebScopes], currScope);
             totalWebScopes++;
 
             // Set scope to be in a logical statement
@@ -1082,11 +1011,8 @@ void generateText() {
 
         // Case for Void Action Calls
         else if (strncmp(strArr[0], "call", 4) == 0) {
-            // Set function return type
-            if (inParams) {
-                inParams = 0;
-                generateResultWAT(WATcode, returnType);
-            }
+            // Switch param context
+            checkParamContext();
 
             // Print starting call line
             fprintf(printFile, "\t\t(call $%s)", strArr[1]);
@@ -1096,566 +1022,56 @@ void generateText() {
                 // Loop through and add all available parameters as lines under the function call
                 // Determine if each one is a variable or not, and assign accordingly
                 int index = 3;
-                while (strArr[index] != NULL) {
-                    // Break if it's the end of sequence
-                    if (strncmp(strArr[index], "\0", 1) == 0) {
-                        break;
-                    }
+                while (strArr[index] != NULL && strncmp(strArr[index], "\0", 1) != 0) {
                     generateGetStatementWAT(printFile, strArr[index]);
-                }
-
-                // End the call statement with parameters
-                fprintf(printFile, "\t\t\t)\n");
-            }
-        }
-
-        // Assignment Statements
-        // Total Strings = 3
-        // STR1 = Assigned Variable, STR2 = "=", STR3 = Primary Variable
-
-        // Assignment Operation
-        else if (strArr[3] == NULL || strncmp(strArr[3], "\0", 1) == 0 || strncmp(strArr[3], "\"", 1) == 0) {
-            // Set function return type
-            if (inParams) {
-                inParams = 0;
-                generateResultWAT(WATcode, returnType);
-            }
-
-            // Declare all three variables
-            char * assignVar = strArr[0];
-            char * primaryVar = strArr[2];
-            
-            // Declare operation type variable
-            char * opType;
-
-            // Determine if the variable is global or local
-            char * scopeType = "global";
-            char ** scopeStack = { "global", currScope };
-            int scopePointer = 0;
-
-            if (!found(strArr[0], scopeStack, scopePointer)) {
-                scopePointer = 1;
-                scopeType = "local";
-            }
-
-            // If a current operation has not been assigned, get the current operation from the assignment statement
-            if (strncmp(currOp, "\0", 1) == 0 || currOp == NULL) {
-                currOp = getPrimaryType(primaryVar);
-            }
-
-            // Determine the operation type
-            opType = getWATType(currOp);
-
-            // Output the assignVar call line
-            // If the assigned variable is an array index
-            int lenArr0 = strlen(assignVar);
-            if (assignVar[lenArr0 - 1] == ']' && inMain) {
-                // Declare a size variable
-                char * size = strtok(strArr[0], "[], ");
-
-                // Redetermine if the scope is global or local
-                scopePointer = 0;
-                if (!found(size, scopeStack, scopePointer)) {
-                    scopePointer = 1;
-                    scopeType = "local";
-                } else {
-                    scopeType = "global";
-                }
-
-                // Get the size number from the assignVar
-                while (isInt(size) != 1) {
-                    size = strtok(NULL, "[], ");
-                }
-
-                // Declare a new array index variable
-                char * arrIndex = malloc(50*sizeof(char));
-                sprintf(arrIndex, "%d", get(&stringAddresses, assignVar) + atoi(size));
-
-                // Start the declaration statement
-                fprintf(MAINcode, "\t\t(call $set_element\n");
-                fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", scopeType, assignVar);
-                fprintf(MAINcode, "\t\t\t(i32.const %s)\n", arrIndex);
-            } else if (assignVar[lenArr0 - 1] == ']') {
-                // Declare a size variable
-                char * size = strtok(strArr[0], "[], ");
-
-                // Redetermine if the scope is global or local
-                scopePointer = 0;
-                if (!found(size, scopeStack, scopePointer)) {
-                    scopePointer = 1;
-                    scopeType = "local";
-                } else {
-                    scopeType = "global";
-                }
-
-                // Get the size number from the assignVar
-                while (isInt(size) != 1) {
-                    size = strtok(NULL, "[], ");
-                }
-
-                // Declare a new array index variable
-                char * arrIndex = malloc(50*sizeof(char));
-                sprintf(arrIndex, "%d", get(&stringAddresses, assignVar) + atoi(size));
-
-                // Start the declaration statement
-                fprintf(LOCALcode, "\t\t(call $set_element\n");
-                fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", scopeType, assignVar);
-                fprintf(LOCALcode, "\t\t\t(i32.const %s)\n", arrIndex);
-
-            } else if (inMain) { // If it's a temp variable in global, print to MAINcode
-                fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
-            }
-            // Else, print to WATcode
-            else {
-                fprintf(LOCALcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
-            }
-
-            char * primaryToken = malloc(100*sizeof(char));
-            strcpy(primaryToken, primaryVar);
-            primaryToken = strtok(primaryToken, varDelimiter);
-            int lenArr2 = strlen(primaryVar);
-
-            // If primaryVar references an actual variable, add a dollar sign in front and build the line accordingly
-            if (strncmp(getPrimaryType(primaryToken), "var", 3) == 0) {
-                // Determine if the variable is global or variable
-                char * varScopeType = "global";
-                scopePointer = 0;
-
-                if (!found(primaryToken, scopeStack, scopePointer)) {
-                    scopePointer = 1;
-                    varScopeType = "local";
-                }
-
-                // If var is an array index callout, generate a call to the appropriate index
-                if (primaryVar[lenArr2 - 1] == ']' && inMain) {
-                    // If it's array call in global, print to MAIN code
-                    // Get the array variable and the index number
-                    char * arrayName = malloc(100*sizeof(char));
-                    char * arrIndex = malloc(100*sizeof(char));
-
-                    // Assign variable name
-                    strcpy(arrayName, primaryToken);
-
-                    // Assign array index variable
-                    primaryToken = strtok(NULL, varDelimiter);
-                    sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(primaryToken));
-
-                    // Print array index code
-                    fprintf(MAINcode, "\t\t\t(call $get_element\n");
-                    fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
-                    fprintf(MAINcode, "\t\t\t\t(i32.const %s)\n", arrIndex);
-                    fprintf(MAINcode, "\t\t\t)\n");
-                    
-                } else if (primaryVar[lenArr2 - 1] == ']') {
-                    // If it's array call in a function, print to LOCAL code
-                    // Get the array variable and the index number
-                    char * arrayName = malloc(100*sizeof(char));
-                    char * arrIndex = malloc(100*sizeof(char));
-
-                    // Assign variable name
-                    strcpy(arrayName, primaryToken);
-
-                    // Assign array index variable
-                    primaryToken = strtok(NULL, varDelimiter);
-                    sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(primaryToken));
-
-                    // Print array index code
-                    fprintf(LOCALcode, "\t\t\t(call $get_element\n");
-                    fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
-                    fprintf(LOCALcode, "\t\t\t\t(i32.const %s)\n", arrIndex);
-                    fprintf(LOCALcode, "\t\t\t)\n");
-
-                } else if (inMain) { // If it's a temp variable in global, print to MAINcode
-                    fprintf(MAINcode, "\t\t\t(%s.get $%s)\n", varScopeType, primaryVar);
-                }
-                // Else, print to WATcode
-                else {
-                    fprintf(LOCALcode, "\t\t\t(%s.get $%s)\n", varScopeType, primaryVar);
-                }
-            } else {
-                // Check if primaryVar references a char
-                // If it does, convert it to an ASCII value
-                if (strncmp(getPrimaryType(primaryVar), "string", 6) == 0) {
-                    primaryVar = convertToASCII(primaryVar);
-                }
-
-                // Check if primaryVar equals zero as a string char (unidentified value)
-                // If so, convert it to a space in ASCII
-                if (strncmp(primaryVar, "0", 1) == 0 && strncmp(getPrimaryType(primaryVar), "string", 6) == 0) {
-                    primaryVar = "32";
-                }
-                
-                if (inMain) {
-                    fprintf(MAINcode, "\t\t\t(%s.const %s)\n", opType, primaryVar);
-                } else {
-                    fprintf(LOCALcode, "\t\t\t(%s.const %s)\n", opType, primaryVar);
-                }
-            }
-
-            // End assignment statement
-            if (inMain) { // If it's a temp variable in global, print to MAINcode
-                fprintf(MAINcode, "\t\t)\n");
-            }
-            // Else, print to WATcode
-            else {
-                fprintf(LOCALcode, "\t\t)\n");
-            }
-            
-            // Reset currOp variable
-            currOp = calloc(100, sizeof(char));
-        }
-
-        // Case for Standard Action Calls
-        // Contains a "call" token at index 3
-        // Always acts as an assignment statement, but calls a function register with a set of parameters
-        else if (strncmp(strArr[2], "call", 4) == 0) {
-            // Declare all three variables
-            char * assignVar = strArr[0];
-            char * funcVar = strArr[3];
-            
-            // Declare operation type variable
-            char * opType;
-
-            // Determine if the variable is global or variable
-            char * scopeType = "global";
-            char ** scopeStack = { "global", currScope };
-            int scopePointer = 0;
-
-            if (!found(strArr[0], scopeStack, scopePointer)) {
-                scopePointer = 1;
-                scopeType = "local";
-            }
-
-            // Determine the operation type
-            opType = getWATType(currOp);
-
-            // Set function return type
-            if (inParams) {
-                inParams = 0;
-                generateResultWAT(WATcode, returnType);
-            }
-            // Else, print a temporary variable declaration line with the WAT type
-            // Save the temporary variable to the table
-            else {
-                // Add the temporary variable to the table
-                addTempVarItem(assignVar, currOp, "Var");
-
-                // Insert into either global or local scope
-                if (inMain) {
-                    fprintf(VARScode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
-                } else {
-                    fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
-                }
-            }
-
-            // Output the assignVar call line
-            if (inMain) {
-                fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
-            } else {
-                fprintf(LOCALcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
-            }
-
-            // Output function call lines
-            // If there are no arguments after the "args" token, generate the call on a single line
-            if (strArr[5] == NULL) {
-                if (inMain) {
-                    fprintf(MAINcode, "\t\t\t(call $%s)\n", funcVar);
-                } else {
-                    fprintf(LOCALcode, "\t\t\t(call $%s)\n", funcVar);
-                }
-            }
-            // Otherwise, generate the call with the list of parameters
-            else {
-                if (inMain) {
-                    fprintf(MAINcode, "\t\t\t(call $%s\n", funcVar);
-                } else {
-                    fprintf(LOCALcode, "\t\t\t(call $%s\n", funcVar);
-                }
-
-
-                // Loop through and add all available parameters as lines under the function call
-                // Determine if each one is a variable or not, and assign accordingly
-                int index = 5;
-                while (strArr[index] != NULL) {
-                    // Double check and break if it's the end of sequence
-                    if (strncmp(strArr[index], "\0", 1) == 0) {
-                        break;
-                    }
-
-                    char * callVar = strArr[index];
-                    
-                    // If var references an actual variable, add a dollar sign in front and build the line accordingly
-                    if (strncmp(getPrimaryType(strArr[index]), "var", 3) == 0) {
-                        // Determine if the variable is global or variable
-                        char * varScopeType = "global";
-                        scopePointer = 0;
-
-                        if (!found(strArr[index], scopeStack, scopePointer)) {
-                            scopePointer = 1;
-                            varScopeType = "local";
-                        }
-
-                        if (inMain) {
-                            fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, callVar);
-                        } else {
-                            fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, callVar);
-                        }
-                        
-                    } else {
-                        opType = getWATType(getPrimaryType(strArr[index]));
-
-                        if (inMain) {
-                            fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, callVar);
-                        } else {
-                            fprintf(LOCALcode, "\t\t\t\t(%s.const %s)\n", opType, callVar);
-                        }
-                    }
                     index++;
                 }
 
                 // End the call statement with parameters
-                if (inMain) {
-                    fprintf(MAINcode, "\t\t\t)\n");
-                } else {
-                    fprintf(LOCALcode, "\t\t\t)\n");
-                }
+                fprintf(printFile, ")\n");
             }
-
-            // End assignment statement
-            if (inMain) {
-                fprintf(MAINcode, "\t\t)\n");
-            } else {
-                fprintf(LOCALcode, "\t\t)\n");
-            }
-            
-            // Reset currOp variable
-            currOp = calloc(100, sizeof(char));
         }
 
-        // c. Basic Operations
-        // - Total Strings = 5
-        // - STR1 = Assign Variable, STR2 = "=", STR3 = Primary Variable 1,
-        // - STR4 = Operand, STR5 = Primary Variable 2
+        // Case for Assignment Statements
+        else if (strArr[3] == NULL || strncmp(strArr[3], "\0", 1) == 0 || strncmp(strArr[3], "\"", 1) == 0) {
+            // Switch param context
+            checkParamContext();
 
+            // Generate the assignment statement
+            generateAssignmentWAT(printFile, strArr[0], strArr[2]);
+        }
+
+        // Case for Standard Action Calls
+        else if (strncmp(strArr[2], "call", 4) == 0) {
+            // Switch param context
+            checkParamContext();
+
+            // Generate the starting action call
+            generateActionCallStartWAT(printFile, strArr[0], strArr[3]);
+
+            // If there are any arguments after the "args" token, generate the call with the list of parameters
+            if (strArr[5] != NULL && strncmp(strArr[5], "\0", 1) != 0) {
+                // Loop through and add all available parameters as lines under the function call
+                // Determine if each one is a variable or not, and assign accordingly
+                int index = 5;
+                while (strArr[index] != NULL && strncmp(strArr[index], "\0", 1) != 0) {
+                    printf("here\n");
+                    generateGetStatementWAT(printFile, strArr[index]);
+                    index++;
+                }
+                // End the call statement with parameters
+                fprintf(printFile, ")");
+            } else {
+                // End the call statement with parameters
+                fprintf(printFile, ")");
+            }
+            // End the assignment statement
+            fprintf(printFile, ")\n");
+        }
+
+        // Case for Basic Operations
         else if (strncmp(strArr[3], "+", 1) == 0 || strncmp(strArr[3], "-", 1) == 0 || strncmp(strArr[3], "*", 1) == 0 || strncmp(strArr[3], "/", 1) == 0) {
-            // Declare all three variables
-            char * assignVar = strArr[0];
-            char * var1 = strArr[2];
-            char * var2 = strArr[4];
-            
-            // Declare operation type variable
-            char * opType;
-
-            // Determine if the variable is global or variable
-            char * scopeType = "global";
-            char ** scopeStack = { "global", currScope };
-            int scopePointer = 0;
-
-            if (!found(assignVar, scopeStack, scopePointer)) {
-                scopePointer = 1;
-                scopeType = "local";
-            }
-            // Determine the operation type
-            opType = getWATType(currOp);
-
-            // If not in parameters, print a temporary variable declaration line with the WAT type
-            // Save the temporary variable to the table
-            if (!inParams) {
-                // Add the temporary variable to the table
-                addTempVarItem(assignVar, currOp, "Var");
-
-                // Insert into either global or local scope
-                if (inMain) {
-                    fprintf(VARScode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
-                } else {
-                    fprintf(WATcode, "\t\t(%s $%s %s)\n", scopeType, assignVar, opType);
-                }
-                
-            }
-
-            // Output the variable set line
-            if (inMain) {
-                fprintf(MAINcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
-            } else {
-                fprintf(LOCALcode, "\t\t(%s.set $%s\n", scopeType, assignVar);
-            }
-
-            // Determine operation WAT call
-            // "+" = "add", "-" = sub, "*" = mul, and "/" = "div" or "div_s" 
-            char * opCall = "";
-            char * specialOp = "";
-
-            if (strncmp(strArr[3], "+", 1) == 0) {
-                opCall = "add";
-            } else if (strncmp(strArr[3], "-", 1) == 0) {
-                opCall = "sub";
-            } else if (strncmp(strArr[3], "*", 1) == 0) {
-                opCall = "mul";
-            } else if (strncmp(strArr[3], "/", 1) == 0) {
-                opCall = "div";
-            }
-
-            // Special case for division
-            // If the operation is an integer, specify "div_s"
-            if (strncmp(opCall, "div", 3) == 0 && strncmp(opType, "i32", 3) == 0) {
-                specialOp = "_s";
-            }
-
-            // Start the operation call
-            if (inMain) {
-                fprintf(MAINcode, "\t\t\t(%s.%s%s\n", opType, opCall, specialOp);
-            } else {
-                fprintf(LOCALcode, "\t\t\t(%s.%s%s\n", opType, opCall, specialOp);
-            }
-
-            // Declare variables for the operation
-            char * tokenVar1 = malloc(100*sizeof(char));
-            strcpy(tokenVar1, var1);
-            tokenVar1 = strtok(tokenVar1, varDelimiter);
-            int lenVar1 = strlen(var1);
-
-            // If var1 references an actual variable, add a dollar sign in front and build the line accordingly
-            if (strncmp(getPrimaryType(tokenVar1), "var", 3) == 0) {
-                // Determine if the variable is global or variable
-                char * varScopeType = "global";
-                char ** scopeStack = { "global", currScope };
-                int scopePointer = 0;
-
-                if (!found(tokenVar1, scopeStack, scopePointer)) {
-                    scopePointer = 1;
-                    varScopeType = "local";
-                }
-
-                // If var1 is an array index callout, generate a call to the appropriate index
-                if (var1[lenVar1 - 1] == ']' && inMain) {
-                    // If it's in global, print to MAIN code
-                    // Get the array variable and the index number
-                    char * arrayName = malloc(100*sizeof(char));
-                    char * arrIndex = malloc(100*sizeof(char));
-
-                    // Assign variable name
-                    strcpy(arrayName, tokenVar1);
-
-                    // Assign array index variable
-                    tokenVar1 = strtok(NULL, varDelimiter);
-                    sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(tokenVar1));
-
-                    // Print array index code
-                    fprintf(MAINcode, "\t\t\t\t(call $get_element\n");
-                    fprintf(MAINcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
-                    fprintf(MAINcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
-                    fprintf(MAINcode, "\t\t\t\t)\n");
-
-                } else if (var1[lenVar1 - 1] == ']') {
-                    // If it's in a function, print to LOCAL code
-                    // Get the array variable and the index number
-                    char * arrayName = malloc(100*sizeof(char));
-                    char * arrIndex = malloc(100*sizeof(char));
-
-                    // Assign variable name
-                    strcpy(arrayName, tokenVar1);
-
-                    // Assign array index variable
-                    tokenVar1 = strtok(NULL, varDelimiter);
-                    sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(tokenVar1));
-
-                    // Print array index code
-                    fprintf(LOCALcode, "\t\t\t\t(call $get_element\n");
-                    fprintf(LOCALcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
-                    fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
-                    fprintf(LOCALcode, "\t\t\t\t)\n");
-
-                } else if (inMain) {
-                    fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var1);
-                } else {
-                    fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var1);
-                }
-            } else {
-                if (inMain) {
-                    fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, var1);   
-                } else {
-                    fprintf(LOCALcode, "\t\t\t\t(%s.const %s)\n", opType, var1);
-                }
-            }
-
-            // Declare variables for the operation
-            char * tokenVar2 = malloc(100*sizeof(char));
-            strcpy(tokenVar2, var2);
-            tokenVar2 = strtok(tokenVar2, varDelimiter);
-            int lenVar2 = strlen(var2);
-
-            // If var2 references an actual variable, add a dollar sign in front and build the line accordingly
-            if (strncmp(getPrimaryType(tokenVar2), "var", 3) == 0) {
-                // Determine if the variable is global or variable
-                char * varScopeType = "global";
-                char ** scopeStack = { "global", currScope };
-                int scopePointer = 0;
-
-                if (!found(tokenVar2, scopeStack, scopePointer)) {
-                    scopePointer = 1;
-                    varScopeType = "local";
-                }
-
-                // If var2 is an array index callout, generate a call to the appropriate index
-                if (var2[lenVar2 - 1] == ']' && inMain) {
-                    // If it's in global, print to MAIN code
-                    // Get the array variable and the index number
-                    char * arrayName = malloc(100*sizeof(char));
-                    char * arrIndex = malloc(100*sizeof(char));
-
-                    // Assign variable name
-                    strcpy(arrayName, tokenVar2);
-
-                    // Assign array index variable
-                    tokenVar2 = strtok(NULL, varDelimiter);
-                    sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(tokenVar2));
-
-                    // Print array index code
-                    fprintf(MAINcode, "\t\t\t\t(call $get_element\n");
-                    fprintf(MAINcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
-                    fprintf(MAINcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
-                    fprintf(MAINcode, "\t\t\t\t)\n");
-
-                } else if (var2[lenVar2 - 1] == ']') {
-                    // If it's in a function, print to LOCAL code
-                    // Get the array variable and the index number
-                    char * arrayName = malloc(100*sizeof(char));
-                    char * arrIndex = malloc(100*sizeof(char));
-
-                    // Assign variable name
-                    strcpy(arrayName, tokenVar2);
-
-                    // Assign array index variable
-                    tokenVar2 = strtok(NULL, varDelimiter);
-                    sprintf(arrIndex, "%d", get(&stringAddresses, arrayName) + atoi(tokenVar2));
-
-                    // Print array index code
-                    fprintf(LOCALcode, "\t\t\t\t(call $get_element\n");
-                    fprintf(LOCALcode, "\t\t\t\t\t(%s.get $%s)\n", varScopeType, arrayName);
-                    fprintf(LOCALcode, "\t\t\t\t\t(i32.const %s)\n", arrIndex);
-                    fprintf(LOCALcode, "\t\t\t\t)\n");
-
-                } else if (inMain) {
-                    fprintf(MAINcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var2);
-                } else {
-                    fprintf(LOCALcode, "\t\t\t\t(%s.get $%s)\n", varScopeType, var2);
-                }
-            } else {
-                if (inMain) {
-                    fprintf(MAINcode, "\t\t\t\t(%s.const %s)\n", opType, var2);
-                } else {
-                    fprintf(LOCALcode, "\t\t\t\t(%s.const %s)\n", opType, var2);
-                }
-            }
-
-            // End the operation call
-            if (inMain) {
-                fprintf(MAINcode, "\t\t\t)\n");
-                fprintf(MAINcode, "\t\t)\n");
-            } else {
-                fprintf(LOCALcode, "\t\t\t)\n");
-                fprintf(LOCALcode, "\t\t)\n");
-            }
+            generateOperationWAT(printFile, strArr[0], strArr[2], strArr[3], strArr[4]);
         }
     }
 }

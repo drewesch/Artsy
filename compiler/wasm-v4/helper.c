@@ -57,14 +57,15 @@ int isAlpha(char * phrase) {
 // Helper function to determine if the string is an integer
 int isInt(char * phrase) {
     // Get length of string
-    int len;
-    for (len = 0; phrase[len] != '\0'; ++len);
+    int len = strlen(phrase);
 
     // Loop through each character
     // If there is a non-numerical character, return false
     for (int i = 0; i < len; i++) {
         if (i == 0 && phrase[i] == '-') {
             // Ignore case for negative floats
+        } else if (phrase[i] == '\n' || phrase[i] == '\0' || phrase[i] == ' ') {
+            // Ignore case for new lines or end of statements
         }
         else if (!isdigit(phrase[i])) {
             return 0;
@@ -133,6 +134,9 @@ char * escapeCharType(char c) {
     }
     if (c == 't') {
         return "ESC_TAB";  
+    }
+    if (c == ' ') {
+        return "SPACE";  
     }
     return "NONE";
 }
@@ -231,6 +235,8 @@ char * convertToASCII(char * phrase) {
         strncpy(asciiVal, "13", 10);
     } else if (strncmp(phrase, "\"ESC_TAB\"", 11) == 0) {
         strncpy(asciiVal, "9", 10);
+    } else if (strncmp(phrase, "\"SPACE\"", 11) == 0) {
+        strncpy(asciiVal, "32", 10);
     } else {
         snprintf(asciiVal, 10, "%d", (int)phrase[1]);
     }
