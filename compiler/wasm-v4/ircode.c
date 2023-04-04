@@ -18,24 +18,35 @@
 FILE * IRcode;
 FILE * IRcodeOptimized;
 
+// Standard program variables
+#define MAX_LINE_LENGTH 10000
+#define MAX_ARRAY_LENGTH 5000
+
 // Constant declarations for generating variables and statements in the IRcode
 int lastIndex = 0;
 int lastArrayTempIndex = 0;
 char outputId[50];
 char buffer[50];
 char * arrElVar;
-char c[50][50];
-int cindex = 0;
-int currIfIndices[50];
-int currIfPointer = 0;
-int currWhileIndices[50];
-int currWhilePointer = 0;
+char params[50][50];
+int paramIndex = 0;
+
+// Bool for checking if a comparison is within a logical statement
+int isLogical = 0;
+int currLogicalStatements = 0;
+int totalLogicalStatements = 0;
+char ** logicalTypes;
+
+// Bool for checking if a call is within a while loop (optimized code only)
+int inWhileLoop = 0;
 
 // Bool for checking if type is a parameter
 int isParam = 0;
 
-// Variable to detect current scope
-char * currIRScope = "global";
+// Variable for current scope and previous scope
+char * currScope;
+char ** prevScopes;
+int totalIRScopes = 1;
 
 // Variables to detect suboperation starts
 int startSubOp = 0;
@@ -96,7 +107,6 @@ char* getVarConstant(char var[50]){
 
 // Function to add a variable to the unused variable table
 void addUnusedVar(char var[50]) {
-    printf("add var: %s\n", var);
     strncpy(uvTable[uvIndex].var, var, 50);
     uvTable[uvIndex].boolVal = 0;
     uvIndex++;
@@ -104,10 +114,8 @@ void addUnusedVar(char var[50]) {
 
 // Function to update variable declarations if the variable is unused - part of the optimization process
 void updateUnusedVar(char var[50]) {
-    printf("update var: %s\n", var);
 	for(int i=0; i<uvIndex; i++){
         if (strcmp(uvTable[i].var, var) == 0) {
-            printf("yes! updated!\n");
             uvTable[i].boolVal = 1;
             return;
 		}
@@ -119,7 +127,6 @@ void updateUnusedVar(char var[50]) {
 int isUsedVar(char var[50]) {
     for (int i = 0; i < uvIndex; i++){
         if (strcmp(uvTable[i].var, var) == 0) {
-            // printf("Found var in isUsed: %s\n", var);
             return uvTable[i].boolVal;
 		}
 	}
@@ -152,16 +159,53 @@ char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
 
     // Output suboperation type (for webgen parsing)
     if (!startSubOp) {
-        char * opType;
+        char * opType = calloc(100, sizeof(char));
         
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            opType = getItemType(token1, currIRScope, 1);
+            char * tempScope = findVarScope(token1, prevScopes, totalIRScopes);
+            opType = getItemType(token1, tempScope, 1);
         } else {
             opType = getPrimaryType(token1);
         }
 
         fprintf(IRcode, "subop %s\n", opType);
         startSubOp = 1;
+    }
+
+    // Print the unoptimized iRcode using outputIDs, the operator, and the other ids
+    fprintf(IRcode, "%s = %s %s %s\n", outputId, token1, op, token2);
+    lastIndex += 1;
+
+    // Returns output
+    return outputId;
+}
+
+// For optimized IRcode, but unoptimized generation for while loops
+char* emitBinaryOperationUnoptimized(char op[2], const char* id1, const char* id2){
+    // Assign temporary variables for tracking base array variables
+    char * token1 = malloc(strlen(id1)*sizeof(char));
+    strcpy(token1, id1);
+
+    // Create a temporary variable assignment using "T"
+    memset(outputId, 0, 50);
+    char currLabelIndexBuffer[50];
+    sprintf(currLabelIndexBuffer, "%d", lastIndex);
+    strcat(outputId, "T");
+    strcat(outputId, currLabelIndexBuffer);
+
+    // Output suboperation type (for webgen parsing)
+    if (!startSubOpOptimized) {
+        char * opType = calloc(100, sizeof(char));
+
+        if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
+            char * tempScope = findVarScope(token1, prevScopes, totalIRScopes);
+            opType = getItemType(token1, tempScope, 1);
+        } else {
+            opType = getPrimaryType(token1);
+        }
+
+        fprintf(IRcodeOptimized, "subop %s\n", opType);
+        startSubOpOptimized = 1;
     }
 
     // Print the unoptimized iRcode using outputIDs, the operator, and the other ids
@@ -172,27 +216,14 @@ char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
     return outputId;
 }
 
-// Helper function that checks each char and determines if the whole string is a digit or not
-int isnumeric(char var[50]) {
-    for(int i = 0; var[i]; i++) {
-        // If any char in the string is not a digit, return false
-        if(!isdigit((int)var[i])) {
-            return 0;
-        }
-    }
-    // Else, return true, it is a digit
-    return 1;
-}
-
 // Optimized version of binary operations for IRcodeOptimized.ir
 char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2){
+    // printf("ID1: %s, ID2: %s\n", id1, id2);
     memset(outputId, 0, 50);
 
     // Assign temporary variables for tracking base array variables
     char * token1 = malloc(strlen(id1)*sizeof(char));
-    char * token2 = malloc(strlen(id2)*sizeof(char));
     strcpy(token1, id1);
-    strcpy(token2, id2);
 
     // If it's an array, get the optype based on the token
     char * opType = getPrimaryType(updateArrayId(token1));
@@ -242,10 +273,11 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
     
     // Output suboperation type (for webgen parsing)
     if (!startSubOpOptimized) {
-        char * opType;
+        char * opType = calloc(100, sizeof(char));
 
         if (strncmp(getPrimaryType(token1), "var", 3) == 0) {
-            opType = getItemType(token1, currIRScope, 1);
+            char * tempScope = findVarScope(token1, prevScopes, totalIRScopes);
+            opType = getItemType(token1, tempScope, 1);
         } else {
             opType = getPrimaryType(token1);
         }
@@ -263,12 +295,11 @@ char* emitBinaryOperationOptimized(char op[1], const char* id1, const char* id2)
 
 // Unoptimized IRcode operation for variable assignment
 void emitAssignment(char * id1, char * id2){
-
     // Print the assignment statement using the two basic IDs
     // If the statement is a combined string, separate it as a set of array index assignments
     if (strncmp(getPrimaryType(id2), "string", 6) == 0) {
         // Update the symbol table with the new array length
-        char ** scopeStack = currIRScope;
+        char ** scopeStack = currScope;
 
         // Get the number of escape characters
         // Used in calculating the new array length
@@ -285,6 +316,9 @@ void emitAssignment(char * id1, char * id2){
             if (id2[i+loopEscapeChars] == '\\') {
                 fprintf(IRcode, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+1+loopEscapeChars]));
                 loopEscapeChars++;
+            // If the character is a space
+            } else if (id2[i+loopEscapeChars] == ' ') {
+                fprintf(IRcode, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+loopEscapeChars]));
             } else {
                 fprintf(IRcode, "%s[%d] = \"%c\"\n", id1, i-1, id2[i+loopEscapeChars]);
             }
@@ -300,38 +334,10 @@ void emitAssignment(char * id1, char * id2){
     startSubOp = 0;
 }
 
-// Unoptimized IRcode operation for variable assignment (for array)
-void emitAssignmentForElement(char *id1, char * elementNum, char * id2) {
-    // Print the assignment statement using the two basic IDs with an element number
-    fprintf(IRcode, "%s[%s] = %s\n", id1, elementNum, id2);
-}
-
-void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2) {
-    int flag = 1;
-
-    if(isnumeric(id2)) {
-        for(int i=0; i<cvIndex; i++){
-            if (strcmp(cvTable[i].var, id1) == 0){
-                cvTable[i].val = (int) strtol(id2, (char **)NULL, 10);
-                flag = 0;
-                break;
-            }
-	    }
-        if(flag) {
-            strcpy(cvTable[cvIndex].var, id1);
-            cvTable[cvIndex].val = (int) strtol(id2, (char **)NULL, 10);
-            cvIndex ++;
-        }
-    }
-
-    // Print the assignment statement using the two basic IDs with an element number
-    fprintf(IRcodeOptimized, "%s[%s] = %s\n", id1, elementNum, id2);
-}
-
 // Optimized assignment operation function for IRcodeOptimized.ir
 void emitAssignmentOptimized(char * id1, char * id2){
     int flag = 1;
-    if(isnumeric(id2)) {
+    if(isNumeric(id2)) {
         for(int i=0; i<cvIndex; i++){
             if (strcmp(cvTable[i].var, id1) == 0){
                 cvTable[i].val = (int) strtol(id2, (char **)NULL, 10);
@@ -353,10 +359,14 @@ void emitAssignmentOptimized(char * id1, char * id2){
         // Used in calculating the new array length
         int numEscapeCharacters = countEscapeChars(id2);
         int loopEscapeChars = 0; // Tracks total escape chars encountered
+
         for (int i = 1; i < strlen(id2)-1-numEscapeCharacters; i++) {
             if (id2[i+loopEscapeChars] == '\\') {
                 fprintf(IRcodeOptimized, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+1+loopEscapeChars]));
                 loopEscapeChars++;
+            // If the character is a space
+            } else if (id2[i+loopEscapeChars] == ' ') {
+                fprintf(IRcodeOptimized, "%s[%d] = \"%s\"\n", id1, i-1, escapeCharType(id2[i+loopEscapeChars]));
             } else {
                 fprintf(IRcodeOptimized, "%s[%d] = \"%c\"\n", id1, i-1, id2[i+loopEscapeChars]);
             }
@@ -372,35 +382,78 @@ void emitAssignmentOptimized(char * id1, char * id2){
 
 }
 
-void emitWritePrimary(char * value) {
-    fprintf(IRcode, "output %s\n", value);
+// Unoptimized IRcode operation for variable assignment (for array)
+void emitAssignmentForElement(char * id1, char * elementNum, char * id2) {
+    // Check if the item uses an escape character or space, switch to new format
+    if (strncmp(getPrimaryType(id2), "string", 6) == 0 && id2[1] == '\\' || id2[1] == ' ') {
+        snprintf(id2, 10, "\"%s\"", escapeCharType(id2[1]));
+    }
+
+    // Print the assignment statement using the two basic IDs with an element number
+    fprintf(IRcode, "%s[%s] = %s\n", id1, elementNum, id2);
 }
 
-void emitWritePrimaryOptimized(char * value) {
-    fprintf(IRcodeOptimized, "output %s\n", value);
+void emitAssignmentForElementOptimized(char *id1, char * elementNum, char * id2) {
+    int flag = 1;
+
+    if(isNumeric(id2)) {
+        for(int i=0; i<cvIndex; i++){
+            if (strcmp(cvTable[i].var, id1) == 0){
+                cvTable[i].val = (int) strtol(id2, (char **)NULL, 10);
+                flag = 0;
+                break;
+            }
+	    }
+        if(flag) {
+            strcpy(cvTable[cvIndex].var, id1);
+            cvTable[cvIndex].val = (int) strtol(id2, (char **)NULL, 10);
+            cvIndex ++;
+        }
+    }
+
+    // Check if the item uses an escape character or space, switch to new format
+    if (strncmp(getPrimaryType(id2), "string", 6) == 0 && id2[1] == '\\' || id2[1] == ' ') {
+        snprintf(id2, 10, "\"%s\"", escapeCharType(id2[1]));
+    }
+
+    // Print the assignment statement using the two basic IDs with an element number
+    fprintf(IRcodeOptimized, "%s[%s] = %s\n", id1, elementNum, id2);
 }
 
-// Unoptimized IRcode operation for the write keyword
+void emitWritePrimary(FILE * printFile, char * value) {
+    fprintf(printFile, "output %s\n", value);
+}
+
+// Unoptimized IRcode operation for writing standard ids
 void emitWriteId(char * id) {
     // Update variable in the unused variable table
     updateUnusedVar(updateArrayId(id));
-
     fprintf(IRcode, "output %s\n", id);
 }
 
-// Optimized IRCode operation for writing 
+// Optimized IRCode operation for writing standard ids
 void emitWriteIdOptimized(char * id){
     // Print output keyword with the associated ID
     // Unused variables are already removed prior to this step, so it is redundant to include it here
     fprintf(IRcodeOptimized, "output %s\n", id);
 }
 
-void emitWriteLn(){
-    fprintf(IRcode, "addline\n");
+// Unoptimized IRcode operation for writing array callouts
+void emitWriteArrayId(char * id, char * elementNum) {
+    // Update variable in the unused variable table
+    updateUnusedVar(updateArrayId(id));
+    fprintf(IRcode, "output %s[%s]\n", id, elementNum);
 }
 
-void emitWriteLnOptimized(){
-    fprintf(IRcodeOptimized, "addline\n");
+// Optimized IRcode operation for writing array callouts
+void emitWriteArrayIdOptimized(char * id, char * elementNum) {
+    // Print output keyword with the associated ID and element num
+    // Unused variables are already removed prior to this step, so it is redundant to include it here
+    fprintf(IRcodeOptimized, "output %s[%s]\n", id, elementNum);
+}
+
+void emitWriteLn(FILE * printFile){
+    fprintf(printFile, "addline\n");
 }
 
 // Outputs the variable and type for variable declaration (unoptimized)
@@ -436,33 +489,6 @@ void emitTypeDeclaration(char * type, char * id){
     }
 }
 
-// Outputs the variable and type for variable declaration (unoptimized) (for array)
-void emitTypeArrayDeclaration(char * type, char * id, char * size){
-    // Flag variable for unused code optimization testing
-    int flag = 1;
-
-    // Char variable to determine if the variable is a type or a parameter
-    char * varType = "type";
-
-    if(isParam) {
-        varType = "param";
-    }
-
-    // Check the whole UV table
-    // If the type is already in the table, set the flag to 0
-    for(int i=0; i<uvIndex; i++){
-        if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
-    }
-
-    // If the flag is still true, add the new id to the unused variable table
-    // Also, print the 
-    if (flag) {
-        addUnusedVar(id);
-    }
-
-    fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
-}
-
 // Emit the type declaration for optimized IRcode file
 void emitTypeDeclarationOptimized(char * type, char * id){
     // Char variable to determine if the variable is a type or a parameter
@@ -483,6 +509,32 @@ void emitTypeDeclarationOptimized(char * type, char * id){
         fprintf(IRcodeOptimized, "%s %s %s\n", varType, type, id);
     }
 
+}
+
+// Outputs the variable and type for variable declaration (unoptimized) (for array)
+void emitTypeArrayDeclaration(char * type, char * id, char * size){
+    // Flag variable for unused code optimization testing
+    int flag = 1;
+
+    // Char variable to determine if the variable is a type or a parameter
+    char * varType = "type";
+
+    if(isParam) {
+        varType = "param";
+    }
+
+    // Check the whole UV table
+    // If the type is already in the table, set the flag to 0
+    for(int i=0; i<uvIndex; i++){
+        if (strcmp(uvTable[i].var, id) == 0){ flag = 0; break; }
+    }
+
+    // If the flag is still true, add the new id to the unused variable table
+    if (flag) {
+        addUnusedVar(id);
+    }
+
+    fprintf(IRcode, "%s %s %s array %s\n", varType, type, id, size);
 }
 
 // Outputs the variable and type for variable declaration (unoptimized) (for array)
@@ -517,24 +569,32 @@ void emitEntry(char * id) {
     }
 
     // Get type and update current scope
-    char ** scopeStack = { "global", currIRScope };
-    char * type = getItemType(id, scopeStack, 1);
-    currIRScope = id;
+    char * type = getItemType(id, "global", 1);
+    
+    // Set new scope and retain history using previous scope
+    currScope = malloc(1000 * sizeof(char));
+    strcpy(currScope, id);
+    strcpy(prevScopes[totalIRScopes], currScope);
+    totalIRScopes++;
 
     fprintf(IRcode, "entry %s %s\n", type, id);
 }
 
 void emitEntryOptimized(char * id) {    
-    char ** scopeStack = { "global", currIRScope };
-    char * type = getItemType(id, scopeStack, 1);
-    currIRScope = id;
+    char * type = getItemType(id, "global", 1);
+
+    // Set new scope and retain history using previous scope
+    currScope = malloc(1000 * sizeof(char));
+    strcpy(currScope, id);
+    strcpy(prevScopes[totalIRScopes], currScope);
+    totalIRScopes++;
 
     fprintf(IRcodeOptimized, "entry %s %s\n", type, id);
 }
 
 void emitReturn(char * id) {
     // Create a temporary variable for array return support
-    char token[50];
+    char * token = calloc(100, sizeof(char));
     strcpy(token, id);
 
     // Updates the variable if it is unused
@@ -549,40 +609,56 @@ void emitReturnOptimized(char * id) {
     fprintf(IRcodeOptimized, "return %s\n", id);
 }
 
-void emitExit() {
-    currIRScope = "global";
-    fprintf(IRcode, "exit\n");
+void emitExit(FILE * printFile) {
+    // Set current scope as previous scope
+    strcpy(currScope, prevScopes[totalIRScopes-1]);
+    totalIRScopes--;
+
+    fprintf(printFile, "exit\n");
 }
 
-void emitExitOptimized() {
-    currIRScope = "global";
-    fprintf(IRcodeOptimized, "exit\n");
+void emitLogicalExpression(FILE * printFile, char * opType) {
+    fprintf(IRcode, " %s", opType);
 }
 
-char * emitIfConditionStatement() {
-    fprintf(IRcode, "if\n");
+void emitComparisonExpression(FILE * printFile, char * leftExpr, char * compareType, char * rightExpr) {
+    fprintf(IRcode, " %s %s %s", leftExpr, compareType, rightExpr);
 }
 
-char * emitIfGoToStatement() {
-    fprintf(IRcode, "goto L%dS%d elsegoto L%dS%d", currIfPointer, currIfIndices[currIfPointer], currIfPointer, currIfIndices[currIfPointer]+1);
-    fprintf(IRcode, "\nL%dS%d: ", currIfPointer, currIfIndices[currIfPointer]);
+void emitIfConditionStatement(FILE * printFile) {
+    fprintf(printFile, "if");
 }
 
-char * emitWhileConditionStatement() {
-    fprintf(IRcode, "\nL%dL%d:\n", currWhilePointer, currWhileIndices[currWhilePointer]);
-    fprintf(IRcode, "if\n");
+void emitIfEndStatement(FILE * printFile) {
+    fprintf(printFile, "endif\n");
 }
 
-char * emitWhileCondition2Statement() {
-    fprintf(IRcode, "whileelsegoto L%dL%d\n", currWhilePointer, currWhileIndices[currWhilePointer]+1);
+void emitElifConditionStatement(FILE * printFile) {
+    fprintf(printFile, "elif");
 }
 
-char * emitWhileEndStatement() {
-    fprintf(IRcode, "\ngoto L%dL%d\nL%dL%d", currWhilePointer, currWhileIndices[currWhilePointer], currWhilePointer, currWhileIndices[currWhilePointer]+1);
+void emitElifEndStatement(FILE * printFile) {
+    fprintf(printFile, "endelif\n");
 }
 
-char * emitIfEndStatement() {
-    fprintf(IRcode, "\nL%dS%d: ", currIfPointer, currIfIndices[currIfPointer]);
+void emitElseConditionStatement(FILE * printFile) {
+    fprintf(printFile, "else");
+}
+
+void emitElseEndStatement(FILE * printFile) {
+    fprintf(printFile, "endelse\n");
+}
+
+void emitWhileConditionStatement(FILE * printFile) {
+    fprintf(printFile, "while");
+}
+
+void emitWhileEndStatement(FILE * printFile) {
+    fprintf(printFile, "endwhile\n");
+}
+
+void emitLogicEndStatement(FILE * printFile) {
+    fprintf(printFile, "endlogic\n");
 }
 
 char * emitFunctionCall(char *id) {
@@ -598,13 +674,12 @@ char * emitFunctionCall(char *id) {
     }
 
     // Output suboperation type (for webgen parsing)
-    char * opType;
+    char * opType = calloc(100, sizeof(char));
     if (!startSubOp) {        
         if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-            char ** scopeStack = { "global", currIRScope };
-            opType = getItemType(id, scopeStack, 1);
+            strcpy(opType, getItemType(id, "global", 1));
         } else {
-            opType = getPrimaryType(id);
+            strcpy(opType, getPrimaryType(id));
         }
 
         // Do not generate a subop if its a void function call
@@ -622,13 +697,13 @@ char * emitFunctionCall(char *id) {
     }
     
     // Print arguments
-    for(int i = 0; i < cindex; i ++) {
+    for(int i = 0; i < paramIndex; i ++) {
         // Update variable if unused
-        if (strncmp(getPrimaryType(c[i]), "var", 3) == 0) {
-            updateUnusedVar(c[i]);
+        if (strncmp(getPrimaryType(params[i]), "var", 3) == 0) {
+            updateUnusedVar(params[i]);
         }
 
-        fprintf(IRcode, " %s", c[i]);
+        fprintf(IRcode, " %s", params[i]);
     }
     fprintf(IRcode, "\n");
     lastIndex += 1;
@@ -647,8 +722,7 @@ char * emitFunctionCallOptimized(char *id) {
     char * opType;
     if (!startSubOpOptimized) {
         if (strncmp(getPrimaryType(id), "var", 3) == 0) {
-            char ** scopeStack = { "global", currIRScope };
-            opType = getItemType(id, scopeStack, 1);
+            opType = getItemType(id, "global", 1);
         } else {
             opType = getPrimaryType(id);
         }
@@ -668,8 +742,8 @@ char * emitFunctionCallOptimized(char *id) {
     }
 
     // Generate arguments
-    for(int i = 0; i < cindex; i ++) {
-        fprintf(IRcodeOptimized, " %s", c[i]);
+    for(int i = 0; i < paramIndex; i ++) {
+        fprintf(IRcodeOptimized, " %s", params[i]);
     }
     fprintf(IRcodeOptimized, "\n");
     lastIndex += 1;
@@ -681,93 +755,248 @@ char * emitFunctionCallOptimized(char *id) {
 // This initializes creating all of the IRcode for unoptimized IRcode
 char* ASTTraversal(struct AST* root) {
     if(root != NULL) {
-        printf("root -> nodeType: %s\n", root -> nodeType);
-        // if(root -> LHS != NULL)
-        // printf("root -> LHS: %s\n", root -> LHS);
-        // if(root -> RHS != NULL)
-        // printf("root -> RHS: %s\n", root -> RHS);
+        printf("root->nodeType: %s\n", root->nodeType);
+        // if(root->LHS != NULL)
+        // printf("root->LHS: %s\n", root->LHS);
+        // if(root->RHS != NULL)
+        // printf("root->RHS: %s\n", root->RHS);
         fflush(stdout);
         char rightVar[50];
         char leftVar[50];
-        if(strcmp(root -> nodeType, "int") == 0
-            || strcmp(root -> nodeType, "float") == 0
-            || strcmp(root -> nodeType, "string") == 0
-            || strcmp(root -> nodeType, "flag") == 0) {
-                return root -> RHS;
+        if(strcmp(root->nodeType, "int") == 0
+            || strcmp(root->nodeType, "float") == 0
+            || strcmp(root->nodeType, "string") == 0
+            || strcmp(root->nodeType, "flag") == 0) {
+                return root->RHS;
         }
-        // Handle Logical keyword
-        // if(strcmp(root -> nodeType, "Logical") == 0) {
-
-        // }
         if(strcmp(root->nodeType, "type") == 0) {
-            if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
-                emitTypeArrayDeclaration(root -> LHS, root -> RHS, root -> right -> right -> RHS);
+            if(root->right != NULL && strcmp(root->right->LHS, "array") == 0) {
+                emitTypeArrayDeclaration(root->LHS, root->RHS, root->right->right->RHS);
             } else {
                 emitTypeDeclaration(root->LHS, root->RHS);
             }
         }
         if(strcmp(root->nodeType, "variable parm") == 0){
             isParam = 1;
-            emitTypeDeclaration(root -> LHS, root -> RHS);
+            emitTypeDeclaration(root->LHS, root->RHS);
             isParam = 0;
         }
         if(strcmp(root->nodeType, "array parm") == 0) {
-            emitTypeArrayDeclaration(root -> LHS, root ->RHS, "-1");
+            emitTypeArrayDeclaration(root->LHS, root->RHS, "-1");
+        }
+        // Handle Logical Statements
+        if(strcmp(root->nodeType, "Logical") == 0) {
+            // Set logical operation type variables
+            if (strcmp(root->RHS, "Logical") == 0) {
+                strcpy(logicalTypes[totalLogicalStatements], root->right->RHS);
+            } else {
+                strcpy(logicalTypes[totalLogicalStatements], root->RHS);
+            }
+            totalLogicalStatements++;
+
+            // Traverse to both conditionals
+            ASTTraversal(root->right->left);
+            ASTTraversal(root->right->right);
+        }
+        if(strcmp(root->nodeType, "Comparison") == 0) {
+            if (isLogical == 1 && currLogicalStatements != 0) {
+                emitLogicalExpression(IRcode, logicalTypes[totalLogicalStatements-currLogicalStatements]);
+                emitComparisonExpression(IRcode, ASTTraversal(root->right->left), root->right, ASTTraversal(root->right->right));
+                updateUnusedVar(ASTTraversal(root->right->left));
+                updateUnusedVar(ASTTraversal(root->right->right));
+                currLogicalStatements++;
+            } else if (isLogical == 1) {
+                emitComparisonExpression(IRcode, ASTTraversal(root->right->left), root->right, ASTTraversal(root->right->right));
+                updateUnusedVar(ASTTraversal(root->right->left));
+                updateUnusedVar(ASTTraversal(root->right->right));
+                currLogicalStatements++;
+            }
+            else {
+                emitComparisonExpression(IRcode, ASTTraversal(root->right->right->left), root->right->RHS, ASTTraversal(root->right->right->right));
+                updateUnusedVar(ASTTraversal(root->right->right->left));
+                updateUnusedVar(ASTTraversal(root->right->right->right));
+            }
         }
         if(strcmp(root->nodeType, "program") == 0 
             || strcmp(root->nodeType, "vardec") == 0
-            || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
+            || strcmp(root->nodeType, "ActionDecl ActionDeclListTail") == 0
             || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
             || strcmp(root->nodeType, "statements") == 0
             || strcmp(root->nodeType, "IfStmtTail continue") == 0
             || strcmp(root->nodeType, "IfStmt") == 0) { 
-            ASTTraversal(root -> left);
-            ASTTraversal(root -> right);
+            ASTTraversal(root->left);
+            ASTTraversal(root->right);
         }
 
         if(strcmp(root->nodeType, "WhileL") == 0) {
+            emitWhileConditionStatement(IRcode);
 
-            emitWhileConditionStatement();
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left to generate logical and conditional statements
             ASTTraversal(root->left);
-            emitWhileCondition2Statement();
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcode, "\n");
+
+            // Traverse to the right to generate block code
             ASTTraversal(root->right);
-            emitWhileEndStatement();
-            
+
+            // End the While statement
+            emitWhileEndStatement(IRcode);
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
+            totalIRScopes--;
         }
 
-        if(strcmp(root->nodeType, "If") == 0
-            || strcmp(root->nodeType, "Elif") == 0) {
-            emitIfConditionStatement();
+        if(strcmp(root->nodeType, "If") == 0) {
+            emitIfConditionStatement(IRcode);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left
             ASTTraversal(root->left);
-            emitIfGoToStatement();
-            currIfIndices[currIfPointer]++;
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
             
-            currIfPointer ++;
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", findVarScope("if", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcode, "\n");
+
+            // Traverse to the right to generate block code
             ASTTraversal(root->right);
-            currIfPointer --;
-            emitIfEndStatement();
+
+            // End if statement
+            emitIfEndStatement(IRcode);
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
+            totalIRScopes--;
+        }
+
+        if (strcmp(root->nodeType, "Elif") == 0) {
+            emitElifConditionStatement(IRcode);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left
+            ASTTraversal(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", findVarScope("elif", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcode, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversal(root->right);
+
+            // End elif statement
+            emitElifEndStatement(IRcode);
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
+            totalIRScopes--;
         }
 
         if(strcmp(root->nodeType, "IfStmtTail else end") == 0) {
+            // Return an empty string 
             if(strcmp(root->right, "") == 0) {
+                // Generate Logic Ending Statement if there's no else statement
+                emitLogicEndStatement(IRcode);
                 return "";
             }
-            ASTTraversal(root -> right);
+
+            // If there is an Else statement, traverse right, then print logic ending statement
+            ASTTraversal(root->right);
+            emitLogicEndStatement(IRcode);
         }
         if(strcmp(root->nodeType, "Else") == 0) {
-            currIfPointer ++;
-            ASTTraversal(root -> right);
-            currIfPointer --;
+            emitElseConditionStatement(IRcode);
 
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", findVarScope("else", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcode, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversal(root->right);
+
+            // End else statement
+            emitElseEndStatement(IRcode);
+
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            prevScopes[totalIRScopes] = malloc(100 * sizeof(char));
+            totalIRScopes--;
+        }
+        if(strcmp(root->nodeType, "and") == 0) {
+            ASTTraversal(root->left);
+            ASTTraversal(root->right);
+        }
+        if(strcmp(root->nodeType, "or") == 0) {
+            ASTTraversal(root->left);
+            ASTTraversal(root->right);
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            printf("Write RHS: %s\n", root->RHS);
-            printf("Write RHS RHS: %s\n", root->right->RHS);
-            if(strcmp(root->RHS, "int") == 0
+            if (root->right->LHS != NULL && strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+                // Write id in array callout format
+                emitWriteArrayId(root->right->LHS, root->right->RHS);
+            } else if (strcmp(root->RHS, "int") == 0
             || strcmp(root->RHS, "float") == 0
             || strcmp(root->RHS, "string") == 0) {
                 updateUnusedVar(root->right->RHS);
-                emitWritePrimary(root->right->RHS);
+                emitWritePrimary(IRcode, root->right->RHS);
             } else if (strncmp(getPrimaryType(root->RHS), "var", 3) == 0) {
                 emitWriteId(root->RHS);
             } else {
@@ -778,49 +1007,50 @@ char* ASTTraversal(struct AST* root) {
                 emitWriteId(tempVar);
             }
         }
-        if(strcmp(root->nodeType, "writeln") == 0) {
-            emitWriteLn();
+        if(strcmp(root->nodeType, "addline") == 0) {
+            emitWriteLn(IRcode);
         }
-        if(strcmp(root->nodeType, "function context") == 0) {
-            emitEntry(root -> LHS);
-            ASTTraversal(root -> right);
+        if(strcmp(root->nodeType, "action context") == 0) {
+            emitEntry(root->LHS);
+            ASTTraversal(root->right);
         }
-        if(strcmp(root->nodeType, "function") == 0) {
-            ASTTraversal(root -> left);
-            ASTTraversal(root -> right);
-            emitExit();
+        if(strcmp(root->nodeType, "action") == 0) {
+            ASTTraversal(root->left);
+            ASTTraversal(root->right);
+            emitExit(IRcode);
         }
         if(strcmp(root->nodeType, "exprlist end") == 0) {
-            if (root->right != NULL) {
-                strcpy(c[cindex], root -> right -> RHS);
-                cindex += 1;
+            if (root->RHS != NULL && root->RHS[0] != '\0' && root->RHS[0] != '\n') {
+                printf("YEP! %s\n", root->RHS);
+                strcpy(params[paramIndex], root->right->RHS);
+                paramIndex += 1;
             }
         }
         if(strcmp(root->nodeType, "exprlist exprtail") == 0) {
-            strcpy(c[cindex], root -> left -> RHS);
-            cindex += 1;
-            ASTTraversal(root -> right);
+            strcpy(params[paramIndex], root->left->RHS);
+            paramIndex += 1;
+            ASTTraversal(root->right);
         }
-        if(strncmp(root->nodeType, "function call param list", 24) == 0) {
-            memset(c, 0, 50 * 50);
-            ASTTraversal(root -> right);
+        if(strncmp(root->nodeType, "action call param list", 24) == 0) {
+            memset(params, 0, 50 * 50);
+            ASTTraversal(root->right);
         }
-        if(strncmp(root->nodeType, "function call", 14) == 0) {
+        if(strncmp(root->nodeType, "action call", 14) == 0) {
             char * funcVar = malloc(100*sizeof(char));
-            ASTTraversal(root -> right);
+            ASTTraversal(root->right);
             strncpy(funcVar, root->LHS, 100);
             memset(buffer, 0, 50);
             strcpy(buffer, emitFunctionCall(funcVar));
-            cindex = 0;
+            paramIndex = 0;
             return buffer;
         }
-        if(strcmp(root -> nodeType, "report") == 0) {
-            strcpy(rightVar, ASTTraversal(root-> right));
+        if(strcmp(root->nodeType, "report") == 0) {
+            strcpy(rightVar, ASTTraversal(root->right));
             emitReturn(rightVar);
         }
         if(strcmp(root->nodeType, "=") == 0) {
-            strcpy(rightVar, ASTTraversal(root-> right));
-            if(strcmp(root -> right -> nodeType, "element assignment") == 0) {
+            strcpy(rightVar, ASTTraversal(root->right));
+            if(strcmp(root->right->nodeType, "element assignment") == 0) {
                 if(strcmp(root->right->RHS, "+") == 0
                     || strcmp(root->right->RHS, "-") == 0
                     || strcmp(root->right->RHS, "*") == 0
@@ -840,7 +1070,6 @@ char* ASTTraversal(struct AST* root) {
                         } else {
                             strcpy(rightVar, root->right->right->right->RHS);
                         }
-
                         return emitBinaryOperation(root->right->RHS, leftVar, rightVar);
                     } else {
                         if (strncmp(getPrimaryType(root->right->right->LHS), "var", 3) == 0) {
@@ -851,33 +1080,33 @@ char* ASTTraversal(struct AST* root) {
                         emitAssignmentForElement(root->LHS, root->right->LHS, rightVar);
                     }
             } else {
-                emitAssignment(root -> LHS, rightVar);
+                emitAssignment(root->LHS, rightVar);
             }
         }
-        if(strcmp(root->nodeType, "block") == 0 ||
-        strcmp(root->nodeType, "Comparsion") == 0) {
-            return ASTTraversal(root -> right);
+        if(strcmp(root->nodeType, "block") == 0) {
+            return ASTTraversal(root->right);
         }
-        if(strcmp(root -> nodeType, "+") == 0
-            || strcmp(root -> nodeType, "-") == 0
-            || strcmp(root -> nodeType, "*") == 0
-            || strcmp(root -> nodeType, "/") == 0
-            || strcmp(root -> nodeType, ">") == 0
-            || strcmp(root -> nodeType, ">=") == 0
-            || strcmp(root -> nodeType, "<") == 0
-            || strcmp(root -> nodeType, "<=") == 0
-            || strcmp(root -> nodeType, "==") == 0
-            || strcmp(root -> nodeType, "!=") == 0) {
+        if(strcmp(root->nodeType, "+") == 0
+            || strcmp(root->nodeType, "-") == 0
+            || strcmp(root->nodeType, "*") == 0
+            || strcmp(root->nodeType, "/") == 0
+            || strcmp(root->nodeType, ">") == 0
+            || strcmp(root->nodeType, ">=") == 0
+            || strcmp(root->nodeType, "<") == 0
+            || strcmp(root->nodeType, "<=") == 0
+            || strcmp(root->nodeType, "==") == 0
+            || strcmp(root->nodeType, "!=") == 0)
+            {
                 // Check to see if the operation includes any array indexes
                 // If so, include the array callout in the binary operation
                 // Form leftVar variable
                 if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {
                     // New changes here
-                    if (strncmp(root->left->LHS, "function call", 14) == 0) {
+                    if (strncmp(root->left->LHS, "action call", 14) == 0) {
                         strcpy(leftVar, ASTTraversal(root->left));
                     } else if (strncmp(root->left->LHS, "int", 3) == 0 || strncmp(root->left->LHS, "float", 5) == 0) {
                         strcpy(leftVar, root->left->left->RHS);
-                    } else if (strncmp(root->left->RHS, "function call param list", 24) == 0) {
+                    } else if (strncmp(root->left->RHS, "action call param list", 24) == 0) {
                         strcpy(leftVar, ASTTraversal(root->right));
                     } else {
                         sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
@@ -886,14 +1115,13 @@ char* ASTTraversal(struct AST* root) {
                     strcpy(leftVar, ASTTraversal(root->left));
                 }
 
-                // Form rightVar variable
                 if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
                     // New changes here
-                    if (strncmp(root->right->LHS, "function call", 14) == 0) {
+                    if (strncmp(root->right->LHS, "action call", 14) == 0) {
                         strcpy(rightVar, ASTTraversal(root->right));
                     } else if (strncmp(root->right->LHS, "int", 3) == 0 || strncmp(root->right->LHS, "float", 5) == 0) {
                         strcpy(rightVar, root->right->left->RHS);
-                    } else if (strncmp(root->right->RHS, "function call param list", 24) == 0) {
+                    } else if (strncmp(root->right->RHS, "action call param list", 24) == 0) {
                         strcpy(rightVar, ASTTraversal(root->right));
                     } else {
                         sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
@@ -901,10 +1129,25 @@ char* ASTTraversal(struct AST* root) {
                 } else {
                     strcpy(rightVar, ASTTraversal(root->right));
                 }
+
+                // Traverse to the left FIRST if there's an expression; avoids last missing expression problem
+                if (strcmp(root->LHS, "+") == 0
+                    || strcmp(root->LHS, "-") == 0
+                    || strcmp(root->LHS, "*") == 0
+                    || strcmp(root->LHS, "/") == 0
+                    || strcmp(root->LHS, ">") == 0
+                    || strcmp(root->LHS, ">=") == 0
+                    || strcmp(root->LHS, "<") == 0
+                    || strcmp(root->LHS, "<=") == 0
+                    || strcmp(root->LHS, "==") == 0
+                    || strcmp(root->LHS, "!=") == 0) {
+                        return emitBinaryOperation(root->nodeType, ASTTraversal(root->left), rightVar);;
+                }
+
                 return emitBinaryOperation(root->nodeType, leftVar, rightVar);
         }
 
-        if(strcmp(root -> LHS, "array") == 0) {
+        if(strcmp(root->LHS, "array") == 0) {
             arrElVar = malloc(50*sizeof(char));
             strcat(arrElVar, root->nodeType);
             strcat(arrElVar, root->RHS);
@@ -912,23 +1155,6 @@ char* ASTTraversal(struct AST* root) {
         }
         return "";
     }
-}
-
-void initIRCodeEnvironment() {
-    for(int i =  0; i < 50; i++) {
-        currIfIndices[i] = 0;
-        currWhileIndices[i] = 0;
-    }
-}
-
-// Main function for IRcode generation
-// After IRcode is generated, close the file
-void generateIRCode(){
-    printf("\n\n----Generate IRCode----\n\n");
-    initIRcodeFile();
-    initIRCodeEnvironment();
-    ASTTraversal(ast);
-    fclose(IRcode);
 }
 
 // Function to traverse the AST tree
@@ -945,69 +1171,249 @@ void generateIRCode(){
  */
 char* ASTTraversalOptimized(struct AST* root) {
     if(root != NULL) {
-        printf("root -> nodeType: %s\n", root -> nodeType);
-        // if(root -> LHS != NULL)
-        // printf("root -> LHS: %s\n", root -> LHS);
-        // if(root -> RHS != NULL)
-        // printf("root -> RHS: %s\n", root -> RHS);
+        printf("root->nodeType: %s\n", root->nodeType);
+        // if(root->LHS != NULL)
+        // printf("root->LHS: %s\n", root->LHS);
+        // if(root->RHS != NULL)
+        // printf("root->RHS: %s\n", root->RHS);
         fflush(stdout);
 
         char rightVar[50];
         char leftVar[50];
         
-        if(strcmp(root -> nodeType, "int") == 0
-            || strcmp(root -> nodeType, "float") == 0
-            || strcmp(root -> nodeType, "string") == 0
-            || strcmp(root -> nodeType, "flag") == 0) {
-                return root -> RHS;
+        if(strcmp(root->nodeType, "int") == 0
+            || strcmp(root->nodeType, "float") == 0
+            || strcmp(root->nodeType, "string") == 0
+            || strcmp(root->nodeType, "flag") == 0) {
+                return root->RHS;
         }
         if(strcmp(root->nodeType, "type") == 0) {
-            if (isUsedVar(root -> RHS)) {
+            if (isUsedVar(root->RHS)) {
                 if (root->right != NULL && strncmp(root->right->LHS, "array", 5) == 0) {
-                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> RHS, root -> right -> right -> RHS);
+                    emitTypeArrayDeclarationOptimized(root->LHS, root->RHS, root->right->right->RHS);
                 } else {
-                    emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+                    emitTypeDeclarationOptimized(root->LHS, root->RHS);
                 }
+            }
+        }
+        // Handle Logical Statements
+        if(strcmp(root->nodeType, "Logical") == 0) {
+            // Set logical operation type variables
+            if (strcmp(root->RHS, "Logical") == 0) {
+                strcpy(logicalTypes[totalLogicalStatements], root->right->RHS);
+            } else {
+                strcpy(logicalTypes[totalLogicalStatements], root->RHS);
+            }
+            totalLogicalStatements++;
+
+            // Traverse to both conditionals
+            ASTTraversalOptimized(root->right->left);
+            ASTTraversalOptimized(root->right->right);
+        }
+        if(strcmp(root->nodeType, "Comparison") == 0) {
+            if (isLogical == 1 && currLogicalStatements != 0) {
+                emitLogicalExpression(IRcodeOptimized, logicalTypes[totalLogicalStatements-currLogicalStatements]);
+                emitComparisonExpression(IRcodeOptimized, ASTTraversalOptimized(root->right->left), root->right, ASTTraversalOptimized(root->right->right));
+                currLogicalStatements++;
+            } else if (isLogical == 1) {
+                emitComparisonExpression(IRcodeOptimized, ASTTraversalOptimized(root->right->left), root->right, ASTTraversalOptimized(root->right->right));
+                currLogicalStatements++;
+            }
+            else {
+                emitComparisonExpression(IRcodeOptimized, ASTTraversalOptimized(root->right->right->left), root->right->RHS, ASTTraversalOptimized(root->right->right->right));
             }
         }
         if(strcmp(root->nodeType, "program") == 0 
             || strcmp(root->nodeType, "vardec") == 0
-            || strcmp(root->nodeType, "FunDecl FunDeclListTail") == 0
+            || strcmp(root->nodeType, "ActionDecl ActionDeclListTail") == 0
             || strcmp(root->nodeType, "ParaDecl comma ParaDeclListTail") == 0
-            || strcmp(root->nodeType, "statements") == 0) { 
-            ASTTraversalOptimized(root -> left);
-            ASTTraversalOptimized(root -> right);
-        }
-        // TO-DO: Ircode Handling
-        if(strcmp(root->nodeType, "WhileL") == 0 
-            || strcmp(root->nodeType, "IfStmt") == 0
+            || strcmp(root->nodeType, "statements") == 0
             || strcmp(root->nodeType, "IfStmtTail continue") == 0
-            || strcmp(root->nodeType, "If") == 0
-            || strcmp(root->nodeType, "Elif") == 0) {
-            ASTTraversalOptimized(root -> left);
-            ASTTraversalOptimized(root -> right);
+            || strcmp(root->nodeType, "IfStmt") == 0) { 
+            ASTTraversalOptimized(root->left);
+            ASTTraversalOptimized(root->right);
         }
-        // TO-DO: Ircode Handling
-        if(strcmp(root->nodeType, "IfStmtTail else end") == 0
-            || strcmp(root->nodeType, "Else") == 0) {
-            ASTTraversalOptimized(root -> right);
+        if(strcmp(root->nodeType, "WhileL") == 0) {
+            // Start While Loop statement
+            inWhileLoop = 1;
+            emitWhileConditionStatement(IRcodeOptimized);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left to generate logical and conditional statements
+            ASTTraversalOptimized(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcodeOptimized, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversalOptimized(root->right);
+
+            // End the While statement
+            emitWhileEndStatement(IRcodeOptimized);
+            inWhileLoop = 0;
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            totalIRScopes--;
+        }
+
+        if(strcmp(root->nodeType, "If") == 0) {
+            // Start If Statement Condition
+            emitIfConditionStatement(IRcodeOptimized);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left to generate logical and conditional statements
+            ASTTraversalOptimized(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", findVarScope("if", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcodeOptimized, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversalOptimized(root->right);
+
+            // End the If statement
+            emitIfEndStatement(IRcodeOptimized);
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            totalIRScopes--;
+        }
+
+        if (strcmp(root->nodeType, "Elif") == 0) {
+            // Start Elif Statement Condition
+            emitElifConditionStatement(IRcodeOptimized);
+
+            // Change logical statement indicator variable to active
+            isLogical = !strcmp(root->LHS, "Logical");
+
+            // Set memory for logical type string array
+            logicalTypes = calloc(2500, sizeof(char));
+            for (int i = 0; i < 50; i++) { logicalTypes[i] = malloc(5 * sizeof(char));}
+
+            // Traverse to the left to generate logical and conditional statements
+            ASTTraversalOptimized(root->left);
+
+            // Reset Logical Statement Variables
+            isLogical = 0;
+            currLogicalStatements = 0;
+            totalLogicalStatements = 0;
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", findVarScope("elif", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcodeOptimized, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversalOptimized(root->right);
+
+            // End the Elif statement
+            emitElifEndStatement(IRcodeOptimized);
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            totalIRScopes--;
+        }
+
+        if(strcmp(root->nodeType, "IfStmtTail else end") == 0) {
+            // Return an empty string 
+            if(strcmp(root->right, "") == 0) {
+                // Generate Logic Ending Statement if there's no else statement
+                emitLogicEndStatement(IRcodeOptimized);
+                return "";
+            }
+
+            // If there is an Else statement, traverse right, then print logic ending statement
+            ASTTraversalOptimized(root->right);
+            emitLogicEndStatement(IRcodeOptimized);
+        }
+        if(strcmp(root->nodeType, "Else") == 0) {
+            // Start Else Statement Condition
+            emitElseConditionStatement(IRcodeOptimized);
+            
+            // Set new scope and retain history using previous scope
+            char * newScope = malloc(1000*sizeof(char));
+            snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", findVarScope("else", prevScopes, totalIRScopes), 1));
+            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(currScope, newScope);
+            totalIRScopes++;
+
+            fprintf(IRcodeOptimized, "\n");
+
+            // Traverse to the right to generate block code
+            ASTTraversalOptimized(root->right);
+
+            // End the Elif statement
+            emitElseEndStatement(IRcodeOptimized);
+            
+            // Set current scope as previous scope
+            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            totalIRScopes--;
+            printf("currScope: %s\n", currScope);
+        }
+        if(strcmp(root->nodeType, "and") == 0
+            || strcmp(root->nodeType, "or") == 0) {
+                ASTTraversalOptimized(root->left);
+                ASTTraversalOptimized(root->right);
         }
         if(strcmp(root->nodeType, "variable parm") == 0){
             isParam = 1;
-            emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+            emitTypeDeclarationOptimized(root->LHS, root->RHS);
             isParam = 0;
         }
         if(strcmp(root->nodeType, "array parm") == 0) {
-            emitTypeArrayDeclarationOptimized(root -> LHS, root ->RHS, "-1");
+            emitTypeArrayDeclarationOptimized(root->LHS, root->RHS, "-1");
         }
         if(strcmp(root->nodeType, "write") == 0) {
-            if(strcmp(root->RHS, "int") == 0
+            if (root->right->LHS != NULL && strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
+                // Write id in array callout format
+                if (isUsedVar(root->right->LHS)) {
+                    emitWriteArrayIdOptimized(root->right->LHS, root->right->RHS);
+                }
+            } else if (strcmp(root->RHS, "int") == 0
             || strcmp(root->RHS, "float") == 0
             || strcmp(root->RHS, "string") == 0) {
-                emitWritePrimaryOptimized(root->right->RHS);
+                emitWritePrimary(IRcodeOptimized, root->right->RHS);
             } else if (strncmp(getPrimaryType(root->RHS), "var", 3) == 0) {
                 if (isUsedVar(root->RHS)) {
-                    emitWriteIdOptimized(root -> RHS);
+                    emitWriteIdOptimized(root->RHS);
                 }
             } else {
                 // Get tempVar from ASTtraversal
@@ -1017,69 +1423,68 @@ char* ASTTraversalOptimized(struct AST* root) {
                 emitWriteIdOptimized(tempVar);
             }
         }
-        if(strcmp(root->nodeType, "writeln") == 0) {
-            emitWriteLnOptimized();
+        if(strcmp(root->nodeType, "addline") == 0) {
+            emitWriteLn(IRcodeOptimized);
         }
-        if(strcmp(root->nodeType, "function context") == 0) {
-            emitEntryOptimized(root -> LHS);
-            ASTTraversalOptimized(root -> right);
+        if(strcmp(root->nodeType, "action context") == 0) {
+            emitEntryOptimized(root->LHS);
+            ASTTraversalOptimized(root->right);
         }
-        if(strcmp(root->nodeType, "function") == 0) {
-            if(isUsedVar(root -> left -> LHS)) {
-                ASTTraversalOptimized(root -> left);
-                ASTTraversalOptimized(root -> right);
-                emitExit();
+        if(strcmp(root->nodeType, "action") == 0) {
+            if(isUsedVar(root->left->LHS)) {
+                ASTTraversalOptimized(root->left);
+                ASTTraversalOptimized(root->right);
+                emitExit(IRcodeOptimized);
             }
         }
         if(strcmp(root->nodeType, "exprlist end") == 0) {
             if (root->right != NULL) {
-                strcpy(c[cindex], root -> right -> RHS);
-                cindex += 1;
+                strcpy(params[paramIndex], root->right->RHS);
+                paramIndex += 1;
             }
         }
         if(strcmp(root->nodeType, "exprlist exprtail") == 0) {
-            strcpy(c[cindex], root -> left -> RHS);
-            cindex += 1;
-            if (isUsedVar(root -> RHS)) {
-                if (root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
-                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> right -> right -> RHS, root -> RHS);
+            strcpy(params[paramIndex], root->left->RHS);
+            paramIndex += 1;
+            if (isUsedVar(root->RHS)) {
+                if (root->right != NULL && strcmp(root->right->LHS, "array") == 0) {
+                    emitTypeArrayDeclarationOptimized(root->LHS, root->right->right->RHS, root->RHS);
                 } else {
-                    emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+                    emitTypeDeclarationOptimized(root->LHS, root->RHS);
                 }
             }
-            ASTTraversalOptimized(root -> right);
+            ASTTraversalOptimized(root->right);
         }
-        if(strncmp(root->nodeType, "function call param list", 24) == 0) {
-            memset(c, 0, 50 * 50);
-            if(isUsedVar(root -> RHS)) {
-                if(root -> right != NULL && strcmp(root -> right -> LHS, "array") == 0) {
-                    emitTypeArrayDeclarationOptimized(root -> LHS, root -> right -> right -> RHS, root -> RHS);
+        if(strncmp(root->nodeType, "action call param list", 24) == 0) {
+            memset(params, 0, 50 * 50);
+            if(isUsedVar(root->RHS)) {
+                if(root->right != NULL && strcmp(root->right->LHS, "array") == 0) {
+                    emitTypeArrayDeclarationOptimized(root->LHS, root->right->right->RHS, root->RHS);
                 } else {
-                    emitTypeDeclarationOptimized(root -> LHS, root -> RHS);
+                    emitTypeDeclarationOptimized(root->LHS, root->RHS);
                 }
             }
-            ASTTraversalOptimized(root -> right);
+            ASTTraversalOptimized(root->right);
         }
-        if(strncmp(root->nodeType, "function call", 14) == 0) {
-            ASTTraversalOptimized(root -> right);
+        if(strncmp(root->nodeType, "action call", 14) == 0) {
+            ASTTraversalOptimized(root->right);
 
             memset(buffer, 0, 50);
-            strcpy(buffer, emitFunctionCallOptimized(root -> LHS));
-            cindex = 0;
+            strcpy(buffer, emitFunctionCallOptimized(root->LHS));
+            paramIndex = 0;
             return buffer;
         }
-        if(strcmp(root -> nodeType, "report") == 0) {
-            strcpy(rightVar, ASTTraversalOptimized(root-> right));
+        if(strcmp(root->nodeType, "report") == 0) {
+            strcpy(rightVar, ASTTraversalOptimized(root->right));
             emitReturnOptimized(rightVar);
         }
-        if(strcmp(root->nodeType, "block") == 0 ||
-        strcmp(root->nodeType, "Comparsion") == 0) {
-            return ASTTraversalOptimized(root -> right);
+        if(strcmp(root->nodeType, "block") == 0) {
+            return ASTTraversalOptimized(root->right);
         }
         if(strcmp(root->nodeType, "=") == 0) {
-            if (isUsedVar(root -> LHS)) {
-                strcpy(rightVar, ASTTraversalOptimized(root-> right));
-                if (strcmp(root -> right -> nodeType, "element assignment") == 0) {
+            if (isUsedVar(root->LHS)) {
+                strcpy(rightVar, ASTTraversalOptimized(root->right));
+                if (strcmp(root->right->nodeType, "element assignment") == 0) {
                     if(strcmp(root->right->RHS, "+") == 0
                         || strcmp(root->right->RHS, "-") == 0
                         || strcmp(root->right->RHS, "*") == 0
@@ -1100,8 +1505,7 @@ char* ASTTraversalOptimized(struct AST* root) {
                                 strcpy(rightVar, root->right->right->right->RHS);
                             }
 
-                            return emitBinaryOperationOptimized(root->right->RHS, leftVar, rightVar);
-                            // emitAssignmentForElement(root -> LHS, root -> right -> LHS, root -> right -> right -> RHS);
+                            return inWhileLoop ? emitBinaryOperationUnoptimized(root->right->RHS, leftVar, rightVar) : emitBinaryOperationOptimized(root->right->RHS, leftVar, rightVar);
                         } else {
                             if (strncmp(getPrimaryType(root->right->right->LHS), "var", 3) == 0) {
                                 sprintf(rightVar, "%s[%s]", root->right->right->LHS, root->right->right->RHS);
@@ -1113,30 +1517,33 @@ char* ASTTraversalOptimized(struct AST* root) {
                 } else {
                     char rightVarOptimized[50];
                     strcpy(rightVarOptimized, getVarConstant(rightVar));
-                    emitAssignmentOptimized(root -> LHS, rightVarOptimized);
+                    emitAssignmentOptimized(root->LHS, rightVarOptimized);
                 }
             }
         }
-        if(strcmp(root -> nodeType, "+") == 0
-            || strcmp(root -> nodeType, "-") == 0
-            || strcmp(root -> nodeType, "*") == 0
-            || strcmp(root -> nodeType, "/") == 0
-            || strcmp(root -> nodeType, ">") == 0
-            || strcmp(root -> nodeType, ">=") == 0
-            || strcmp(root -> nodeType, "<") == 0
-            || strcmp(root -> nodeType, "<=") == 0
-            || strcmp(root -> nodeType, "==") == 0
-            || strcmp(root -> nodeType, "!=") == 0) {
+        if(strcmp(root->nodeType, "+") == 0
+            || strcmp(root->nodeType, "-") == 0
+            || strcmp(root->nodeType, "*") == 0
+            || strcmp(root->nodeType, "/") == 0
+            || strcmp(root->nodeType, ">") == 0
+            || strcmp(root->nodeType, ">=") == 0
+            || strcmp(root->nodeType, "<") == 0
+            || strcmp(root->nodeType, "<=") == 0
+            || strcmp(root->nodeType, "==") == 0
+            || strcmp(root->nodeType, "!=") == 0) {
+                char rightVarOptimized[50];
+                char leftVarOptimized[50];
+
                 // Check to see if the operation includes any array indexes
                 // If so, include the array callout in the binary operation
                 // Form leftVar variable
                 if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {
                     // New changes here
-                    if (strncmp(root->left->LHS, "function call", 14) == 0) {
+                    if (strncmp(root->left->LHS, "action call", 14) == 0) {
                         strcpy(leftVar, ASTTraversalOptimized(root->left));
                     } else if (strncmp(root->left->LHS, "int", 3) == 0 || strncmp(root->left->LHS, "float", 5) == 0) {
                         strcpy(leftVar, root->left->left->RHS);
-                    } else if (strncmp(root->left->RHS, "function call param list", 24) == 0) {
+                    } else if (strncmp(root->left->RHS, "action call param list", 24) == 0) {
                         strcpy(leftVar, ASTTraversalOptimized(root->right));
                     } else {
                         sprintf(leftVar, "%s[%s]", root->left->LHS, root->left->RHS);
@@ -1148,11 +1555,11 @@ char* ASTTraversalOptimized(struct AST* root) {
                 // Form rightVar variable
                 if (strncmp(getPrimaryType(root->right->LHS), "var", 3) == 0) {
                     // New changes here
-                    if (strncmp(root->right->LHS, "function call", 14) == 0) {
+                    if (strncmp(root->right->LHS, "action call", 14) == 0) {
                         strcpy(rightVar, ASTTraversalOptimized(root->right));
                     } else if (strncmp(root->right->LHS, "int", 3) == 0 || strncmp(root->right->LHS, "float", 5) == 0) {
                         strcpy(rightVar, root->right->left->RHS);
-                    } else if (strncmp(root->right->RHS, "function call param list", 24) == 0) {
+                    } else if (strncmp(root->right->RHS, "action call param list", 24) == 0) {
                         strcpy(rightVar, ASTTraversalOptimized(root->right));
                     } else {
                         sprintf(rightVar, "%s[%s]", root->right->LHS, root->right->RHS);
@@ -1161,33 +1568,65 @@ char* ASTTraversalOptimized(struct AST* root) {
                     strcpy(rightVar, ASTTraversalOptimized(root->right));
                 }
 
-                char rightVarOptimized[50];
-                char leftVarOptimized[50];
+                // Traverse to the left FIRST if there's an expression; avoids last missing expression problem
+                if (strcmp(root->LHS, "+") == 0
+                    || strcmp(root->LHS, "-") == 0
+                    || strcmp(root->LHS, "*") == 0
+                    || strcmp(root->LHS, "/") == 0
+                    || strcmp(root->LHS, ">") == 0
+                    || strcmp(root->LHS, ">=") == 0
+                    || strcmp(root->LHS, "<") == 0
+                    || strcmp(root->LHS, "<=") == 0
+                    || strcmp(root->LHS, "==") == 0
+                    || strcmp(root->LHS, "!=") == 0) {
+                        char * newVar = getVarConstant(ASTTraversalOptimized(root->left));
+                        strcpy(rightVarOptimized, getVarConstant(newVar));
+                        strcpy(leftVarOptimized, getVarConstant(rightVar));
+                        return inWhileLoop ? emitBinaryOperationUnoptimized(root->nodeType, leftVar, rightVar) : emitBinaryOperationOptimized(root->nodeType, rightVarOptimized, leftVarOptimized);
+                }
+
                 strcpy(rightVarOptimized, getVarConstant(leftVar));
                 strcpy(leftVarOptimized, getVarConstant(rightVar));
 
-                return emitBinaryOperationOptimized(root -> nodeType, rightVarOptimized, leftVarOptimized);
+                return inWhileLoop ? emitBinaryOperationUnoptimized(root->nodeType, leftVar, rightVar) : emitBinaryOperationOptimized(root->nodeType, rightVarOptimized, leftVarOptimized);
         }
-        if(strcmp(root -> LHS, "array") == 0) {
+        if(strcmp(root->LHS, "array") == 0) {
             memcpy(arrElVar, 0, 50);
-            strcat(arrElVar, root -> nodeType);
-            strcat(arrElVar, root-> RHS);
+            strcat(arrElVar, root->nodeType);
+            strcat(arrElVar, root->RHS);
             return arrElVar;
         }
         return "";
     }
 }
 
+// Main functions for IRcode generation
+void generateIRCode() {
+    // Set Scope Memory
+    currScope = calloc(1000, sizeof(char));
+    strcpy(currScope, "global");
+    prevScopes = malloc(MAX_ARRAY_LENGTH * sizeof(char*));
+    for (int i = 0; i < MAX_ARRAY_LENGTH; i++) { prevScopes[i] = malloc(100 * sizeof(char)); }
+    strcpy(prevScopes[0], "global");
+
+    // Start AST Traversal
+    printf("\n\n----Generate IRCode----\n\n");
+    initIRcodeFile();
+    ASTTraversal(ast);
+    fclose(IRcode);
+}
+
 // Main function for optimized IRcode generation
-// After IRcode is generated, close the file
-// Moreover, flush the stdout buffer prior to proceeding to the next step
 void generateIRCodeOptimized() {
     // Reset temp variable number
     lastIndex = 0;
 
+    // Set Scope Memory
+    strcpy(currScope, "global");
+
+    // Start Optimized AST Traversal
     printf("\n\n----Perform Code Optimizations----\n\n");
     initIRcodeFileOptimized();
-    initIRCodeEnvironment();
     ASTTraversalOptimized(ast);
     fclose(IRcodeOptimized);
     fflush(stdout);

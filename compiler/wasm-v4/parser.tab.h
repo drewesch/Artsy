@@ -60,7 +60,7 @@ extern int yydebug;
     FLOAT = 261,                   /* FLOAT  */
     STRING = 262,                  /* STRING  */
     LOGICALOPERATOR = 263,         /* LOGICALOPERATOR  */
-    COMPARSIONOPERATOR = 264,      /* COMPARSIONOPERATOR  */
+    COMPARISONOPERATOR = 264,      /* COMPARISONOPERATOR  */
     COMMA = 265,                   /* COMMA  */
     SEMICOLON = 266,               /* SEMICOLON  */
     EQ = 267,                      /* EQ  */
@@ -99,7 +99,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "parser.y"
+#line 26 "parser.y"
 
 	char* number;
 	char* decimal; 

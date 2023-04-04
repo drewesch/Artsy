@@ -20,6 +20,7 @@ char scopeStack[50][50];
 char currentFunctionScope[50];
 int stackPointer;
 int blockNumber;
+
 %}
 
 %union {
@@ -38,7 +39,7 @@ int blockNumber;
 %token <string> FLOAT
 %token <string> STRING
 %token <string> LOGICALOPERATOR
-%token <string> COMPARSIONOPERATOR
+%token <string> COMPARISONOPERATOR
 %token <char> COMMA
 %token <char> SEMICOLON
 %token <char> EQ
@@ -72,12 +73,12 @@ int blockNumber;
 %printer { fprintf(yyoutput, "%d", $$); } NUMBER; */
 
 %left LOGICALOPERATOR 
-%left COMPARSIONOPERATOR
+%left COMPARISONOPERATOR
 %left PLUS MINUS
 %left MULTIPLY DIVIDE
 %left MODULO
 %left EXPONENT
-%type <ast> ProgramStart Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block FunDeclList FuncHeader FunDecl ParamDeclList ParamDeclListTail ParamDecl FunctionCall FunDeclListTail IfStmt If IfStmtTail Loop Elif Else WhileL WhileHead IfHead ElifHead ElseHead
+%type <ast> ProgramStart Program DeclList Decl VarDecl Stmt StmtList Expr Primary ExprListTail ExprList Block ActionDeclList ActionHeader ActionDecl ParamDeclList ParamDeclListTail ParamDecl ActionCall ActionDeclListTail IfStmt If IfStmtTail Loop Elif Else WhileL WhileHead IfHead ElifHead ElseHead
 
 %start ProgramStart
 
@@ -130,7 +131,7 @@ VarDecl:
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Var", $4, 0, scopeStack[stackPointer]);
+			addItem($2, "Var", $4, 0, scopeStack[stackPointer], stackPointer, blockNumber);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -153,7 +154,7 @@ VarDecl:
 		// Check if the variable has been declared
 		// If it has, throw an error
 		if (inSymTab == 0) 
-			addItem($2, "Array", $4, atoi($6), scopeStack[stackPointer]);
+			addItem($2, "Array", $4, atoi($6), scopeStack[stackPointer], stackPointer, blockNumber);
 		else {
 			printf("SEMANTIC ERROR: Variable %s has already been declared.\n", $2);
 			exit(1);
@@ -167,42 +168,41 @@ VarDecl:
 	}
 ;
 
-FunDeclList: { 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
-	| FunDecl {$$ = $1;}
-	| FunDeclListTail {$$ = $1;}
+ActionDeclList: { 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
+	| ActionDecl {$$ = $1;}
+	| ActionDeclListTail {$$ = $1;}
 ;
 
-FunDeclListTail: FunDecl {$$ = $1;}
-	| FunDecl FunDeclListTail {$$ = AST_DoublyChildNodes("FunDecl FunDeclListTail",$1,$2,$1, $2);}
+ActionDeclListTail: ActionDecl {$$ = $1;}
+	| ActionDecl ActionDeclListTail {$$ = AST_DoublyChildNodes("ActionDecl ActionDeclListTail",$1,$2,$1, $2);}
 ;
 
-FuncHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
-		printf("RECOGNIZED RULE: Standard Function\n");
-
-		symTabAccess();
-		int inSymTab = found($3, scopeStack, stackPointer);
+ActionHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
+		printf("RECOGNIZED RULE: Standard Action\n");
 
 		// Check if the function variable has already been declared
 		// If it has, throw an error
+		symTabAccess();
+		int inSymTab = found($3, scopeStack, stackPointer);
 		if (inSymTab == 0){
-			addFunction($2, $3, $5, scopeStack, stackPointer); //id
+			addAction($2, $3, $5, scopeStack, stackPointer, blockNumber); //id
 		}
 		else {
-			printf("SEMANTIC ERROR: Function %s has already been declared.\n", $3);
+			printf("SEMANTIC ERROR: Action %s has already been declared.\n", $3);
 			exit(1);
 		}
 
 		showSymTable();
-		$$ = AST_DoublyChildNodes("function context", $3, $5, $3, $5);
+		$$ = AST_DoublyChildNodes("action context", $3, $5, $3, $5);
 
-		stackPointer += 1;
+		stackPointer++;
 		memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 		strcpy(scopeStack[stackPointer], $3);
 		memset(currentFunctionScope, 0, 50 * sizeof(char));
 		strcpy(currentFunctionScope, $3);
 	}
 	| ACTION ID LEFTPAREN ParamDeclList RIGHTPAREN {
-		printf("RECOGNIZED RULE: Void Function\n");
+		printf("RECOGNIZED RULE: Void Action\n");
 		
 		symTabAccess();
 		int inSymTab = found($2, scopeStack, stackPointer);
@@ -210,17 +210,17 @@ FuncHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 		// Check if the function variable has already been declared
 		// If it has, throw an error
 		if (inSymTab == 0){
-			addFunction("void", $2, $4, scopeStack, stackPointer); //id
+			addAction("void", $2, $4, scopeStack, stackPointer, blockNumber); //id
 		}
 		else {
-			printf("SEMANTIC ERROR: Function %s has already been declared.\n", $2);
+			printf("SEMANTIC ERROR: Action %s has already been declared.\n", $2);
 			exit(1);
 		}
 
 		showSymTable();
-		$$ = AST_DoublyChildNodes("function context", $2, $4, $2, $4);
+		$$ = AST_DoublyChildNodes("action context", $2, $4, $2, $4);
 
-		stackPointer += 1;
+		stackPointer++;
 		memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 		strcpy(scopeStack[stackPointer], $2);
 		memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -228,10 +228,10 @@ FuncHeader: ACTION TYPE ID LEFTPAREN ParamDeclList RIGHTPAREN {
 	}
 ;
 
-FunDecl: FuncHeader Block {
+ActionDecl: ActionHeader Block {
 	// Generate AST node as a doubly node
-	$$ = AST_DoublyChildNodes("function",$1,$2,$1, $2);
-	stackPointer -= 1;
+	$$ = AST_DoublyChildNodes("action", $1, $2, $1, $2);
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -263,7 +263,7 @@ StmtList: Stmt {
 		// Generate a list of all statement declarations below vardecl
 		$$ = AST_DoublyChildNodes("statements", $1, $2, $1, $2);
 		}
-	| FunDeclList {
+	| ActionDeclList {
 		$$ = $1;
 	}
 ;
@@ -277,10 +277,10 @@ Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 		// Generate write declarations as a statement in the parser
 		$$ = AST_SingleChildNode("write", $2, $2);
 
-		printf("Write: %s", $2->nodeType);
+		printf("Write: %s\n", $2->nodeType);
 
 		// If the primary type is a variable, check if the variable is in the symbol table
-		if (!strcmp($2 -> nodeType, "int") && !strcmp($2 -> nodeType, "float") && !strcmp($2 -> nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
+		if (!strcmp($2->nodeType, "int") && !strcmp($2->nodeType, "float") && !strcmp($2->nodeType, "string") && strncmp(getPrimaryType($2), "var", 3) == 0 && !found($2, scopeStack, stackPointer)) {
 			printf("SEMANTIC ERROR: Variable %s does not exist.\n", $2);
 			exit(1);
 		}
@@ -288,7 +288,7 @@ Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 	}
 	| ADDLINE SEMICOLON {
 		printf("\n RECOGNIZED RULE: ADDLINE statement\n");
-		$$ = AST_SingleChildNode("writeln", "\n", 0);
+		$$ = AST_SingleChildNode("addline", "\n", 0);
 	}
 	| FINISH SEMICOLON {
 		printf("\n RECOGNIZED RULE: FINISH statement\n");
@@ -309,8 +309,8 @@ Stmt:	SEMICOLON	{ 	$$ = AST_SingleChildNode("empty", "empty", "empty");}
 		CheckAssignmentType(currentFunctionScope, getExprOp($2), scopeStack, stackPointer);
 	}
 	| Block {$$ = $1;} //To do for next iteration
-	| Loop {$$=$1;}
-	| IfStmt {$$=$1;} 
+	| Loop {$$ = $1;}
+	| IfStmt {$$ = $1;} 
 ;
 
 IfStmt: If IfStmtTail {
@@ -330,10 +330,18 @@ Loop: WhileL {
 
 WhileHead: WHILE LEFTPAREN Expr RIGHTPAREN {
 	$$ = AST_SingleChildNode($3, $3, $3);
+
+	// Add the while loop to the symbol table
+	symTabAccess();
+	addLogic("while", "While", scopeStack[stackPointer], stackPointer, blockNumber);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
-	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "while", blockNumber);
-	stackPointer += 1;
-	blockNumber += 1;
+	sprintf(tempScopeName, "%s %s %d", "while", scopeStack[stackPointer], blockNumber);
+
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -342,7 +350,7 @@ WhileHead: WHILE LEFTPAREN Expr RIGHTPAREN {
 
 WhileL: WhileHead Block {
 	$$ = AST_DoublyChildNodes("WhileL", $1, $2, $1, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -350,10 +358,17 @@ WhileL: WhileHead Block {
 
 IfHead: IF LEFTPAREN Expr RIGHTPAREN {
 	$$ = AST_SingleChildNode($3, $3, $3);
+
+	// Add the if-statement to the symbol table
+	symTabAccess();
+	addLogic("if", "If", scopeStack[stackPointer], stackPointer, blockNumber);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
-	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "if", blockNumber);
-	stackPointer += 1;
-	blockNumber += 1;
+	sprintf(tempScopeName, "%s %s %d", "if", scopeStack[stackPointer], blockNumber);
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -365,7 +380,7 @@ If: IfHead Block {
 	printf("\n RECOGNIZED RULE: if statement\n");
 
 	$$ = AST_DoublyChildNodes("If", $1, $2, $1, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -373,9 +388,17 @@ If: IfHead Block {
 
 ElifHead: ELIF LEFTPAREN Expr RIGHTPAREN {
 	$$ = AST_SingleChildNode($3, $3, $3);
+
+	// Add the elif-statement to the symbol table
+	symTabAccess();
+	addLogic("elif", "Elif", scopeStack[stackPointer], stackPointer, blockNumber);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
-	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "elif", blockNumber);
-	stackPointer += 1;
+	sprintf(tempScopeName, "%s %s %d", "elif", scopeStack[stackPointer], blockNumber);
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -387,16 +410,23 @@ Elif:  ElifHead Block {
 	printf("\n RECOGNIZED RULE: elif statement\n");
 
 	$$ = AST_DoublyChildNodes("Elif", $1, $2, $1, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
 ;
 
 ElseHead: ELSE {
+	// Add the else-statement to the symbol table
+	symTabAccess();
+	addLogic("else", "Else", scopeStack[stackPointer], stackPointer, blockNumber);
+	showSymTable();
+
+	// Create tempScopeName
 	char tempScopeName[50];
-	sprintf(tempScopeName, "%s %s %d", scopeStack[stackPointer], "else", blockNumber);
-	stackPointer += 1;
+	sprintf(tempScopeName, "%s %s %d", "else", scopeStack[stackPointer], blockNumber);
+	stackPointer++;
+	blockNumber++;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], tempScopeName);
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
@@ -408,7 +438,7 @@ Else:  ElseHead Block {
 	printf("\n RECOGNIZED RULE: else statement\n");
 
 	$$ = AST_SingleChildNode("Else", $2, $2);
-	stackPointer -= 1;
+	stackPointer--;
 	memset(currentFunctionScope, 0, 50 * sizeof(char));
 	strcpy(currentFunctionScope, scopeStack[stackPointer]);
 }
@@ -463,157 +493,160 @@ Expr  :	Primary { printf("\n RECOGNIZED RULE: Simplest expression\n");
 		strcpy($$->nodeType, tempNodeType);
 	}		
 	| LET ID EQ Expr 	{ printf("\n RECOGNIZED RULE: Let Assignment statement \n");
-					// --- SEMANTIC CHECKS --- //
-					/*
-						int semanticCorrectness = FALSE;
-						1. Has ID been declared? If yes, semanticCorrectness = 1
+		// --- SEMANTIC CHECKS --- //
+		/*
+			int semanticCorrectness = FALSE;
+			1. Has ID been declared? If yes, semanticCorrectness = 1
 
-						2. Does RHS.type = LHS.type? if yes, semanticCorrectness = 1
+			2. Does RHS.type = LHS.type? if yes, semanticCorrectness = 1
 
-						If all tests == 1, then
-							perform SEMANTIC ACTIONS
-						
-					*/
-					
-					// Check to see if the ID exists in the symbol table
-					checkID($2, scopeStack, stackPointer);
+			If all tests == 1, then
+				perform SEMANTIC ACTIONS
+			
+		*/
+		
+		// Check to see if the ID exists in the symbol table
+		checkID($2, scopeStack, stackPointer);
 
-					// Check to see if the LHS matches the RHS
-					CheckAssignmentType($2, getExprOp($4), scopeStack, stackPointer);
+		// Check to see if the LHS matches the RHS
+		CheckAssignmentType($2, getExprOp($4), scopeStack, stackPointer);
 
-					// Generate AST tree nodes
-					printf("DEBUG -- GENERATE AST\n");
-					$$ = AST_DoublyChildNodes("=",$2, $4, $2, $4);
+		// Generate AST tree nodes
+		printf("DEBUG -- GENERATE AST\n");
+		$$ = AST_DoublyChildNodes("=",$2, $4, $2, $4);
 
-					}
-
-	| LET ID LEFTSQUARE INTEGER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Let Assignment element statement\n");
-					// --- SEMANTIC CHECKS --- //
-					/*
-						int semanticCorrectness = FALSE;
-						1. Has ID been declared? If yes, semanticCorrectness = 1
-
-						2. Does RHS.type = LHS.type? if yes, semanticCorrectness = 1
-
-						If all tests == 1, then
-							perform SEMANTIC ACTIONS
-						
-					*/
-					
-					// Check to see if the ID exists in the symbol table
-					checkID($2, scopeStack, stackPointer);
-
-					// Check to see if the LHS matches the RHS
-					CheckAssignmentType($2, $7, scopeStack, stackPointer);
-
-					// Generate AST tree nodes
-					printf("DEBUG -- GENERATE AST\n");
-					struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $4, $7, $4, $7); 
-
-					$$ = AST_DoublyChildNodes("=", $2, arrayElement, $2, arrayElement);
-
-					}
-
-	| Expr PLUS Expr { printf("\n RECOGNIZED RULE: PLUS statement\n");
-					// Semantic checks
-
-					// Check to see if the LHS matches the RHS
-					CheckOperationType(getExprOp($1), getExprOp($3));
-					
-					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("+", $1, $3, $1, $3);
-					printf("EXPR PLUS EXPR: %s \n------------------------------------------------------------------\n", $3 ->nodeType);
-				}
-	| Expr MINUS Expr { printf("\n RECOGNIZED RULE: MINUS statement\n");
-					// Semantic checks
-					
-					// Check to see if the LHS matches the RHS
-					CheckOperationType(getExprOp($1), getExprOp($3));
-					
-					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("-",$1,$3, $1, $3);
-				}
-	| Expr MULTIPLY Expr { printf("\n RECOGNIZED RULE: MULTIPLY statement\n");
-					// Semantic checks
-					
-					// Check to see if the LHS matches the RHS
-					CheckOperationType(getExprOp($1), getExprOp($3));
-					
-					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("*", $1, $3, $1, $3);
-				}
-	| Expr DIVIDE Expr { printf("\n RECOGNIZED RULE: DIVIDE statement\n");
-					// Semantic checks
-					
-					// Check to see if the LHS matches the RHS
-					CheckOperationType(getExprOp($1), getExprOp($3));
-					
-					// Generate AST Nodes (doubly linked)
-					$$ = AST_DoublyChildNodes("/", $1, $3, $1, $3);
-
-					// If the RHS is an int, check for integer division error
-					if (strncmp($3, "int", 3) == 0) {
-						int numeratorInt = 1;
-						int denominatorInt = 1;
-
-						// Assign expression values if it's not just a sequence of vars
-						if (containsNonVars($1)) {
-							numeratorInt = evaluateIntExpr($1);
-						}
-						if (containsNonVars($3)) {
-							denominatorInt = evaluateIntExpr($3);
-						}
-						checkIntDivisionError(numeratorInt, denominatorInt);
-					} else if (strncmp($3, "float", 5) == 0) {
-						float numeratorFloat = 1.0;
-						float denominatorFloat = 1.0;
-
-						// Assign expression values if it's not just a sequence of vars
-						if (containsNonVars($1)) {
-							numeratorFloat = evaluateFloatExpr($1);
-						}
-						if (containsNonVars($3)) {
-							denominatorFloat = evaluateFloatExpr($3);
-						}
-						checkFloatDivisionError(numeratorFloat, denominatorFloat);
-					}
-
-				}
-	| Expr EXPONENT Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
-				// Semantic checks
-				
-				// Check to see if the LHS matches the RHS
-				CheckOperationType(getExprOp($1), getExprOp($3));
-				
-				// Generate AST Nodes (doubly linked)
-				$$ = AST_DoublyChildNodes("^", $1, $3, $1, $3);
-			}
-	| Expr COMMA Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
-				// Semantic checks
-				
-				// Check if both exprs exist
-				
-				// Generate AST Nodes (doubly linked)
-				$$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
-			}
-	| Expr COMPARSIONOPERATOR Expr {
-		printf("\n RECOGNIZED RULE: Comparison statement\n");
-		CheckComparisonType($1, $3, scopeStack, stackPointer);
-		struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
-		$$ = AST_SingleChildNode("Comparsion", tempNode, tempNode);
 	}
-	| Expr LOGICALOPERATOR Expr {$$ = AST_DoublyChildNodes("Logical", $1, $3, $1, $3);}			
+	| LET ID LEFTSQUARE INTEGER RIGHTSQUARE EQ Expr 	{ printf("\n RECOGNIZED RULE: Let Assignment element statement\n");
+		// --- SEMANTIC CHECKS --- //
+		/*
+			int semanticCorrectness = FALSE;
+			1. Has ID been declared? If yes, semanticCorrectness = 1
+
+			2. Does RHS.type = LHS.type? if yes, semanticCorrectness = 1
+
+			If all tests == 1, then
+				perform SEMANTIC ACTIONS
+			
+		*/
+		
+		// Check to see if the ID exists in the symbol table
+		checkID($2, scopeStack, stackPointer);
+
+		// Check to see if the LHS matches the RHS
+		CheckAssignmentType($2, $7, scopeStack, stackPointer);
+
+		// Generate AST tree nodes
+		printf("DEBUG -- GENERATE AST\n");
+		struct AST* arrayElement = AST_DoublyChildNodes("element assignment", $4, $7, $4, $7); 
+
+		$$ = AST_DoublyChildNodes("=", $2, arrayElement, $2, arrayElement);
+
+	}
+	| Expr PLUS Expr { printf("\n RECOGNIZED RULE: PLUS statement\n");
+		// Semantic checks
+
+		// Check to see if the LHS matches the RHS
+		CheckOperationType(getExprOp($1), getExprOp($3));
+		
+		// Generate AST Nodes (doubly linked)
+		$$ = AST_DoublyChildNodes("+", $1, $3, $1, $3);
+		printf("EXPR PLUS EXPR: %s \n------------------------------------------------------------------\n", $3->nodeType);
+	}
+	| Expr MINUS Expr { printf("\n RECOGNIZED RULE: MINUS statement\n");
+		// Semantic checks
+		
+		// Check to see if the LHS matches the RHS
+		CheckOperationType(getExprOp($1), getExprOp($3));
+		
+		// Generate AST Nodes (doubly linked)
+		$$ = AST_DoublyChildNodes("-", $1, $3, $1, $3);
+	}
+	| Expr MULTIPLY Expr { printf("\n RECOGNIZED RULE: MULTIPLY statement\n");
+		// Semantic checks
+		
+		// Check to see if the LHS matches the RHS
+		CheckOperationType(getExprOp($1), getExprOp($3));
+
+		printf("Node: *, Term 1: %s, Term 2: %s\n", $1->RHS, $3->RHS);
+		
+		// Generate AST Nodes (doubly linked)
+		$$ = AST_DoublyChildNodes("*", $1, $3, $1, $3);
+	}
+	| Expr DIVIDE Expr { printf("\n RECOGNIZED RULE: DIVIDE statement\n");
+		// Semantic checks
+		
+		// Check to see if the LHS matches the RHS
+		CheckOperationType(getExprOp($1), getExprOp($3));
+		
+		// Generate AST Nodes (doubly linked)
+		$$ = AST_DoublyChildNodes("/", $1, $3, $1, $3);
+
+		// If the RHS is an int, check for integer division error
+		if (strncmp($3, "int", 3) == 0) {
+			int numeratorInt = 1;
+			int denominatorInt = 1;
+
+			// Assign expression values if it's not just a sequence of vars
+			if (containsNonVars($1)) {
+				numeratorInt = evaluateIntExpr($1);
+			}
+			if (containsNonVars($3)) {
+				denominatorInt = evaluateIntExpr($3);
+			}
+			checkIntDivisionError(numeratorInt, denominatorInt);
+		} else if (strncmp($3, "float", 5) == 0) {
+			float numeratorFloat = 1.0;
+			float denominatorFloat = 1.0;
+
+			// Assign expression values if it's not just a sequence of vars
+			if (containsNonVars($1)) {
+				numeratorFloat = evaluateFloatExpr($1);
+			}
+			if (containsNonVars($3)) {
+				denominatorFloat = evaluateFloatExpr($3);
+			}
+			checkFloatDivisionError(numeratorFloat, denominatorFloat);
+		}
+
+	}
+	| Expr EXPONENT Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
+		// Semantic checks
+		
+		// Check to see if the LHS matches the RHS
+		CheckOperationType(getExprOp($1), getExprOp($3));
+		
+		// Generate AST Nodes (doubly linked)
+		$$ = AST_DoublyChildNodes("^", $1, $3, $1, $3);
+	}
+	| Expr COMMA Expr { printf("\n RECOGNIZED RULE: BinOp statement\n");
+		// Semantic checks
+		
+		// Check if both exprs exist
+		
+		// Generate AST Nodes (doubly linked)
+		$$ = AST_DoublyChildNodes("EXP ", $1, $3, $1, $3);
+	}
+	| Expr COMPARISONOPERATOR Expr {
+		printf("\n RECOGNIZED RULE: Comparison statement\n");
+		struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
+		$$ = AST_SingleChildNode("Comparison", tempNode, tempNode);
+	}
+	| Expr LOGICALOPERATOR Expr {
+		printf("\n RECOGNIZED RULE: Logical statement\n");
+		struct AST * tempNode = AST_DoublyChildNodes($2, $1, $3, $1, $3);
+		$$ = AST_SingleChildNode("Logical", tempNode, tempNode);
+	}			
 	| LEFTPAREN Expr RIGHTPAREN {$$ = $2;}
-	| FunctionCall {$$ = $1;}
+	| ActionCall {$$ = $1;}
 	| TRUE {$$ = AST_SingleChildNode("flag", $1, $1);}
 	| FALSE {$$ = AST_SingleChildNode("flag",$1, $1);}
 ;
 
 
-FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
-	printf("\nRECOGNIZED RULE: FunctionCall\n");
-	struct AST* funcCallParamList = AST_SingleChildNode("function call param list", $3, $3);
-	$$ = AST_DoublyChildNodes("function call", $1, funcCallParamList, $1, funcCallParamList);
+ActionCall: ID LEFTPAREN ExprList RIGHTPAREN {
+	printf("\nRECOGNIZED RULE: ActionCall\n");
+	struct AST* funcCallParamList = AST_SingleChildNode("action call param list", $3, $3);
+	$$ = AST_DoublyChildNodes("action call", $1, funcCallParamList, $1, funcCallParamList);
 
 	// Check if the number of call parameters matches the number of function parameters
 	CheckParamLength($1, funcCallParamList);
@@ -644,20 +677,15 @@ FunctionCall: ID LEFTPAREN ExprList RIGHTPAREN {
 
 %%
 
-int parser_main(FILE*inputfile)
+int parser_main(FILE * inputfile)
 {
 	printf("\n----Starting Lexer and Parser----\n\n");
 	stackPointer = 0;
 	blockNumber = 0;
 	memset(scopeStack[stackPointer], 0, 50 * sizeof(char));
 	strcpy(scopeStack[stackPointer], "global");
-	if (2 > 1){
-	  if(!(yyin = inputfile))
-          {
-		perror("Cannot open file");
-		return(1);
-	  }
-	}
+	
+	yyin = inputfile;
 	
 	return yyparse();
 }

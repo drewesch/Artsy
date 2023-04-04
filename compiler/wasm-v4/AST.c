@@ -16,7 +16,7 @@ struct AST * AST_SingleChildNode(char nodeType[50], char RHS[50], struct AST * c
 	strcpy(astSingleChildNode->RHS, RHS);
 
 	// Set a pointer to the RHS
-	astSingleChildNode -> right = childNode;
+	astSingleChildNode->right = childNode;
 
 	// Return the node to the parser
 	return astSingleChildNode;
@@ -34,7 +34,7 @@ struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50],
 	// Only utilize RHS if it isn't NULL
 	if (RHS != NULL) {
 		strcpy(astDoubleChildNode->RHS, RHS);
-		astDoubleChildNode -> right = rightChildNode;
+		astDoubleChildNode->right = rightChildNode;
 	}
 
 
@@ -52,7 +52,7 @@ struct AST * AST_DoublyChildNodes(char nodeType[50], char LHS[50], char RHS[50],
 
 
 
-//This function is to show the abstract symbol tree
+//This action is to show the abstract symbol tree
 //Will allow for an easier ability to debug future projects!
 void showSingleAST(struct AST * ASTNode) {
 	// Use recursion to traverse the AST
@@ -95,21 +95,21 @@ char * getExprOp(struct AST * root) {
 		// Return operation type
 		return op;
 
-	} else if (strncmp(root->nodeType, "function call", 14) == 0) {
+	} else if (strncmp(root->nodeType, "action call", 14) == 0) {
 		char * op = "";
 
-		// Find the type of the function in the function table
+		// Find the type of the action in the action table
 
 		char ** scopeStack = { "global" };
 		char * funcType = getItemType(root->left->nodeType, scopeStack, 0);
 
-		// Assign function type to operation type variable
+		// Assign action type to operation type variable
 		op = malloc(strlen(funcType)*sizeof(char));
 		strcpy(op, funcType);
 
 		// Return operation type
 		return op;
-	} else if (strncmp(root -> nodeType, "Comparsion", 10) == 0) {
+	} else if (strncmp(root->nodeType, "Comparison", 10) == 0) {
 		return "flag";
 	} else if (strncmp(root->LHS, "", 1) != 0) {
 		return getExprOp(root->left);
@@ -164,7 +164,7 @@ int getNumExprs(struct AST * root) {
 	}
 	int count = 0;
 	// printf("Node: %s, LHS: %s, RHS: %s\n", root->nodeType, root->LHS, root->RHS);
-	if (strncmp(root->nodeType, "function call param list", 24) != 0 && strncmp(root->nodeType, "exprlist exprtail", 17) != 0 && strncmp(root->nodeType, "exprlist end", 12) != 0 && strncmp(root->nodeType, "exprlist exprtail", 17) != 0 && strncmp(root->nodeType, ")", 1) != 0 && strncmp(root->nodeType, ",", 1) != 0) {
+	if (strncmp(root->nodeType, "action call param list", 24) != 0 && strncmp(root->nodeType, "exprlist exprtail", 17) != 0 && strncmp(root->nodeType, "exprlist end", 12) != 0 && strncmp(root->nodeType, "exprlist exprtail", 17) != 0 && strncmp(root->nodeType, ")", 1) != 0 && strncmp(root->nodeType, ",", 1) != 0) {
 		return 1;
 	}
 	if (strncmp(root->LHS, "", 1) != 0) {
@@ -195,7 +195,7 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 	//		- Otherwise, return the right hand side case
 	// 4. If anything else is encounered, skip and traverse to the right
 
-	if (strncmp(root->nodeType, "function call param list", 24) == 0) {
+	if (strncmp(root->nodeType, "action call param list", 24) == 0) {
 		getCallListItemType(root->right, searchIndex, currIndex, currentScope);
 	} else if (strncmp(root->nodeType, "exprlist exprtail", 17) == 0) {
 		if (searchIndex != currIndex) {
@@ -214,7 +214,7 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 
 				// Return operation type
 				return op;
-			} else if (strncmp(nodeType, "function call", 14) == 0) {
+			} else if (strncmp(nodeType, "action call", 14) == 0) {
 				// Find the type of the item using the symbol table
 				char * funcType = malloc(100*sizeof(char));
 				if (!found(root->right->left->nodeType, "global", 0)) {
@@ -223,14 +223,14 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 					funcType = getItemType(root->right->left->nodeType, "global", 0);
 				}
 
-				// Assign function type to operation type variable
+				// Assign action type to operation type variable
 				char * op = malloc(strlen(funcType)*sizeof(char));
 				strcpy(op, funcType);
 
 				// Return operation type
 				return op;
 			} else {
-				// Find the type of the function in the function table
+				// Find the type of the action in the action table
 				char * varType = malloc(100*sizeof(char));
 				if (!found(nodeType, "global", 0)) {
 					varType = getItemType(nodeType, currentScope, 0);
@@ -263,7 +263,7 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 
 				// Return operation type
 				return op;
-			} else if (strncmp(nodeType, "function call", 14) == 0) {
+			} else if (strncmp(nodeType, "action call", 14) == 0) {
 				// Find the type of the item using the symbol table
 				char * funcType = malloc(100*sizeof(char));
 				if (!found(root->right->left->nodeType, "global", 0)) {
@@ -272,14 +272,14 @@ char * getCallListItemType(struct AST * root, int searchIndex, int currIndex, ch
 					funcType = getItemType(root->right->left->nodeType, "global", 0);
 				}
 
-				// Assign function type to operation type variable
+				// Assign action type to operation type variable
 				char * op = malloc(strlen(funcType)*sizeof(char));
 				strcpy(op, funcType);
 
 				// Return operation type
 				return op;
 			} else {
-				// Find the type of the function in the function table
+				// Find the type of the action in the action table
 				char * varType = malloc(100*sizeof(char));
 				if (!found(nodeType, "global", 0)) {
 					varType = getItemType(nodeType, currentScope, 0);

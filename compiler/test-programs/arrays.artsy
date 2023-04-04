@@ -34,9 +34,9 @@ let numArr[3] = 4;
 let numArr[4] = 5;
 # let numArr[5] = 10; Semantic Error
 
-let random = numArr[0] + numArr[2];
+let random = numArr[0] + numArr[4] + numArr[2];
 
-print numArr;
+print numArr[0];
 addline;
 print message;
 addline;

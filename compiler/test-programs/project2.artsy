@@ -23,43 +23,11 @@ action int displayMessage(){
 	report 0;
 }
 
-
-
 declare anywhere as int; 										
 let anywhere = 5;										
 print anywhere; 									
 print "done";																						
 print 5;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 /#1. semantic check for loop comparsion#/

@@ -36,12 +36,12 @@
 
         ;; If-Elif-Else Example
         (if (i32.eq (get_local 0) (i32.const 0))
-            (then (local.set $type (i32.const 0)))
-            (else (if (i32.eq (get_local 0) (i32.const 1))
-                (then (local.set $type (i32.const 1)))
-                (else (local.set $type (i32.const -1)))
-                )
-            )
+        (then (local.set $type (i32.const 0)))
+        (else (if (i32.eq (get_local 0) (i32.const 1))
+        (then (local.set $type (i32.const 1)))
+        (else (local.set $type (i32.const -1)))
+        )
+        )
         )
 
         ;; If-Else example

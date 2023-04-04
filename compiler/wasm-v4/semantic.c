@@ -15,8 +15,7 @@ int found(char itemName[50], char scopeStack[50][50], int stackPointer);
 // Checks to see if a variable has been declared globally first
 void CheckGlobal(char* variableName, char* currentScope) {
     int nonGlobal = strcmp(currentScope, "global");
-    char ** scopeStack = { "global" };
-    if (nonGlobal != 0 && found(variableName, scopeStack, 0) == 1) {
+    if (nonGlobal != 0 && found(variableName, "global", 0) == 1) {
         printf("SEMANTIC ERROR: Variable %s has already been declared globally.\n", variableName);
         exit(1);
     }
@@ -105,12 +104,12 @@ void CheckParamLength(char funcName[50], struct AST * funcCallParamList) {
 
 void CheckIndexOutOfBound(char * identifier, char * integer, char scopeStack[50][50], int stackPointer) {
     struct Entry * itemObj = getItem(identifier, scopeStack, stackPointer);
-    if(itemObj == NULL) {
+    if (itemObj == NULL) {
         printf("\nSEMANTIC ERROR: The total number of call parameters for \"%s\" (%s) does not match function declaration (%d).\n", identifier, integer, scopeStack[stackPointer]);
         exit(1);
     }
-    if(itemObj -> arrayLength < atoi(integer) || atoi(integer) < 0) {
-        printf("\nSEMANTIC ERROR: Index out of bound\n");
+    if (itemObj->arrayLength < atoi(integer) || atoi(integer) < 0) {
+        printf("\nSEMANTIC ERROR: Index out of bound for array %s with size %d\n", identifier, itemObj->arrayLength);
         exit(1);
     }
 }
@@ -188,5 +187,15 @@ int countEscapeChars(char * phrase) {
     return numEscapeChars;
 }
 
-
+// Helper function to find which scope a variable is part of, if nested within multiple scopes
+char * findVarScope(char * varName, char ** scopeList, int scopeListLength) {
+    for (int i = 0; i < scopeListLength; i++) {
+        if (found(varName, scopeList[i], 1)) {
+            return getItemScope(varName, scopeList[i], 1);
+        }
+    }
+    // Else, it's not in this list; throw a semantic error
+    printf("\nSemantic Error: Variable %s is not nested in any scope.\n", varName);
+    exit(1);
+}
 

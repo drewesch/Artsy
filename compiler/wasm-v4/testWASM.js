@@ -4,15 +4,15 @@ fetch('./WASMcode.wasm').then(response =>
 response.arrayBuffer()
 ).then(bytes => WebAssembly.instantiate(bytes, {
 env: {
-   writeconsoleInt: function writeconsole(wVar) {
+   print_int: function printInt(wVar) {
       document.write(wVar)
    },
 
-   writeconsoleFloat: function writeconsole(wVar) {
+   print_float: function printFloat(wVar) {
       document.write(wVar)
    },
 
-   writeconsoleString: function writeconsole(wVar) {
+   print_string: function printString(wVar) {
       document.write(String.fromCharCode(wVar))
    },
 

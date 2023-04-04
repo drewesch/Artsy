@@ -57,14 +57,15 @@ int isAlpha(char * phrase) {
 // Helper function to determine if the string is an integer
 int isInt(char * phrase) {
     // Get length of string
-    int len;
-    for (len = 0; phrase[len] != '\0'; ++len);
+    int len = strlen(phrase);
 
     // Loop through each character
     // If there is a non-numerical character, return false
     for (int i = 0; i < len; i++) {
         if (i == 0 && phrase[i] == '-') {
             // Ignore case for negative floats
+        } else if (phrase[i] == '\n' || phrase[i] == '\0' || phrase[i] == ' ') {
+            // Ignore case for new lines or end of statements
         }
         else if (!isdigit(phrase[i])) {
             return 0;
@@ -134,24 +135,76 @@ char * escapeCharType(char c) {
     if (c == 't') {
         return "ESC_TAB";  
     }
+    if (c == ' ') {
+        return "SPACE";  
+    }
     return "NONE";
+}
+
+// Helper function that checks each char and determines if the whole string is a digit or not
+int isNumeric(char * var) {
+    for(int i = 0; var[i]; i++) {
+        // If any char in the string is not a digit, return false
+        if(!isdigit((int)var[i])) {
+            return 0;
+        }
+    }
+    // Else, return true, it is a digit
+    return 1;
 }
 
 // Helper function that maps IRcode to the corresponding WebAssembly type
 char * getWATType(char * phrase) {
-    char * watType = "";
+    char * watType = calloc(10, sizeof(char));
 
     if (strncmp(phrase, "float", 5) == 0) {
-        watType = "f32";
-        return watType;
+        strcpy(watType, "f32");
     } else if (strncmp(phrase, "int", 3) == 0 || strncmp(phrase, "string", 6) == 0) {
-        watType = "i32";
-        return watType;
+        strcpy(watType, "i32");
     } else {
         // Uses a void or undefined keyword
-        watType = "void";
-        return watType;
+        strcpy(watType, "void");
     }
+    return watType;
+}
+
+char * getCompareWATType(char * symbol, char * WATType, char * logicType) {
+    char * compareType = calloc(10, sizeof(char));
+
+    // Get initial WAT Type
+    if (strncmp(symbol, "<", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "lt_s");
+    } else if (strncmp(symbol, "<", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "lt");
+    } else if (strncmp(symbol, "<=", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "le_s");
+    } else if (strncmp(symbol, "<=", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "le");
+    } else if (strncmp(symbol, ">", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "gt_s");
+    } else if (strncmp(symbol, ">", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "gt");
+    } else if (strncmp(symbol, ">=", 1) == 0 && strncmp(WATType, "i32", 3) == 0) {
+        strcpy(compareType, "ge_s");
+    } else if (strncmp(symbol, ">=", 1) == 0 && strncmp(WATType, "f32", 3) == 0) {
+        strcpy(compareType, "ge");
+    } else if (strncmp(symbol, "==", 1) == 0) {
+        strcpy(compareType, "eq");
+    } else if (strncmp(symbol, "!=", 1) == 0) {
+        strcpy(compareType, "ne");
+    } else {
+        // Uses a void or undefined keyword
+        strcpy(compareType, "void");
+    }
+
+    // Switch sign direction if it's the condition for a while loop (only applies to ">" and "<")
+    if (strncmp(logicType, "while", 5) == 0 && compareType[0] == 'l') {
+        compareType[0] = 'g';
+    } else if (strncmp(logicType, "while", 5) == 0 && compareType[0] == 'g') {
+        compareType[0] = 'l';
+    }
+
+    return compareType;
 }
 
 // Helper function that returns the number of characters to move after finding the corresponding WebAssembly type
@@ -182,10 +235,16 @@ char * convertToASCII(char * phrase) {
         strncpy(asciiVal, "13", 10);
     } else if (strncmp(phrase, "\"ESC_TAB\"", 11) == 0) {
         strncpy(asciiVal, "9", 10);
+    } else if (strncmp(phrase, "\"SPACE\"", 11) == 0) {
+        strncpy(asciiVal, "32", 10);
     } else {
         snprintf(asciiVal, 10, "%d", (int)phrase[1]);
     }
 
     // Return ASCII value
     return asciiVal;
+}
+
+char * convertLogicalIR(char * phrase) {
+    
 }

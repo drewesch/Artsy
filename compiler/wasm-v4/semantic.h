@@ -15,6 +15,7 @@ void checkIntDivisionError(int numerator, int denominator);
 void checkFloatDivisionError(float numerator, float denominator);
 void checkEscapeChars(char * phrase);
 int countEscapeChars(char * phrase);
+char * findVarScope(char * varName, char ** scopeList, int scopeListLength);
 
 #endif
 
