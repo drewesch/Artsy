@@ -16,7 +16,7 @@ let b = 3;
 action testLoop() {
 	# While and If-Elif-Else test
 	# x < 4 and a != 0 and b == 3
-	while (x < 5) {
+	while (x < 4) {
 		if (x > 3) {
 			print "Logic condition 1!";
 			addline;

@@ -604,7 +604,7 @@ void emitReturnOptimized(char * id) {
 
 void emitExit(FILE * printFile) {
     // Set current scope as previous scope
-    strcpy(currScope, prevScopes[totalIRScopes-1]);
+    strcpy(currScope, prevScopes[totalIRScopes-2]);
     totalIRScopes--;
 
     fprintf(printFile, "exit\n");
@@ -844,6 +844,7 @@ char* ASTTraversal(struct AST* root) {
             snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalIRScopes), 1));
             strcpy(prevScopes[totalIRScopes], currScope);
             strcpy(currScope, newScope);
+            printf("newScope: %s\n", currScope);
             totalIRScopes++;
 
             fprintf(IRcode, "\n");
@@ -855,8 +856,7 @@ char* ASTTraversal(struct AST* root) {
             emitWhileEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
-            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
         }
 
@@ -894,8 +894,7 @@ char* ASTTraversal(struct AST* root) {
             emitIfEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
-            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
         }
 
@@ -933,8 +932,7 @@ char* ASTTraversal(struct AST* root) {
             emitElifEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
-            prevScopes[totalIRScopes-1] = malloc(100 * sizeof(char));
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
         }
 
@@ -969,8 +967,7 @@ char* ASTTraversal(struct AST* root) {
             emitElseEndStatement(IRcode);
 
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
-            prevScopes[totalIRScopes] = malloc(100 * sizeof(char));
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
         }
         if(strcmp(root->nodeType, "and") == 0) {
@@ -1263,7 +1260,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             inWhileLoop = 0;
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
         }
 
@@ -1302,7 +1299,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitIfEndStatement(IRcodeOptimized);
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
         }
 
@@ -1341,7 +1338,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitElifEndStatement(IRcodeOptimized);
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
         }
 
@@ -1377,7 +1374,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             emitElseEndStatement(IRcodeOptimized);
             
             // Set current scope as previous scope
-            strcpy(currScope, prevScopes[totalIRScopes-1]);
+            strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
             printf("currScope: %s\n", currScope);
         }
