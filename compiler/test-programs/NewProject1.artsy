@@ -50,13 +50,13 @@ let d = "d d d";
 		let x = x + 1;
 	}
 
-	elif (x == 1 || x < 0){        		/#6. Test Sematic#/ 
+	elif (x == 1 or x < 0){        		/#6. Test Sematic#/ 
 		let z = 6;
 		print z;
 		let x = x + 1;
 	}
 
-	elif (x == 2 && x > 1){				/#7. Test Sematic#/ 
+	elif (x == 2 and x > 1){				/#7. Test Sematic#/ 
 		let z = 7;
 		print z;
 		let x = x + 1;
