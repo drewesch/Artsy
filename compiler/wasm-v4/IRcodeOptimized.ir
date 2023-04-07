@@ -1,24 +1,39 @@
 #### Optimized IR Code ####
-output "Test program\nthis"
+entry int fibonacci
+param int n
+if n <= 0
+output "Please enter a positive integer"
 addline
-type int x
-x = 60
-type int y
-y = 30
-output x
+return 0
+endif
+elif n == 1
+return 0
+endelif
+elif n == 2
+return 1
+endelif
+else
+type int left
+type int right
+subop int
+T0 = n - 1
+left = T0
+subop int
+T1 = n - 2
+right = T1
+subop int
+T2 = call fibonacci args left
+T3 = call fibonacci args right
+T4 = T2 + T3
+return T4
+endelse
+endlogic
+return 0
+exit
+type int test
+T5 = call fibonacci args 10
+test = T5
+output "Fibonacci Result: "
+output test
 addline
-output "Look!!!\tThis is tabbed!"
-addline
-type float testArr array 3
-testArr[0] = 3.3
-testArr[1] = -129.2
-type int z
-z = 290230
-output -21542.224609
-addline
-subop float
-T0 = testArr[0] + testArr[1]
-T1 = T0 + testArr[1]
-output T1
-addline
-output 522414000
+output "Complete!"
