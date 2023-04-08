@@ -1,39 +1,10 @@
 #### IR Code ####
-entry int fibonacci
-param int n
-if n <= 0
-output "Please enter a positive integer"
+output "The answer is:\t"
+subop int
+T0 = 1823 - 100
+output T0
 addline
-return 0
-endif
-elif n == 1
-return 0
-endelif
-elif n == 2
-return 1
-endelif
-else
-type int left
-type int right
-subop int
-T0 = n - 1
-left = T0
-subop int
-T1 = n - 2
-right = T1
-subop int
-T2 = call fibonacci args left
-T3 = call fibonacci args right
-T4 = T2 + T3
-return T4
-endelse
-endlogic
-return 0
-exit
-type int test
-T5 = call fibonacci args 10
-test = T5
-output "Fibonacci Result: "
-output test
-addline
-output "Complete!"
+output "Or a similar float value is:\t\'"
+T1 = 1182.3 * 1.5
+output T1
+output "\'"
