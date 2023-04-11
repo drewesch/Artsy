@@ -31,8 +31,3 @@ print testArr[0] + testArr[1] + testArr[1]; 								/#1. IR code is wrong#/
 addline;
 print x * y * z;
 
-declare abc as int;
-let abc = 1;
-print testArr[abc];															/#2. cannot declare variable in index arrays#/ 
-
-

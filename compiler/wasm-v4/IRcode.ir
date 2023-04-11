@@ -1,10 +1,30 @@
 #### IR Code ####
-output "The answer is:\t"
-subop int
-T0 = 1823 - 100
-output T0
+output "Test program\nthis"
 addline
-output "Or a similar float value is:\t\'"
-T1 = 1182.3 * 1.5
-output T1
-output "\'"
+type int x
+subop int
+T0 = 10 + 20
+T1 = T0 + 30
+x = T1
+type int y
+y = 30
+output x
+addline
+output "Look!!!\tThis is tabbed!"
+addline
+type float testArr array 3
+testArr[0] = 3.3
+testArr[1] = -129.2
+type int z
+z = 290230
+subop float
+T2 = -923.2 * 23.3343
+output T2
+addline
+T3 = testArr + testArr
+T4 = T3 + testArr
+output T4
+addline
+T5 = x * y
+T6 = T5 * z
+output T6
