@@ -168,7 +168,7 @@ char* emitBinaryOperation(char op[2], const char* id1, const char* id2){
     }
 
     // Print the unoptimized iRcode using outputIDs, the operator, and the other ids
-    fprintf(IRcode, "%s = %s %s %s\n", outputId, token1, op, token2);
+    fprintf(IRcode, "%s = %s %s %s\n", outputId, id1, op, id2);
     lastIndex += 1;
 
     // Returns output
@@ -850,9 +850,8 @@ char* ASTTraversal(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
-            printf("newScope: %s\n", currScope);
             totalIRScopes++;
 
             fprintf(IRcode, "\n");
@@ -889,7 +888,7 @@ char* ASTTraversal(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", findVarScope("if", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -927,7 +926,7 @@ char* ASTTraversal(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", findVarScope("elif", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -962,7 +961,7 @@ char* ASTTraversal(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", findVarScope("else", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1259,7 +1258,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "while %s %d", currScope, getItemBlockNumber("while", findVarScope("while", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1299,7 +1298,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "if %s %d", currScope, getItemBlockNumber("if", findVarScope("if", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1338,7 +1337,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "elif %s %d", currScope, getItemBlockNumber("elif", findVarScope("elif", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1374,7 +1373,7 @@ char* ASTTraversalOptimized(struct AST* root) {
             // Set new scope and retain history using previous scope
             char * newScope = malloc(1000*sizeof(char));
             snprintf(newScope, 1000, "else %s %d", currScope, getItemBlockNumber("else", findVarScope("else", prevScopes, totalIRScopes), 1));
-            strcpy(prevScopes[totalIRScopes], currScope);
+            strcpy(prevScopes[totalIRScopes], newScope);
             strcpy(currScope, newScope);
             totalIRScopes++;
 
@@ -1389,7 +1388,6 @@ char* ASTTraversalOptimized(struct AST* root) {
             // Set current scope as previous scope
             strcpy(currScope, prevScopes[totalIRScopes-2]);
             totalIRScopes--;
-            printf("currScope: %s\n", currScope);
         }
         if(strcmp(root->nodeType, "and") == 0
             || strcmp(root->nodeType, "or") == 0) {
@@ -1548,6 +1546,7 @@ char* ASTTraversalOptimized(struct AST* root) {
                 // If so, include the array callout in the binary operation
                 // Form leftVar variable
                 if (strncmp(getPrimaryType(root->left->LHS), "var", 3) == 0) {
+                    
                     // New changes here
                     if (strncmp(root->left->LHS, "action call", 14) == 0) {
                         strcpy(leftVar, ASTTraversalOptimized(root->left));

@@ -4,7 +4,7 @@ addline
 type int x
 subop int
 T0 = 10 + 20
-T1 = T0 + 30
+T1 = T1 + 30
 x = T1
 type int y
 y = 30
@@ -21,10 +21,10 @@ subop float
 T2 = -923.2 * 23.3343
 output T2
 addline
-T3 = testArr + testArr
-T4 = T3 + testArr
+T3 = testArr[0] + testArr[1]
+T4 = T4 + testArr[1]
 output T4
 addline
 T5 = x * y
-T6 = T5 * z
+T6 = T6 * z
 output T6
