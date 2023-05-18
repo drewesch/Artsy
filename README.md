@@ -42,7 +42,7 @@ make artsy ARGS="(filename here)"
 
 
 ## Viewing Artsy Output
-To view the results after compiling an Artsy program on Ubuntu CLI, open the output.html page in a modern web browser
+To view the results after compiling an Artsy program on Ubuntu CLI, open the output.html page in one of the following modern web browsers:
 - Chrome
 - Firefox
 - Microsoft Edge
