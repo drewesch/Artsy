@@ -7,8 +7,10 @@ Language Creators: Andrew Esch and Albert Gonzales
 ## Operating System
 Artsy is intended to run on Ubuntu 20.04. Other flavors of Debian may work as well, but these operating systems are untested with Artsy.
 
-## Web Server and PHP
-Artsy is intended to run on PHP 8.x with either the LAMP or LEMP stack (i.e., Apache or Nginx).
+## Web Server
+The Artsy compiler is intended to be utilized with a web server for dynamic loading. However, Artsy output can be viewed statically by refreshing the output.html page upon recompiling any program.
+
+One option for quickly viewing Artsy output without a web server environment is to utilize VSCode's Live Server extension. Please see [Live Server's official extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) for more details.
 
 ## Package Dependencies
 The following packages need to be installed in Ubuntu for Artsy to function properly:
@@ -29,13 +31,23 @@ sudo apt-get install make flex bison wabt build-essential gcc
 ## Permissions
 Ensure that the user has full read, write, and execute permissions for the entire project directory.
 
-## Running Artsy
-To execute the Artsy compiler for a specific file, navigate to the root directory for this project and execute the following command.
+## Running the Artsy Compiler
+To execute the Artsy compiler using a source code file, navigate to the root directory for this project and execute the following command.
 
 ```
-# Example: make artsy args="example-programs/addition.artsy"
-make artsy args="(filename here)"
+# Example: make artsy ARGS="example-programs/addition.artsy"
+# Note, "ARGS" must be uppercase when executing this command.
+make artsy ARGS="(filename here)"
 ```
+
+
+## Viewing Artsy Output
+To view the results after compiling an Artsy program on Ubuntu CLI, open the output.html page in a modern web browser
+- Chrome
+- Firefox
+- Microsoft Edge
+- Safari
+- Opera
 
 
 ## Using the Artsy Programming Language

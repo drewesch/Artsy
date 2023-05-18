@@ -1,8 +1,0 @@
-
-declare testArr as float[3];
-let testArr[1] = 5;
-
-declare abc as int;
-let abc = 1;
-print testArr[abc];															/#2. cannot declare variable in index arrays#/ 
-
